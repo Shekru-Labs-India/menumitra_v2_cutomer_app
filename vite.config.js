@@ -78,5 +78,5 @@ export default defineConfig({
       }
     })
   ],
-  base: '/menumitra_customer_app/',
+  base: '/',
 })
