@@ -130,12 +130,28 @@ export const OutletProvider = ({ children }) => {
 
   const fetchOutletDetailsByCode = async (outletCode) => {
     try {
+      // Get section_id and table_id from localStorage
+      const sectionId = localStorage.getItem('sectionId');
+      const tableId = localStorage.getItem('tableId');
+
       const response = await axios.post('https://men4u.xyz/v2/user/get_restaurant_details_by_code', {
-        outlet_code: outletCode
+        outlet_code: outletCode,
+        section_id: sectionId || '',
+        table_number: tableId || ''
       });
+
       if (response.data?.data?.outlet_details) {
         const details = response.data.data.outlet_details;
+        
+        // Get existing outlet info from localStorage
+        const existingOutletInfo = localStorage.getItem('selectedOutlet') 
+          ? JSON.parse(localStorage.getItem('selectedOutlet'))
+          : {};
+
         const formattedOutletInfo = {
+          // First spread existing data
+          ...existingOutletInfo,
+          // Then add new/updated data from API
           outletId: details.outlet_id,
           outletCode: outletCode,
           outletName: details.name,
@@ -154,14 +170,17 @@ export const OutletProvider = ({ children }) => {
           googleReview: details.google_review,
           googleBusinessLink: details.google_business_link,
           sectionName: details.section_name,
-          sectionId: localStorage.getItem('sectionId'),
-          tableId: localStorage.getItem('tableId')
+          // Use API values with fallback to existing values
+          sectionId: details.section_id?.toString() || existingOutletInfo.sectionId || localStorage.getItem('sectionId'),
+          tableId: details.table_id?.toString() || existingOutletInfo.tableId || localStorage.getItem('tableId'),
+          tableNumber: details.table_number?.toString() || details.table_id?.toString() || existingOutletInfo.tableNumber
         };
 
-        // Only set if not already present
-        if (!localStorage.getItem('selectedOutlet')) {
-          localStorage.setItem('selectedOutlet', JSON.stringify(formattedOutletInfo));
-        }
+        // Update localStorage with merged data
+        localStorage.setItem('sectionId', formattedOutletInfo.sectionId);
+        localStorage.setItem('tableId', formattedOutletInfo.tableId);
+        localStorage.setItem('selectedOutlet', JSON.stringify(formattedOutletInfo));
+        
         return formattedOutletInfo;
       }
     } catch (error) {
