@@ -5,6 +5,7 @@ import OrderAccordionItem from "../components/OrderAccordionItem";
 import { useOutlet } from "../contexts/OutletContext";
 import Timer from '../components/Timer';
 import CancelOrderModal from '../components/Modal/variants/CancelOrderModal';
+import axios from 'axios';
 
 // Add this new component for no orders state
 const NoOrders = ({ message }) => (
@@ -47,6 +48,7 @@ function Orders() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [selectedOrderNumber, setSelectedOrderNumber] = useState(null);
+  const [cancelOrderStatus, setCancelOrderStatus] = useState(true);
 
   useEffect(() => {
     // Call both APIs independently
@@ -305,44 +307,33 @@ function Orders() {
     setShowCancelModal(true);
   };
 
-  // Add this new function to handle the actual cancellation
+  // Update handleConfirmCancel
   const handleConfirmCancel = async (reason) => {
-    console.log('[Orders] handleConfirmCancel called with reason:', reason);
     try {
       const auth = JSON.parse(localStorage.getItem("auth")) || {};
       const accessToken = auth.accessToken;
+      if (!accessToken) throw new Error("Authentication token not found");
 
-      if (!accessToken) {
-        throw new Error("Authentication token not found");
-      }
-
-      const response = await fetch("https://men4u.xyz/v2/user/cancel_order", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
+      const { data } = await axios.post(
+        "https://men4u.xyz/v2/user/cancel_order",
+        {
           outlet_id: outletId,
           order_id: selectedOrderId,
           note: reason
-        }),
-      });
+        },
+        {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        }
+      );
 
-      console.log('[Orders] cancel_order API response:', response);
-      const data = await response.json();
-      console.log('[Orders] cancel_order API data:', data);
+      setCancelOrderStatus(true);
+      console.log('[Orders] Cancel order status:', true);
+      await fetchOngoingOrders();
+      handleCloseCancelModal();
 
-      if (response.ok && data.status === "success") {
-        // Refresh orders
-        await fetchOngoingOrders();
-        // Close modal and reset state
-        handleCloseCancelModal();
-      } else {
-        throw new Error(data.message || "Failed to cancel order");
-      }
     } catch (err) {
-      // Optionally show error to user
+      setCancelOrderStatus(false);
+      console.log('[Orders] Cancel order status:', false);
       console.error("Error cancelling order:", err);
     }
   };
