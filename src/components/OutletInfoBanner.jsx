@@ -12,7 +12,9 @@ function OutletInfoBanner() {
     address,
     outletCode,
     fetchOutletDetailsByCode,
-    isOutletOnlyUrl
+    isOutletOnlyUrl,
+    tableId,
+    sectionName
   } = useOutlet();
   const navigate = useNavigate();
 
@@ -85,7 +87,7 @@ function OutletInfoBanner() {
 
         {/* Right side - Order Type Selection */}
         <div>
-          {isOutletOnlyUrl && (
+          {isOutletOnlyUrl ? (
             <button
               className="btn btn-link p-0 d-flex align-items-center"
               onClick={handleOrderTypeClick}
@@ -124,6 +126,15 @@ function OutletInfoBanner() {
                 </small>
               </div>
             </button>
+          ) : (
+            <div className="d-flex flex-column align-items-start ms-2">
+              <span className="fw-bold text-dark">
+                {sectionName ? sectionName : 'Section'}
+              </span>
+              <small className="text-muted">
+                Table Number: {tableId ? tableId : 'N/A'}
+              </small>
+            </div>
           )}
         </div>
       </div>

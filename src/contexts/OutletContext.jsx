@@ -19,13 +19,15 @@ export const useOutlet = () => {
 };
 
 export const OutletProvider = ({ children }) => {
-  const [outletInfo, setOutletInfo] = useState(() => {
+  // Always read from localStorage for outletInfo
+  const getStoredOutlet = () => {
     const stored = localStorage.getItem('selectedOutlet');
     return stored ? JSON.parse(stored) : null;
-  });
+  };
 
-  const [outletId, setOutletId] = useState(null);
-  const [outletDetails, setOutletDetails] = useState(null);
+  const [outletInfo, setOutletInfo] = useState(getStoredOutlet());
+  const [outletId, setOutletId] = useState(getStoredOutlet()?.outletId || null);
+  const [outletDetails, setOutletDetails] = useState(getStoredOutlet() || null);
   const [isOutletOnlyUrl, setIsOutletOnlyUrl] = useState(false);
 
   const location = useLocation();
@@ -66,46 +68,44 @@ export const OutletProvider = ({ children }) => {
 
   useEffect(() => {
     const fullPath = window.location.pathname;
-    console.log('Full path:', fullPath);
-    const segments = fullPath.split('/').filter(Boolean);
-    console.log('Segments:', segments);
-    const initializeOutlet = async () => {
-      const params = extractOutletParamsFromPath(fullPath);
+    const params = extractOutletParamsFromPath(fullPath);
 
-      if (params) {
-        const { outletCode, sectionId, tableId } = params;
-        console.log('Extracted from URL:', params);
+    const stored = getStoredOutlet();
 
+    if (params) {
+      const { outletCode, sectionId, tableId } = params;
+
+      if (
+        !stored ||
+        stored.outletCode !== outletCode ||
+        stored.sectionId !== sectionId ||
+        stored.tableId !== tableId
+      ) {
         localStorage.setItem('outletCode', outletCode);
         localStorage.setItem('sectionId', sectionId);
         localStorage.setItem('tableId', tableId);
 
-        await fetchOutletDetailsByCode(outletCode);
+        fetchOutletDetailsByCode(outletCode).then((details) => {
+          if (details) {
+            localStorage.setItem('selectedOutlet', JSON.stringify(details));
+            setOutletInfo(details);
+            setOutletId(details.outletId);
+            setOutletDetails(details);
+          }
+        });
       } else {
-        console.log('No outlet params found in path:', fullPath);
-        // No URL pattern, try localStorage
-        const storedOutletCode = localStorage.getItem('outletCode');
-        const storedOutlet = localStorage.getItem('selectedOutlet');
-        
-        if (storedOutletCode && !storedOutlet) {
-          // We have a code but no details, fetch them
-          console.log('Using stored outlet code:', storedOutletCode);
-          await fetchOutletDetailsByCode(storedOutletCode);
-        } else if (storedOutlet) {
-          console.log('Using stored outlet details');
-          const outlet = JSON.parse(storedOutlet);
-          setOutletInfo(outlet);
-          setOutletId(outlet.outletId);
-          setOutletDetails(outlet);
-        } else {
-          // No outlet info in URL or localStorage, redirect to all-outlets
-          navigate('/all-outlets', { replace: true });
-        }
+        setOutletInfo(stored);
+        setOutletId(stored?.outletId);
+        setOutletDetails(stored);
       }
-    };
-
-    initializeOutlet().catch(console.error);
-  }, []); // Run only on mount
+    } else if (stored) {
+      setOutletInfo(stored);
+      setOutletId(stored?.outletId);
+      setOutletDetails(stored);
+    } else {
+      navigate('/all-outlets', { replace: true });
+    }
+  }, [location.pathname]);
 
   // Updated pattern to handle basename
   useEffect(() => {
@@ -123,7 +123,6 @@ export const OutletProvider = ({ children }) => {
       const response = await axios.post('https://men4u.xyz/v2/user/get_restaurant_details_by_code', {
         outlet_code: outletCode
       });
-      
       if (response.data?.data?.outlet_details) {
         const details = response.data.data.outlet_details;
         const formattedOutletInfo = {
@@ -145,16 +144,14 @@ export const OutletProvider = ({ children }) => {
           googleReview: details.google_review,
           googleBusinessLink: details.google_business_link,
           sectionName: details.section_name,
-          // Include section and table IDs
           sectionId: localStorage.getItem('sectionId'),
           tableId: localStorage.getItem('tableId')
         };
 
-        // Store complete outlet info in localStorage
-        localStorage.setItem('selectedOutlet', JSON.stringify(formattedOutletInfo));
-        setOutletInfo(formattedOutletInfo);
-        setOutletId(details.outlet_id);
-        setOutletDetails(formattedOutletInfo);
+        // Only set if not already present
+        if (!localStorage.getItem('selectedOutlet')) {
+          localStorage.setItem('selectedOutlet', JSON.stringify(formattedOutletInfo));
+        }
         return formattedOutletInfo;
       }
     } catch (error) {
@@ -187,37 +184,39 @@ export const OutletProvider = ({ children }) => {
   };
 
   // Memoize the context value to prevent unnecessary re-renders
-  const contextValue = useMemo(() => ({
-    outletInfo,
-    updateOutletInfo,
-    clearOutletInfo,
-    fetchOutletDetailsByCode,
-    // Convenience getters with null checks
-    outletId,
-    outletDetails,
-    setOutletId,
-    setOutletDetails,
-    isOutletOnlyUrl,
-    outletCode: outletInfo?.outletCode,
-    sectionId: outletInfo?.sectionId,
-    tableId: outletInfo?.tableId,
-    outletName: outletInfo?.outletName,
-    isOpen: outletInfo?.isOpen,
-    mobile: outletInfo?.mobile,
-    fssaiNumber: outletInfo?.fssaiNumber,
-    gstNumber: outletInfo?.gstNumber,
-    address: outletInfo?.address,
-    ownerId: outletInfo?.ownerId,
-    outletType: outletInfo?.outletType,
-    outletVegNonveg: outletInfo?.outletVegNonveg,
-    whatsapp: outletInfo?.whatsapp,
-    facebook: outletInfo?.facebook,
-    instagram: outletInfo?.instagram,
-    website: outletInfo?.website,
-    googleReview: outletInfo?.googleReview,
-    googleBusinessLink: outletInfo?.googleBusinessLink,
-    sectionName: outletInfo?.sectionName
-  }), [outletInfo, outletId, outletDetails, isOutletOnlyUrl]);
+  const contextValue = useMemo(() => {
+    const stored = getStoredOutlet();
+    return {
+      outletInfo: stored,
+      updateOutletInfo,
+      clearOutletInfo,
+      fetchOutletDetailsByCode,
+      outletId: stored?.outletId,
+      outletDetails: stored,
+      setOutletId,
+      setOutletDetails,
+      isOutletOnlyUrl,
+      outletCode: stored?.outletCode,
+      sectionId: stored?.sectionId,
+      tableId: stored?.tableId,
+      outletName: stored?.outletName,
+      isOpen: stored?.isOpen,
+      mobile: stored?.mobile,
+      fssaiNumber: stored?.fssaiNumber,
+      gstNumber: stored?.gstNumber,
+      address: stored?.address,
+      ownerId: stored?.ownerId,
+      outletType: stored?.outletType,
+      outletVegNonveg: stored?.outletVegNonveg,
+      whatsapp: stored?.whatsapp,
+      facebook: stored?.facebook,
+      instagram: stored?.instagram,
+      website: stored?.website,
+      googleReview: stored?.googleReview,
+      googleBusinessLink: stored?.googleBusinessLink,
+      sectionName: stored?.sectionName
+    };
+  }, [outletInfo, isOutletOnlyUrl]);
 
   return (
     <OutletContext.Provider value={contextValue}>
