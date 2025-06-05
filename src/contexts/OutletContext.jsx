@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const OutletContext = createContext();
 
@@ -29,6 +29,7 @@ export const OutletProvider = ({ children }) => {
   const [isOutletOnlyUrl, setIsOutletOnlyUrl] = useState(false);
 
   const location = useLocation();
+  const navigate = useNavigate();
 
   const parseOutletUrl = (url) => {
     const matches = url.match(URL_PATTERN);
@@ -93,6 +94,9 @@ export const OutletProvider = ({ children }) => {
         } else if (storedOutlet) {
           console.log('Using stored outlet details');
           setOutletInfo(JSON.parse(storedOutlet));
+        } else {
+          // No outlet info in URL or localStorage, redirect to all-outlets
+          navigate('/all-outlets', { replace: true });
         }
       }
     };
