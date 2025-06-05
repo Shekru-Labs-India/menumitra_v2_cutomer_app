@@ -8,6 +8,7 @@ import { useCart } from "../contexts/CartContext"; // Add this import
 import { useModal } from "../contexts/ModalContext"; // Add this import
 import { debounce } from 'lodash'; // Make sure to install lodash
 import { useOutlet } from '../contexts/OutletContext';
+import QuickFilters from '../components/QuickFilters';
 
 function Search() {
   const [searchResults, setSearchResults] = useState([]);
@@ -31,6 +32,13 @@ function Search() {
   const { outletId } = useOutlet();
 
   const MAX_QUANTITY = 20;
+
+  // Add new state for quick filters
+  const [quickFilters, setQuickFilters] = useState({
+    type: null,
+    price: null,
+    spicy: null
+  });
 
   // Load recent searches from localStorage on component mount
   useEffect(() => {
@@ -301,6 +309,48 @@ function Search() {
     return 'all';
   };
 
+  // Add handler for quick filter changes
+  const handleQuickFilterChange = (filters) => {
+    setQuickFilters(filters);
+    
+    // Filter the results based on the quick filters
+    let filtered = [...originalSearchResults];
+
+    if (filters.type) {
+      filtered = filtered.filter(item => {
+        if (filters.type === 'all') return true;
+        return item.menu_food_type.toLowerCase() === filters.type.toLowerCase();
+      });
+    }
+
+    if (filters.price) {
+      filtered = filtered.filter(item => {
+        const price = item.portions?.[0]?.price || 0;
+        const priceMap = {
+          '50': 50,
+          '100': 100,
+          '200': 200,
+          '500': 500,
+          '1000': 1000,
+          'above1000': 1001
+        };
+        
+        if (filters.price === 'all') return true;
+        if (filters.price === 'above1000') return price >= 1000;
+        return price <= priceMap[filters.price];
+      });
+    }
+
+    if (filters.spicy) {
+      filtered = filtered.filter(item => {
+        if (filters.spicy === 'all') return true;
+        return item.spicy_level === filters.spicy;
+      });
+    }
+
+    setSearchResults(filtered);
+  };
+
   return (
     <>
       <Header />
@@ -366,6 +416,8 @@ function Search() {
                 </div>
               </div>
             </div>
+            {/* Add QuickFilters component after search input */}
+            <QuickFilters onFilterChange={handleQuickFilterChange} />
             {/* Recent Searches Section */}
             {recentSearches.length > 0 && (
               <>
