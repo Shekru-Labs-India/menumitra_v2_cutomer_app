@@ -23,7 +23,7 @@ export const AddToCartModal = () => {
         item.menuId === modalConfig.data?.menuId && 
         item.portionId === portion.portion_id
       );
-      initial[portion.portion_id] = cartItem?.quantity || 0;
+      initial[portion.portion_id] = cartItem?.quantity || 1;
     });
     return initial;
   });
@@ -71,6 +71,12 @@ export const AddToCartModal = () => {
     });
     
     setSelectedPortion(portionId);
+    
+    // Set quantity to 1 if it's 0 or undefined
+    setQuantities(prev => ({
+      ...prev,
+      [portionId]: prev[portionId] || 1
+    }));
   };
 
   // Set modal title based on cart status and include menu name
@@ -152,7 +158,7 @@ export const AddToCartModal = () => {
     }
   };
 
-  // Update handleAddToCart to include portion-specific comments
+  // Update handleAddToCart to only add the selected portion
   const handleAddToCart = () => {
     // Check if user is authenticated
     const authData = localStorage.getItem('auth');
@@ -170,17 +176,16 @@ export const AddToCartModal = () => {
       isInCart
     });
     
-    // Add/Update all portions at once
-    Object.entries(quantities).forEach(([portionId, quantity]) => {
-      if (quantity > 0) {
-        addToCart(
-          modalConfig.data, 
-          Number(portionId), 
-          quantity, 
-          comments[portionId] || ''
-        );
-      }
-    });
+    // Only add/update the selected portion
+    if (selectedPortion && quantities[selectedPortion] > 0) {
+      addToCart(
+        modalConfig.data, 
+        Number(selectedPortion), 
+        quantities[selectedPortion], 
+        comments[selectedPortion] || ''
+      );
+    }
+    
     closeModal('addToCart');
   };
 
@@ -228,7 +233,7 @@ export const AddToCartModal = () => {
                   item.menuId === modalConfig.data?.menuId && 
                   item.portionId === portion.portion_id
                 );
-                updated[portion.portion_id] = cartItem?.quantity || 0;
+                updated[portion.portion_id] = cartItem?.quantity || 1;
               }
             });
             return updated;
