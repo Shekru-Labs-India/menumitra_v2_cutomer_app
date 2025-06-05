@@ -28,7 +28,7 @@ const CategorySwiper = ({
         <Swiper
           spaceBetween={8}
           slidesPerView="auto"
-          className="categorie-swiper px-2 py-3"
+          className="categorie-swiper px-2"
           loop={false}
           grabCursor={true}
           cssMode={true}

@@ -263,31 +263,7 @@ function Home() {
               {/* Search */}
               {/* Dashboard Area */}
               <div className="dashboard-area">
-               
-                <div className="title-bar mt-0">
-                  <span className="title mb-0 font-18">Categories</span>
-                  <Link 
-                    className="btn-link" 
-                    to="/categories"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigate('/categories');
-                    }}
-                  >
-                    <svg
-                      width={24}
-                      height={24}
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M8.25005 20.25C8.05823 20.25 7.86623 20.1767 7.7198 20.0303C7.42673 19.7372 7.42673 19.2626 7.7198 18.9698L14.6895 12L7.7198 5.03025C7.42673 4.73719 7.42673 4.26263 7.7198 3.96975C8.01286 3.67688 8.48742 3.67669 8.7803 3.96975L16.2803 11.4698C16.5734 11.7628 16.5734 12.2374 16.2803 12.5303L8.7803 20.0303C8.63386 20.1767 8.44186 20.25 8.25005 20.25Z"
-                        fill="#7D8FAB"
-                      />
-                    </svg>
-                  </Link>
-                </div>
+           
                 {isLoading ? (
                   <div className="categories-box">
                     <Swiper
@@ -406,7 +382,7 @@ function Home() {
                 )}
                 
                 <div className="title-bar">
-                  <span className="title mb-0 font-18">Popular Menus</span>
+                  <span className="title mb-0 font-18">Menus</span>
                 </div>
                 <div className="row g-3 mb-3">
                   {isLoading ? (
