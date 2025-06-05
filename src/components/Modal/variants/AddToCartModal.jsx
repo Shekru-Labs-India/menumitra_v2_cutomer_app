@@ -3,12 +3,15 @@ import BaseModal from '../BaseModal';
 import { useCart } from '../../../contexts/CartContext';
 import { useModal } from '../../../contexts/ModalContext';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useOutlet } from '../../../contexts/OutletContext';
+import axios from 'axios';
 
 export const AddToCartModal = () => {
   const { closeModal, modalConfig } = useModal();
   const { addToCart, cartItems } = useCart();
-  const { user, setShowAuthOffcanvas } = useAuth();
-  
+  const { user, setShowAuthOffcanvas, getAccessToken } = useAuth();
+  const { outletId } = useOutlet();
+ 
   console.log('Modal Config Data:', modalConfig.data);
   console.log('Current Cart Items:', cartItems);
 
@@ -186,6 +189,153 @@ export const AddToCartModal = () => {
     return Object.values(quantities).some(quantity => quantity > 0);
   };
 
+  // Add new state for menu details
+  const [menuDetails, setMenuDetails] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Update the useEffect with bearer token and outletId
+  useEffect(() => {
+    const fetchMenuDetails = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const token = getAccessToken(); // Get the access token
+        
+        const response = await axios.post('https://men4u.xyz/v2/user/get_full_half_price_of_menu', 
+          {
+            outlet_id: outletId, // Use outletId from context
+            menu_id: modalConfig.data?.menuId || modalConfig.data?.menu_id
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        if (response.data?.detail?.menu_detail) {
+          setMenuDetails(response.data.detail.menu_detail);
+          
+          // Initialize quantities and comments for new portions
+          const initialQuantities = {};
+          const initialComments = {};
+          
+          response.data.detail.menu_detail.portions.forEach(portion => {
+            const cartItem = cartItems.find(item => 
+              item.menuId === modalConfig.data?.menuId && 
+              item.portionId === portion.portion_id
+            );
+            initialQuantities[portion.portion_id] = cartItem?.quantity || 0;
+            initialComments[portion.portion_id] = cartItem?.comment || '';
+          });
+
+          setQuantities(initialQuantities);
+          setComments(initialComments);
+          
+          // Set initial selected portion
+          if (response.data.detail.menu_detail.portions.length > 0) {
+            setSelectedPortion(response.data.detail.menu_detail.portions[0].portion_id);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching menu details:', err);
+        setError('Failed to load menu details. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (modalConfig.data?.menuId || modalConfig.data?.menu_id) {
+      fetchMenuDetails();
+    }
+  }, [modalConfig.data, cartItems, getAccessToken, outletId]); // Add outletId to dependencies
+
+  // Update the portion selection UI section
+  const renderPortionSelection = () => {
+    if (isLoading) {
+      return (
+        <div className="text-center py-3">
+          <div className="spinner-border text-success" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="alert alert-danger" role="alert">
+          {error}
+        </div>
+      );
+    }
+
+    if (!menuDetails?.portions?.length) {
+      return (
+        <div className="col-12 text-center text-muted">
+          No portion sizes available
+        </div>
+      );
+    }
+
+    return menuDetails.portions.map(portion => (
+      <div 
+        className={
+          menuDetails.portions.length === 1 ? 'col-12' : 
+          menuDetails.portions.length === 2 ? 'col-6' : 
+          'col-4'
+        }
+        key={portion.portion_id}
+      >
+        <div 
+          onClick={() => handlePortionChange(portion.portion_id)}
+          style={{
+            border: `1.5px solid ${selectedPortion === portion.portion_id ? '#28a745' : '#e9ecef'}`,
+            borderRadius: '12px',
+            padding: '12px 8px',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            backgroundColor: selectedPortion === portion.portion_id ? '#f8fff8' : 'white',
+            width: '100%',
+            display: 'flex',
+            justifyContent: 'center'
+          }}
+        >
+          <div className="d-flex flex-column align-items-center">
+            <span style={{ 
+              fontSize: '16px',
+              fontWeight: '500',
+              color: '#212529',
+              marginBottom: '4px'
+            }}>
+              ₹{portion.price}
+            </span>
+            <div className="d-flex flex-column align-items-center">
+              <span style={{ 
+                fontSize: '13px',
+                color: '#6c757d',
+                textTransform: 'capitalize'
+              }}>
+                {portion.portion_name.toLowerCase()}
+              </span>
+              {portion.unit_value && (
+                <small style={{ 
+                  fontSize: '11px',
+                  color: '#adb5bd'
+                }}>
+                  {portion.unit_value}
+                </small>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    ));
+  };
+
   return (
     <BaseModal 
       isOpen={true}
@@ -197,55 +347,7 @@ export const AddToCartModal = () => {
           Select Portion
         </label>
         <div className="row g-2">
-          {modalConfig.data?.portions?.length > 0 ? (
-            modalConfig.data.portions.map(portion => (
-              <div 
-                className={
-                  modalConfig.data.portions.length === 1 ? 'col-12' : 
-                  modalConfig.data.portions.length === 2 ? 'col-6' : 
-                  'col-4'
-                }
-                key={portion.portion_id}
-              >
-                <div 
-                  onClick={() => handlePortionChange(portion.portion_id)}
-                  style={{
-                    border: `1.5px solid ${selectedPortion === portion.portion_id ? '#28a745' : '#e9ecef'}`,
-                    borderRadius: '12px',
-                    padding: '12px 8px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    backgroundColor: selectedPortion === portion.portion_id ? '#f8fff8' : 'white',
-                    width: '100%',
-                    display: 'flex',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <div className="d-flex flex-column align-items-center">
-                    <span style={{ 
-                      fontSize: '16px',
-                      fontWeight: '500',
-                      color: '#212529',
-                      marginBottom: '4px'
-                    }}>
-                      ₹{portion.price}
-                    </span>
-                    <span style={{ 
-                      fontSize: '13px',
-                      color: '#6c757d',
-                      textTransform: 'capitalize'
-                    }}>
-                      {portion.portion_name.toLowerCase()}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="col-12 text-center text-muted">
-              No portion sizes available
-            </div>
-          )}
+          {renderPortionSelection()}
         </div>
       </div>
 
@@ -253,7 +355,7 @@ export const AddToCartModal = () => {
         <label className="text-secondary mb-2 d-flex justify-content-between align-items-center">
           <span style={{ fontSize: '14px' }}>
             Special Instructions for {
-              modalConfig.data?.portions?.find(p => p.portion_id === selectedPortion)?.portion_name
+              menuDetails?.portions?.find(p => p.portion_id === selectedPortion)?.portion_name
             }
           </span>
           <small style={{ 
@@ -313,7 +415,7 @@ export const AddToCartModal = () => {
             value={comments[selectedPortion] || ''}
             onChange={(e) => handleCommentChange(e.target.value)}
             placeholder={`Add instructions for ${
-              modalConfig.data?.portions?.find(p => p.portion_id === selectedPortion)?.portion_name
+              menuDetails?.portions?.find(p => p.portion_id === selectedPortion)?.portion_name
             } portion...`}
             style={{
               border: `1.5px solid ${
