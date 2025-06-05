@@ -168,8 +168,8 @@ const VerticalMenuCard = ({
             <li className="price text-accent">₹{currentPrice}</li>
             {reviewCount && (
               <li className="review">
-                <span className="text-soft font-10">({reviewCount})</span>
-                <i className="fa fa-star"></i>
+                <span className="text-accent">{reviewCount}</span>
+                {/* <i className="fa fa-star"></i> */}
               </li>
             )}
           </ul>
