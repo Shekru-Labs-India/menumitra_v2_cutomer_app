@@ -93,7 +93,10 @@ export const OutletProvider = ({ children }) => {
           await fetchOutletDetailsByCode(storedOutletCode);
         } else if (storedOutlet) {
           console.log('Using stored outlet details');
-          setOutletInfo(JSON.parse(storedOutlet));
+          const outlet = JSON.parse(storedOutlet);
+          setOutletInfo(outlet);
+          setOutletId(outlet.outletId);
+          setOutletDetails(outlet);
         } else {
           // No outlet info in URL or localStorage, redirect to all-outlets
           navigate('/all-outlets', { replace: true });
