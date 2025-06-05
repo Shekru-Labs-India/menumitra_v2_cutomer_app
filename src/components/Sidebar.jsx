@@ -91,6 +91,20 @@ function Sidebar() {
       </li>
       <li>
         <NavLink
+          to="/search"
+          className={({ isActive }) => 
+            `nav-link ${isActive ? 'active bg-success text-white fw-bold px-2 rounded-5' : ''}`
+          }
+          onClick={handleLinkClick}
+        >
+          <span className="dz-icon">
+            <i className="fa-solid fa-magnifying-glass"></i>
+          </span>
+          <span>Search</span>
+        </NavLink>
+      </li>
+      <li>
+        <NavLink
           to="/favourites"
           className={({ isActive }) => 
             `nav-link ${isActive ? 'active bg-success text-white fw-bold px-2 rounded-5' : ''}`
