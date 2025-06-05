@@ -189,23 +189,20 @@ export const AddToCartModal = () => {
     return Object.values(quantities).some(quantity => quantity > 0);
   };
 
-  // Add new state for menu details
-  const [menuDetails, setMenuDetails] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // Initialize menuDetails with modalConfig.data instead of null
+  const [menuDetails, setMenuDetails] = useState({
+    portions: modalConfig.data?.portions || []
+  });
 
-  // Update the useEffect with bearer token and outletId
+  // Update the useEffect to silently update the UI
   useEffect(() => {
     const fetchMenuDetails = async () => {
       try {
-        setIsLoading(true);
-        setError(null);
-        
-        const token = getAccessToken(); // Get the access token
+        const token = getAccessToken();
         
         const response = await axios.post('https://men4u.xyz/v2/user/get_full_half_price_of_menu', 
           {
-            outlet_id: outletId, // Use outletId from context
+            outlet_id: outletId,
             menu_id: modalConfig.data?.menuId || modalConfig.data?.menu_id
           },
           {
@@ -217,41 +214,55 @@ export const AddToCartModal = () => {
         );
 
         if (response.data?.detail?.menu_detail) {
+          // Silently update the state without affecting the UI
           setMenuDetails(response.data.detail.menu_detail);
           
-          // Initialize quantities and comments for new portions
-          const initialQuantities = {};
-          const initialComments = {};
+          // Update quantities and comments only if they don't exist
+          const newPortions = response.data.detail.menu_detail.portions;
           
-          response.data.detail.menu_detail.portions.forEach(portion => {
-            const cartItem = cartItems.find(item => 
-              item.menuId === modalConfig.data?.menuId && 
-              item.portionId === portion.portion_id
-            );
-            initialQuantities[portion.portion_id] = cartItem?.quantity || 0;
-            initialComments[portion.portion_id] = cartItem?.comment || '';
+          setQuantities(prev => {
+            const updated = { ...prev };
+            newPortions.forEach(portion => {
+              if (!(portion.portion_id in updated)) {
+                const cartItem = cartItems.find(item => 
+                  item.menuId === modalConfig.data?.menuId && 
+                  item.portionId === portion.portion_id
+                );
+                updated[portion.portion_id] = cartItem?.quantity || 0;
+              }
+            });
+            return updated;
           });
 
-          setQuantities(initialQuantities);
-          setComments(initialComments);
-          
-          // Set initial selected portion
-          if (response.data.detail.menu_detail.portions.length > 0) {
-            setSelectedPortion(response.data.detail.menu_detail.portions[0].portion_id);
+          setComments(prev => {
+            const updated = { ...prev };
+            newPortions.forEach(portion => {
+              if (!(portion.portion_id in updated)) {
+                const cartItem = cartItems.find(item => 
+                  item.menuId === modalConfig.data?.menuId && 
+                  item.portionId === portion.portion_id
+                );
+                updated[portion.portion_id] = cartItem?.comment || '';
+              }
+            });
+            return updated;
+          });
+
+          // Only set selected portion if none is selected
+          if (!selectedPortion && newPortions.length > 0) {
+            setSelectedPortion(newPortions[0].portion_id);
           }
         }
       } catch (err) {
+        // Just log the error without updating UI
         console.error('Error fetching menu details:', err);
-        setError('Failed to load menu details. Please try again.');
-      } finally {
-        setIsLoading(false);
       }
     };
 
     if (modalConfig.data?.menuId || modalConfig.data?.menu_id) {
       fetchMenuDetails();
     }
-  }, [modalConfig.data, cartItems, getAccessToken, outletId]); // Add outletId to dependencies
+  }, [modalConfig.data, cartItems, getAccessToken, outletId, selectedPortion]);
 
   // Add state for dropdown
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -268,30 +279,25 @@ export const AddToCartModal = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isDropdownOpen]);
 
-  // Update the portion selection UI section
+  // Update renderPortionSelection to always show UI without loading or error states
   const renderPortionSelection = () => {
-    if (isLoading) {
-      return (
-        <div className="text-center py-3">
-          <div className="spinner-border text-success" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-        </div>
-      );
-    }
+    const portions = menuDetails?.portions || [];
 
-    if (error) {
+    if (portions.length === 0) {
       return (
-        <div className="alert alert-danger" role="alert">
-          {error}
-        </div>
-      );
-    }
-
-    if (!menuDetails?.portions?.length) {
-      return (
-        <div className="col-12 text-center text-muted">
-          No portion sizes available
+        <div 
+          className="form-control d-flex justify-content-between align-items-center"
+          style={{
+            border: '1.5px solid #e9ecef',
+            borderRadius: '12px',
+            padding: '12px 16px',
+            fontSize: '14px',
+            backgroundColor: '#f8f9fa',
+            color: '#6c757d',
+            cursor: 'not-allowed'
+          }}
+        >
+          <span>No portion sizes available</span>
         </div>
       );
     }
@@ -313,14 +319,14 @@ export const AddToCartModal = () => {
           }}
         >
           <span>
-            {selectedPortion ? 
-              `${menuDetails.portions.find(p => p.portion_id === selectedPortion)?.portion_name} - ₹${menuDetails.portions.find(p => p.portion_id === selectedPortion)?.price} (${menuDetails.portions.find(p => p.portion_id === selectedPortion)?.unit_value})` 
+            {selectedPortion && portions.length > 0 ? 
+              `${portions.find(p => p.portion_id === selectedPortion)?.portion_name} - ₹${portions.find(p => p.portion_id === selectedPortion)?.price} (${portions.find(p => p.portion_id === selectedPortion)?.unit_value})` 
               : 'Select a portion size'}
           </span>
           <i className={`fas fa-chevron-${isDropdownOpen ? 'up' : 'down'}`} style={{ color: '#6c757d' }}></i>
         </div>
 
-        {isDropdownOpen && (
+        {isDropdownOpen && portions.length > 0 && (
           <div 
             className="position-absolute w-100 mt-1 shadow-sm"
             style={{
@@ -331,7 +337,7 @@ export const AddToCartModal = () => {
               overflow: 'hidden'
             }}
           >
-            {menuDetails.portions.map(portion => (
+            {portions.map(portion => (
               <div
                 key={portion.portion_id}
                 onClick={() => {
