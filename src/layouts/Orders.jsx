@@ -46,184 +46,7 @@ function Orders() {
   });
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
-
-  // Dummy order steps data
-  const orderSteps = [
-    {
-      title: "Order Placed",
-      timestamp: "January 19th, 12 : 02 AM",
-      completed: true,
-    },
-    {
-      title: "Order Confirmed",
-      timestamp: "January 19th, 12 : 02 AM",
-      completed: true,
-    },
-    {
-      title: "Your Order On Delivery by Courir",
-      timestamp: "January 19th, 12 : 02 AM",
-      completed: true,
-    },
-    {
-      title: "Order Delivered",
-      timestamp: "January 19th, 12 : 02 AM",
-      completed: false,
-    },
-  ];
-
-  // Dummy orders data
-  const dummyOrders = {
-    ongoing: [
-      {
-        id: "0012345",
-        itemCount: 12,
-        status: "On Delivery",
-        iconColor: "#FFA902",
-        iconBgClass: "",
-        isExpanded: true,
-        orderSteps: [
-          {
-            title: "Order Created",
-            timestamp: "Feb 8,2023-12:20pm",
-            completed: true,
-          },
-          {
-            title: "Order Received",
-            timestamp: "Feb 8,2023-12:25pm",
-            completed: true,
-          },
-          {
-            title: "Order Confirmed",
-            timestamp: "Feb 8,2023-12:30pm",
-            completed: true,
-          },
-          {
-            title: "Order Processed",
-            timestamp: "Feb 8,2023-12:45pm",
-            completed: false,
-          },
-          {
-            title: "Order Delivered",
-            timestamp: "Feb 8,2023-1:20pm",
-            completed: false,
-          },
-        ],
-      },
-    ],
-    completed: [
-      {
-        id: "0012346",
-        itemCount: 8,
-        status: "Completed",
-        iconColor: "#00B67A",
-        iconBgClass: "bg-success",
-        isExpanded: false,
-        orderSteps: [
-          {
-            title: "Order Created",
-            timestamp: "Feb 8,2023-12:20pm",
-            completed: true,
-          },
-          {
-            title: "Order Received",
-            timestamp: "Feb 8,2023-12:25pm",
-            completed: true,
-          },
-          {
-            title: "Order Confirmed",
-            timestamp: "Feb 8,2023-12:30pm",
-            completed: true,
-          },
-          {
-            title: "Order Processed",
-            timestamp: "Feb 8,2023-12:45pm",
-            completed: true,
-          },
-          {
-            title: "Order Delivered",
-            timestamp: "Feb 8,2023-1:20pm",
-            completed: true,
-          },
-        ],
-      },
-    ],
-    cancelled: [
-      {
-        id: "0012347",
-        itemCount: 15,
-        status: "Cancelled",
-        iconColor: "#E74C3C",
-        iconBgClass: "bg-danger",
-        isExpanded: false,
-        orderSteps: [
-          {
-            title: "Order Created",
-            timestamp: "Feb 8,2023-12:20pm",
-            completed: true,
-          },
-          {
-            title: "Order Cancelled",
-            timestamp: "Feb 8,2023-12:25pm",
-            completed: true,
-          },
-          {
-            title: "Order Confirmed",
-            timestamp: "Feb 8,2023-12:30pm",
-            completed: false,
-          },
-          {
-            title: "Order Processed",
-            timestamp: "Feb 8,2023-12:45pm",
-            completed: false,
-          },
-          {
-            title: "Order Delivered",
-            timestamp: "Feb 8,2023-1:20pm",
-            completed: false,
-          },
-        ],
-      },
-    ],
-  };
-
-  // Add this new dummy ongoing order
-  const dummyOngoingOrder = {
-    id: "1209",
-    orderId: "1209",
-    itemCount: 1,
-    status: "On Delivery",
-    iconColor: "#FFA902",
-    iconBgClass: "bg-warning",
-    orderSteps: [
-      {
-        title: "Order Created",
-        timestamp: new Date().toLocaleString(),
-        completed: true,
-      },
-      {
-        title: "Order Received",
-        timestamp: new Date().toLocaleString(),
-        completed: true,
-      },
-      {
-        title: "Order Confirmed",
-        timestamp: new Date().toLocaleString(),
-        completed: true,
-      },
-      {
-        title: "Order Processed",
-        timestamp: new Date().toLocaleString(),
-        completed: false,
-      },
-      {
-        title: "Order Delivered",
-        timestamp: new Date().toLocaleString(),
-        completed: false,
-      }
-    ],
-    isExpanded: false,
-    parentId: "accordionExample1"
-  };
+  const [selectedOrderNumber, setSelectedOrderNumber] = useState(null);
 
   useEffect(() => {
     // Call both APIs independently
@@ -308,7 +131,7 @@ function Orders() {
         const transformedOngoingOrders = data.detail.orders.map(order => {
           // Parse order time
           const [hours, minutes, seconds] = order.time.split(':');
-          const [timeValue, period] = order.time.split(' '); // Split "11:40:21 PM"
+          const [_, period] = order.time.split(' ');
           const orderTime = new Date();
           
           // Set the order time
@@ -332,7 +155,8 @@ function Orders() {
 
           return {
             id: order.order_number,
-            orderId: order.order_number,
+            orderId: order.order_id,
+            orderNumber: order.order_number,
             itemCount: order.menu_count,
             status: order.status === 'placed' ? 'Order Placed' : 
                    order.status === 'cooking' ? 'Preparing' : 
@@ -396,7 +220,7 @@ function Orders() {
     
     // Handle paid/completed orders
     if (orders.paid) {
-      Object.entries(orders.paid).forEach(([date, orderList]) => {
+      Object.entries(orders.paid).forEach(([, orderList]) => {
         orderList.forEach(order => {
           transformedOrders.completed.push({
             id: order.order_number,
@@ -441,7 +265,7 @@ function Orders() {
 
     // Handle cancelled orders
     if (orders.cancelled) {
-      Object.entries(orders.cancelled).forEach(([date, orderList]) => {
+      Object.entries(orders.cancelled).forEach(([, orderList]) => {
         orderList.forEach(order => {
           transformedOrders.cancelled.push({
             id: order.order_number,
@@ -475,31 +299,59 @@ function Orders() {
   const transformedOrders = transformOrderData(ordersData);
 
   // Update the handleCancelOrder function
-  const handleCancelOrder = (orderId) => {
+  const handleCancelOrder = (orderId, orderNumber) => {
     setSelectedOrderId(orderId);
+    setSelectedOrderNumber(orderNumber);
     setShowCancelModal(true);
   };
 
   // Add this new function to handle the actual cancellation
-  const handleConfirmCancel = async (orderId, reason) => {
+  const handleConfirmCancel = async (reason) => {
+    console.log('[Orders] handleConfirmCancel called with reason:', reason);
     try {
       const auth = JSON.parse(localStorage.getItem("auth")) || {};
-      const userId = auth.userId;
       const accessToken = auth.accessToken;
 
       if (!accessToken) {
         throw new Error("Authentication token not found");
       }
 
-      // Add your API call here
-      console.log(`Cancelling order ${orderId} with reason: ${reason}`);
-      
-      // Refresh the orders list after successful cancellation
-      await fetchOngoingOrders();
+      const response = await fetch("https://men4u.xyz/v2/user/cancel_order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          outlet_id: outletId,
+          order_id: selectedOrderId,
+          note: reason
+        }),
+      });
+
+      console.log('[Orders] cancel_order API response:', response);
+      const data = await response.json();
+      console.log('[Orders] cancel_order API data:', data);
+
+      if (response.ok && data.status === "success") {
+        // Refresh orders
+        await fetchOngoingOrders();
+        // Close modal and reset state
+        handleCloseCancelModal();
+      } else {
+        throw new Error(data.message || "Failed to cancel order");
+      }
     } catch (err) {
+      // Optionally show error to user
       console.error("Error cancelling order:", err);
-      // Handle error (show toast or alert)
     }
+  };
+
+  const handleCloseCancelModal = () => {
+    console.log('[Orders] handleCloseCancelModal called, closing modal.');
+    setShowCancelModal(false);
+    setSelectedOrderId(null);
+    setSelectedOrderNumber(null);
   };
 
   return (
@@ -531,7 +383,7 @@ function Orders() {
                                 <i className="fa-solid fa-bag-shopping" style={{ color: order.iconColor }}></i>
                               </span>
                               <div className="ms-3">
-                                <h6 className="mb-0">Order #{order.orderId}</h6>
+                                <h6 className="mb-0">Order #{order.orderNumber}</h6>
                                 <span className="text-soft">{order.itemCount} Items {order.status}</span>
                               </div>
                             </div>
@@ -542,7 +394,7 @@ function Orders() {
                                 className="btn btn-sm me-2 text-white"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleCancelOrder(order.orderId);
+                                  handleCancelOrder(order.orderId, order.orderNumber);
                                 }}
                                 style={{
                                   backgroundColor: '#FF0000',
@@ -727,9 +579,10 @@ function Orders() {
       </div>
       <CancelOrderModal
         isOpen={showCancelModal}
-        onClose={() => setShowCancelModal(false)}
+        onClose={handleCloseCancelModal}
         onConfirm={handleConfirmCancel}
         orderId={selectedOrderId}
+        orderNumber={selectedOrderNumber}
       />
       <Footer />
     </>

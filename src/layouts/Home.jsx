@@ -200,7 +200,7 @@ function Home() {
     <>
       <div className="page-wraper">
         <Header />
-        <div className="author-notification">
+        {/* <div className="author-notification">
           <div className="container inner-wrapper">
             <div className="dz-info">
               <span className="text-dark d-block">{greeting}</span>
@@ -230,7 +230,7 @@ function Home() {
               </div>
             </a>
           </div>
-        </div>
+        </div> */}
         {/* Banner End */}
         {/* Page Content */}
         <div className="page-content">

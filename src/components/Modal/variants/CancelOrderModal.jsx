@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
-import { useOutlet } from '../../../contexts/OutletContext';
 
-function CancelOrderModal({ isOpen, onClose, onConfirm, orderId }) {
+function CancelOrderModal({ isOpen, onClose, onConfirm, orderNumber }) {
   const [reason, setReason] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { outletId } = useOutlet();
 
   const predefinedReasons = [
     {
@@ -29,48 +26,10 @@ function CancelOrderModal({ isOpen, onClose, onConfirm, orderId }) {
     }
   ];
 
-  const handleConfirm = async () => {
+  const handleConfirm = () => {
     if (!reason.trim()) return;
-    
-    setIsLoading(true);
-    try {
-      const auth = JSON.parse(localStorage.getItem("auth")) || {};
-      const accessToken = auth.accessToken;
-
-      if (!accessToken) {
-        throw new Error("Authentication token not found");
-      }
-
-      const response = await fetch("https://men4u.xyz/v2/user/cancel_order", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          outlet_id: outletId,
-          order_id: orderId,
-          note: reason
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to cancel order");
-      }
-
-      const data = await response.json();
-      
-      if (data.status === "success") {
-        onConfirm(orderId, reason);
-        onClose();
-      } else {
-        throw new Error(data.message || "Failed to cancel order");
-      }
-    } catch (error) {
-      console.error("Error cancelling order:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    console.log('[CancelOrderModal] handleConfirm called with reason:', reason);
+    onConfirm(reason);
   };
 
   if (!isOpen) return null;
@@ -81,12 +40,13 @@ function CancelOrderModal({ isOpen, onClose, onConfirm, orderId }) {
         <div className="modal-content" style={{ borderRadius: '16px' }}>
           {/* Header */}
           <div className="d-flex justify-content-between align-items-center p-3">
-            <h6 className="mb-0">Cancel Order</h6>
+            <h6 className="mb-0">
+              Cancel Order {orderNumber ? `#${orderNumber}` : ''}
+            </h6>
             <button 
               type="button" 
               className="btn-close" 
               onClick={onClose}
-              disabled={isLoading}
               style={{ fontSize: '0.8rem' }}
             ></button>
           </div>
@@ -105,7 +65,6 @@ function CancelOrderModal({ isOpen, onClose, onConfirm, orderId }) {
                 rows="3"
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                disabled={isLoading}
                 style={{
                   border: '1px solid #E8E8E8',
                   borderRadius: '8px',
@@ -122,11 +81,11 @@ function CancelOrderModal({ isOpen, onClose, onConfirm, orderId }) {
               {predefinedReasons.map((item, index) => (
                 <div 
                   key={index} 
-                  onClick={() => !isLoading && setReason(item.description)}
+                  onClick={() => setReason(item.description)}
                   style={{ 
-                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                    cursor: 'pointer',
                     marginBottom: '12px',
-                    opacity: isLoading ? 0.7 : 1
+                    opacity: 1
                   }}
                 >
                   <p className="mb-0" style={{ fontSize: '0.9rem', fontWeight: '500' }}>
@@ -150,7 +109,6 @@ function CancelOrderModal({ isOpen, onClose, onConfirm, orderId }) {
               type="button" 
               className="btn flex-grow-1"
               onClick={onClose}
-              disabled={isLoading}
               style={{
                 backgroundColor: '#F5F5F5',
                 color: '#333',
@@ -165,7 +123,7 @@ function CancelOrderModal({ isOpen, onClose, onConfirm, orderId }) {
               type="button" 
               className="btn btn-danger flex-grow-1"
               onClick={handleConfirm}
-              disabled={!reason.trim() || isLoading}
+              disabled={!reason.trim()}
               style={{
                 backgroundColor: '#FF0000',
                 border: 'none',
@@ -173,12 +131,8 @@ function CancelOrderModal({ isOpen, onClose, onConfirm, orderId }) {
                 padding: '10px'
               }}
             >
-              {isLoading ? (
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-              ) : (
-                <i className="fas fa-times-circle me-2"></i>
-              )}
-              {isLoading ? 'Cancelling...' : 'Confirm Cancel'}
+              <i className="fas fa-times-circle me-2"></i>
+              Confirm Cancel
             </button>
           </div>
         </div>
