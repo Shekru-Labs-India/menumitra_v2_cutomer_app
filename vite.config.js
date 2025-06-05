@@ -20,7 +20,7 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         scope: '/',
-        start_url: '/',
+        start_url: '/all-outlets',
         icons: [
           {
             src: '/icons/icon-72x72.png',
@@ -42,6 +42,24 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'
+          }
+        ],
+        prefer_related_applications: false,
+        categories: ['food', 'lifestyle'],
+        shortcuts: [
+          {
+            name: "MenuMitra",
+            url: "/all-outlets",
+            icons: [{ src: "/icons/menu-shortcut.png", sizes: "96x96" }]
+          }
+        ],
+        screenshots: [
+          {
+            src: "/screenshots/app-screen1.png",
+            sizes: "1280x720",
+            type: "image/png",
+            form_factor: "wide",
+            label: "MenuMitra Home Screen"
           }
         ]
       },
