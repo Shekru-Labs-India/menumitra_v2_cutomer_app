@@ -63,7 +63,7 @@ function OutletInfoBanner() {
             role="button"
             className="outlet-info"
           >
-            <h6 className="mb-0 text-dark fw-bold">
+            <h6 className="mb-0 text-dark fw-semibold">
               {outletName || '-'}
             </h6>
            
@@ -113,10 +113,10 @@ function OutletInfoBanner() {
             </button>
           ) : (
             <div className="d-flex align-items-center">
-              <span className="fw-bold text-dark me-2">
+              <span className="fw-normal text-dark me-2">
                 {sectionName ? sectionName : 'SectionName'}
               </span> 
-              <small className="text-dark">
+              <small className="fw-normal text-dark">
              - {tableId ? tableId : 'N/A'}
               </small>
             </div>
