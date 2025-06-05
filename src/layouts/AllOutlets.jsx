@@ -306,11 +306,11 @@ function AllOutlets() {
 
                     <div className="card-text">
                       <p className="text-muted small mb-1">
-                        <i className="fas fa-map-marker-alt me-2"></i>
+                        <i className="fas fa-map-marker-alt me-2" style={{ fontSize: '16px', }}></i>
                         {outlet.address}
                       </p>
                       <p className="text-muted small mb-2">
-                        <i className="fas fa-phone me-2"></i>
+                        <i className="fas fa-phone me-2" style={{ fontSize: '16px' }}></i>
                         {outlet.mobile}
                       </p>
                       <div className="d-flex align-items-center"></div>
