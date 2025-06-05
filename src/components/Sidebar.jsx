@@ -7,6 +7,7 @@ import { useTheme } from '../contexts/ThemeContext'
 import { useThemeColor } from '../contexts/ThemeColorContext'
 import '../assets/css/style.css'
 import ThemeColorOffcanvas from './ThemeColorOffcanvas'
+import MenuMitra from './MenuMitra'
 
 function Sidebar() {
     const { isOpen, closeSidebar } = useSidebar();
@@ -190,7 +191,7 @@ function Sidebar() {
                   <i class="fa-solid fa-moon"></i>
                 )}
               </span>
-              {/* <span className={isDarkMode ? "text-white" : "text-dark"}>Dark Mode</span> */}
+         
             </div>
             <div className="custom-switch">
               <input
@@ -216,10 +217,7 @@ function Sidebar() {
     >
       Delete Cookie
     </a> */}
-    <div className="sidebar-bottom">
-      <h6 className="name">MenuMitra</h6>
-      <span className="ver-info">App Version 1.0</span>
-    </div>
+    <MenuMitra />
     <ThemeColorOffcanvas 
       show={showThemeColorOffcanvas} 
       onClose={() => toggleThemeColorOffcanvas(false)} 
