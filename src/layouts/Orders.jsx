@@ -39,7 +39,6 @@ function Orders() {
     cancelled: {},
   });
   const [ongoingOrders, setOngoingOrders] = useState([]);
-  const [isLoadingOngoing, setIsLoadingOngoing] = useState(true);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [error, setError] = useState({
     ongoing: null,
@@ -104,32 +103,20 @@ function Orders() {
       const userId = auth.userId || "73";
       const accessToken = auth.accessToken;
 
-      if (!accessToken) {
-        throw new Error("Authentication token not found");
-      }
+      if (!accessToken) throw new Error("Authentication token not found");
 
-      const response = await fetch(
+      const { data } = await axios.post(
         "https://men4u.xyz/v2/user/get_ongoing_or_placed_order",
         {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({
-            user_id: parseInt(userId),
-            outlet_id: outletId,
-          }),
+          user_id: parseInt(userId),
+          outlet_id: outletId,
+        },
+        {
+          headers: { Authorization: `Bearer ${accessToken}` }
         }
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch ongoing orders");
-      }
-
-      const data = await response.json();
-
-      if (data.detail && data.detail.orders) {
+      if (data.detail?.orders) {
         const transformedOngoingOrders = data.detail.orders.map(order => {
           // Parse order time
           const [hours, minutes, seconds] = order.time.split(':');
@@ -145,14 +132,11 @@ function Orders() {
             orderTime.setHours(parseInt(hours));
           }
           orderTime.setMinutes(parseInt(minutes));
-          orderTime.setSeconds(parseInt(seconds.split(' ')[0])); // Remove PM/AM
+          orderTime.setSeconds(parseInt(seconds.split(' ')[0]));
 
-          // Calculate time difference
           const currentTime = new Date();
           const timeDifferenceInSeconds = Math.floor((currentTime - orderTime) / 1000);
           const remainingSeconds = Math.max(90 - timeDifferenceInSeconds, 0);
-          
-          // Show timer only if order is placed and within 90 seconds
           const showTimer = order.status === 'placed' && remainingSeconds > 0;
 
           return {
@@ -204,12 +188,17 @@ function Orders() {
         });
 
         setOngoingOrders(transformedOngoingOrders);
+        setError(prev => ({ ...prev, ongoing: null }));
+
       }
     } catch (err) {
       console.error("Error fetching ongoing orders:", err);
-      setError(prev => ({ ...prev, ongoing: err.message }));
-    } finally {
-      setIsLoadingOngoing(false);
+      if (axios.isAxiosError(err) && err.response?.status === 404) {
+        setOngoingOrders([]); 
+        setError(prev => ({ ...prev, ongoing: '404' }));
+      } else {
+        setError(prev => ({ ...prev, ongoing: err.message }));
+      }
     }
   };
 
@@ -350,82 +339,74 @@ function Orders() {
       <Header />
       <div className="page-content">
         <div className="container pb">
-          {/* Ongoing Orders Section */}
-          <div className="mb-4">
-            <h6 className="mb-3">Ongoing Orders</h6>
-            {isLoadingOngoing ? (
-              <div className="text-center py-4">Loading ongoing orders...</div>
-            ) : error.ongoing ? (
-              <div className="alert alert-danger">{error.ongoing}</div>
-            ) : (
+          {/* Only show if error is not 404 and we have orders */}
+          {error.ongoing !== '404' && ongoingOrders.length > 0 && (
+            <div className="mb-4">
+              <h6 className="mb-3">Ongoing Orders</h6>
               <div className="accordion style-3" id="accordionExample1">
-                {ongoingOrders.length > 0 ? (
-                  ongoingOrders.map((order) => (
-                    <div key={order.id} className="accordion-item">
-                      <div className="accordion-header">
-                        <div className="accordion-button collapsed" 
-                          data-bs-toggle="collapse"
-                          data-bs-target={`#collapse${order.orderId}`}
-                        >
-                          <div className="d-flex align-items-center justify-content-between w-100">
-                            {/* Left side with icon and order details */}
-                            <div className="d-flex align-items-center">
-                              <span className={`icon-box ${order.iconBgClass}`}>
-                                <i className="fa-solid fa-bag-shopping" style={{ color: order.iconColor }}></i>
-                              </span>
-                              <div className="ms-3">
-                                <h6 className="mb-0">Order #{order.orderNumber}</h6>
-                                <span className="text-soft">{order.itemCount} Items {order.status}</span>
-                              </div>
+                {ongoingOrders.map((order) => (
+                  <div key={order.id} className="accordion-item">
+                    <div className="accordion-header">
+                      <div className="accordion-button collapsed" 
+                        data-bs-toggle="collapse"
+                        data-bs-target={`#collapse${order.orderId}`}
+                      >
+                        <div className="d-flex align-items-center justify-content-between w-100">
+                          {/* Left side with icon and order details */}
+                          <div className="d-flex align-items-center">
+                            <span className={`icon-box ${order.iconBgClass}`}>
+                              <i className="fa-solid fa-bag-shopping" style={{ color: order.iconColor }}></i>
+                            </span>
+                            <div className="ms-3">
+                              <h6 className="mb-0">Order #{order.orderNumber}</h6>
+                              <span className="text-soft">{order.itemCount} Items {order.status}</span>
                             </div>
+                          </div>
 
-                            {/* Right side with cancel button */}
-                            <div className="d-flex align-items-center gap-3">
-                              <button 
-                                className="btn btn-sm me-2 text-white"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleCancelOrder(order.orderId, order.orderNumber);
-                                }}
-                                style={{
-                                  backgroundColor: '#FF0000',
-                                }}
-                              >
-                                Cancel Order
-                              </button>
-                              {/* The collapse arrow will be automatically placed here by Bootstrap */}
-                            </div>
+                          {/* Right side with cancel button */}
+                          <div className="d-flex align-items-center gap-3">
+                            <button 
+                              className="btn btn-sm me-2 text-white"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCancelOrder(order.orderId, order.orderNumber);
+                              }}
+                              style={{
+                                backgroundColor: '#FF0000',
+                              }}
+                            >
+                              Cancel Order
+                            </button>
+                            {/* The collapse arrow will be automatically placed here by Bootstrap */}
                           </div>
                         </div>
                       </div>
-                      <div id={`collapse${order.orderId}`} className="accordion-collapse collapse" data-bs-parent="#accordionExample1">
-                        <div className="accordion-body">
-                          <OrderAccordionItem
-                            orderId={order.orderId}
-                            itemCount={order.itemCount}
-                            status={order.status}
-                            iconColor={order.iconColor}
-                            iconBgClass={order.iconBgClass}
-                            orderSteps={order.orderSteps}
-                            isExpanded={order.isExpanded}
-                            parentId={order.parentId}
-                            orderType={order.orderType}
-                            outletName={order.outletName}
-                            totalAmount={order.totalAmount}
-                            paymentMethod={order.paymentMethod}
-                            showTimer={order.showTimer}
-                            remainingSeconds={order.remainingSeconds}
-                          />
-                        </div>
+                    </div>
+                    <div id={`collapse${order.orderId}`} className="accordion-collapse collapse" data-bs-parent="#accordionExample1">
+                      <div className="accordion-body">
+                        <OrderAccordionItem
+                          orderId={order.orderId}
+                          itemCount={order.itemCount}
+                          status={order.status}
+                          iconColor={order.iconColor}
+                          iconBgClass={order.iconBgClass}
+                          orderSteps={order.orderSteps}
+                          isExpanded={order.isExpanded}
+                          parentId={order.parentId}
+                          orderType={order.orderType}
+                          outletName={order.outletName}
+                          totalAmount={order.totalAmount}
+                          paymentMethod={order.paymentMethod}
+                          showTimer={order.showTimer}
+                          remainingSeconds={order.remainingSeconds}
+                        />
                       </div>
                     </div>
-                  ))
-                ) : (
-                  <NoOrders message="No ongoing orders" />
-                )}
+                  </div>
+                ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           <div className="default-tab style-1">
             <ul
