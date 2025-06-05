@@ -41,24 +41,27 @@ export const OrderTypeModal = () => {
       isOpen={modals.orderType}
       title="Select Order Type" 
       onClose={() => closeModal('orderType')}
+      size="modal-dialog-centered"
     >
-      <div className="row g-3">
-        {orderTypes.map((type) => (
-          <div key={type.id} className="col-6">
-            <button 
-              className={`btn ${orderSettings.order_type === type.id ? 'btn-primary' : 'btn-outline-primary'} w-100 h-100 py-3 d-flex flex-column align-items-center justify-content-center`}
-              onClick={() => handleOrderTypeSelect(type.id)}
-              style={{
-                borderRadius: '12px',
-                minHeight: '100px',
-                transition: 'all 0.3s ease'
-              }}
-            >
-              <span className="mb-2" style={{ fontSize: '24px' }}>{type.icon}</span>
-              <span style={{ fontSize: '14px', fontWeight: '500' }}>{type.title}</span>
-            </button>
-          </div>
-        ))}
+      <div className="px-4">
+        <div className="row g-3">
+          {orderTypes.map((type) => (
+            <div key={type.id} className="col-6">
+              <button 
+                className={`btn ${orderSettings.order_type === type.id ? 'btn-primary' : 'btn-outline-primary'} w-100 h-100 py-3 d-flex flex-column align-items-center justify-content-center`}
+                onClick={() => handleOrderTypeSelect(type.id)}
+                style={{
+                  borderRadius: '12px',
+                  minHeight: '100px',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <span className="mb-2" style={{ fontSize: '24px' }}>{type.icon}</span>
+                <span style={{ fontSize: '14px', fontWeight: '500' }}>{type.title}</span>
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
     </BaseModal>
   );

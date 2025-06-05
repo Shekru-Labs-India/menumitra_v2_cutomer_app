@@ -11,7 +11,7 @@ export const AddToCartModal = () => {
   const { addToCart, cartItems } = useCart();
   const { user, setShowAuthOffcanvas, getAccessToken } = useAuth();
   const { outletId } = useOutlet();
- 
+  
   console.log('Modal Config Data:', modalConfig.data);
   console.log('Current Cart Items:', cartItems);
 
@@ -178,13 +178,13 @@ export const AddToCartModal = () => {
     
     // Only add/update the selected portion
     if (selectedPortion && quantities[selectedPortion] > 0) {
-      addToCart(
-        modalConfig.data, 
+        addToCart(
+          modalConfig.data, 
         Number(selectedPortion), 
         quantities[selectedPortion], 
         comments[selectedPortion] || ''
-      );
-    }
+        );
+      }
     
     closeModal('addToCart');
   };
@@ -391,7 +391,7 @@ export const AddToCartModal = () => {
         <div className="row">
           <div className="col-12">
             {renderPortionSelection()}
-          </div>
+            </div>
         </div>
       </div>
 
