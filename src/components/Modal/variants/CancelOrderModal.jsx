@@ -30,6 +30,8 @@ function CancelOrderModal({ isOpen, onClose, onConfirm, orderNumber }) {
     if (!reason.trim()) return;
     console.log('[CancelOrderModal] handleConfirm called with reason:', reason);
     onConfirm(reason);
+    onClose();
+    
   };
 
   if (!isOpen) return null;
