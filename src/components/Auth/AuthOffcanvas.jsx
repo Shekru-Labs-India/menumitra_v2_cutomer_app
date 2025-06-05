@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import Offcanvas from '../shared/Offcanvas';
+import Offcanvas from '../Shared/Offcanvas';
 import { useAuth } from '../../contexts/AuthContext';
 
 const STEPS = {
