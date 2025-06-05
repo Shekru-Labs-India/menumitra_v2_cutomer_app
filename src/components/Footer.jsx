@@ -28,28 +28,28 @@ function Footer() {
           <NavLink
             to="/"
             className={({ isActive }) =>
-              isActive ? "nav-link active" : "nav-link"
+              `nav-link ${isActive ? 'active text-primary' : ''}`
             }
             end
           >
-            <i class="fa-solid fa-house"></i>
+            <i className="fa-solid fa-house"></i>
           </NavLink>
           <NavLink
             to="/favourites"
             className={({ isActive }) =>
-              isActive ? "nav-link active" : "nav-link"
+              `nav-link ${isActive ? 'active text-primary' : ''}`
             }
           >
-            <i class="fa-solid fa-heart"></i>
+            <i className="fa-solid fa-heart"></i>
           </NavLink>
           <NavLink
             to="/checkout"
             className={({ isActive }) =>
-              isActive ? "nav-link active position-relative d-flex align-items-center justify-content-center" : "nav-link position-relative d-flex align-items-center justify-content-center"
+              `nav-link position-relative d-flex align-items-center justify-content-center ${isActive ? 'active text-primary' : ''}`
             }
           >
             <span style={{ position: "relative", display: "inline-block" }}>
-            <i class="fa-solid fa-cart-shopping"></i>
+            <i className="fa-solid fa-cart-shopping"></i>
               {cartCount > 0 && (
                 <span
                   className="position-absolute badge rounded-pill"
@@ -78,18 +78,18 @@ function Footer() {
           <NavLink
             to="/orders"
             className={({ isActive }) =>
-              isOrderRoute() ? "nav-link active" : "nav-link"
+              `nav-link ${isOrderRoute() ? 'active text-primary' : ''}`
             }
           >
-           <i class="fa-solid fa-clock-rotate-left"></i>
+           <i className="fa-solid fa-clock-rotate-left"></i>
           </NavLink>
           <NavLink
             to="/profile"
             className={({ isActive }) =>
-              isProfileRoute() ? "nav-link active" : "nav-link"
+              `nav-link ${isProfileRoute() ? 'active text-primary' : ''}`
             }
           >
-           <i class="fa-solid fa-user"></i>
+           <i className="fa-solid fa-user"></i>
           </NavLink>
         </div>
       </div>
