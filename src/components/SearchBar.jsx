@@ -43,6 +43,11 @@ function SearchBar({ onSearch, menuItems = [] }) {
     onSearch(filteredResults);
   };
 
+  const handleClear = () => {
+    setSearchQuery('');
+    onSearch([]); // Reset search results
+  };
+
   return (
     <div className="search-box mb-4">
       <div className="mb-3 input-group input-radius">
@@ -67,6 +72,16 @@ function SearchBar({ onSearch, menuItems = [] }) {
           value={searchQuery}
           onChange={handleSearch}
         />
+        {searchQuery && (
+          <span 
+            className="input-group-text" 
+            onClick={handleClear}
+            style={{ cursor: 'pointer' }}
+            title="Clear search"
+          >
+            <i class="fa-regular fa-circle-xmark" style={{color:"red"}}></i>
+          </span>
+        )}
       </div>
     </div>
   );
