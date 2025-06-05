@@ -143,19 +143,17 @@ const VerticalMenuCard = ({
           style={{ pointerEvents: isLoading ? "none" : "auto" }}
         >
           <div
-            class="border border-1 rounded-circle bg-white opacity-75 d-flex justify-content-center align-items-center"
-            style={{ position: "absolute", height: 25, width: 25 }}
+            class="rounded-circle bg-white opacity-75 d-flex justify-content-center align-items-center"
+            style={{  height: 25, width: 25 }}
           >
           <div className={`like-button ${initialIsFavorite ? "active" : ""}`}>
-            {isLoading ? (
-              <i className="fas fa-spinner fa-spin"></i>
-            ) : (
+         
               <i
                 className={`fa-${
                   initialIsFavorite ? "solid" : "regular"
                 } fa-heart`}
               ></i>
-            )}
+         
           </div>
           </div>
         </a>
