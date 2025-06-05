@@ -49,13 +49,14 @@ function Home() {
   const { menuCategories, menuItems, isLoading } = useMenuItems();
   const { user } = useAuth();
   const [greeting, setGreeting] = useState("");
-  const { cartItems, updateQuantity, addToCart, orderSettings } = useCart();
+  const { cartItems, updateQuantity, addToCart } = useCart();
+  const { orderSettings, isOutletOnlyUrl } = useOutlet();
   const [specialMenuItems, setSpecialMenuItems] = useState([]);
   const navigate = useNavigate();
   const [favoriteMenuIds, setFavoriteMenuIds] = useState(new Set());
   const location = useLocation();
 
-  const { outletId, isOutletOnlyUrl } = useOutlet();
+  const { outletId } = useOutlet();
   const { openModal, closeModal } = useModal();
 
   const [filteredMenuItems, setFilteredMenuItems] = useState([]);

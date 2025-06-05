@@ -1,12 +1,10 @@
 import React from "react";
 import { useModal } from '../contexts/ModalContext';
-import { useCart } from '../contexts/CartContext';
 import { useOutlet } from '../contexts/OutletContext';
 import { useNavigate } from 'react-router-dom';
 
 function OutletInfoBanner() {
   const { openModal } = useModal();
-  const { orderSettings } = useCart();
   const { 
     outletName,
     address,
@@ -14,7 +12,8 @@ function OutletInfoBanner() {
     fetchOutletDetailsByCode,
     isOutletOnlyUrl,
     tableId,
-    sectionName
+    sectionName,
+    orderSettings,
   } = useOutlet();
   const navigate = useNavigate();
 

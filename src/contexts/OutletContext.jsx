@@ -30,6 +30,12 @@ export const OutletProvider = ({ children }) => {
   const [outletDetails, setOutletDetails] = useState(getStoredOutlet() || null);
   const [isOutletOnlyUrl, setIsOutletOnlyUrl] = useState(false);
 
+  // Add new state for orderSettings
+  const [orderSettings, setOrderSettings] = useState(() => {
+    const savedSettings = localStorage.getItem('orderSettings');
+    return savedSettings ? JSON.parse(savedSettings) : { order_type: null };
+  });
+
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -66,21 +72,28 @@ export const OutletProvider = ({ children }) => {
     return null;
   }
 
+  // Add function to update orderSettings
+  const updateOrderSettings = (settings) => {
+    const newSettings = { ...orderSettings, ...settings };
+    setOrderSettings(newSettings);
+    localStorage.setItem('orderSettings', JSON.stringify(newSettings));
+  };
+
   useEffect(() => {
     const fullPath = window.location.pathname;
     const params = extractOutletParamsFromPath(fullPath);
-
     const stored = getStoredOutlet();
 
     if (params) {
       const { outletCode, sectionId, tableId } = params;
 
-      if (
-        !stored ||
-        stored.outletCode !== outletCode ||
-        stored.sectionId !== sectionId ||
-        stored.tableId !== tableId
-      ) {
+      // Case 1: Full URL with outlet/section/table - Set dine-in
+      updateOrderSettings({ order_type: 'dine-in' });
+
+      if (!stored || 
+          stored.outletCode !== outletCode || 
+          stored.sectionId !== sectionId || 
+          stored.tableId !== tableId) {
         localStorage.setItem('outletCode', outletCode);
         localStorage.setItem('sectionId', sectionId);
         localStorage.setItem('tableId', tableId);
@@ -93,17 +106,14 @@ export const OutletProvider = ({ children }) => {
             setOutletDetails(details);
           }
         });
-      } else {
-        setOutletInfo(stored);
-        setOutletId(stored?.outletId);
-        setOutletDetails(stored);
       }
-    } else if (stored) {
-      setOutletInfo(stored);
-      setOutletId(stored?.outletId);
-      setOutletDetails(stored);
     } else {
-      navigate('/all-outlets', { replace: true });
+      // Check if it's outlet-only URL
+      const outletOnlyPattern = /^(\/menumitra_customer_app)?\/o\d+\/?$/;
+      if (outletOnlyPattern.test(fullPath)) {
+        // Case 2: Outlet-only URL - Clear order type
+        updateOrderSettings({ order_type: null });
+      }
     }
   }, [location.pathname]);
 
@@ -173,14 +183,17 @@ export const OutletProvider = ({ children }) => {
     setOutletDetails(updatedInfo);
   };
 
+  // Modify clearOutletInfo to also clear orderSettings
   const clearOutletInfo = () => {
     localStorage.removeItem('selectedOutlet');
     localStorage.removeItem('outletCode');
     localStorage.removeItem('sectionId');
     localStorage.removeItem('tableId');
+    localStorage.removeItem('orderSettings');
     setOutletInfo(null);
     setOutletId(null);
     setOutletDetails(null);
+    setOrderSettings({ order_type: null });
   };
 
   // Memoize the context value to prevent unnecessary re-renders
@@ -214,9 +227,11 @@ export const OutletProvider = ({ children }) => {
       website: stored?.website,
       googleReview: stored?.googleReview,
       googleBusinessLink: stored?.googleBusinessLink,
-      sectionName: stored?.sectionName
+      sectionName: stored?.sectionName,
+      orderSettings,
+      updateOrderSettings,
     };
-  }, [outletInfo, isOutletOnlyUrl]);
+  }, [outletInfo, isOutletOnlyUrl, orderSettings]);
 
   return (
     <OutletContext.Provider value={contextValue}>

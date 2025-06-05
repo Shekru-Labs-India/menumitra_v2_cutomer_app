@@ -1,11 +1,11 @@
 import React from 'react';
 import BaseModal from '../BaseModal';
-import { useCart } from '../../../contexts/CartContext';
+import { useOutlet } from '../../../contexts/OutletContext';
 import { useModal } from '../../../contexts/ModalContext';
 
 export const OrderTypeModal = () => {
   const { closeModal, modals } = useModal();
-  const { updateOrderSettings, orderSettings } = useCart();
+  const { updateOrderSettings, orderSettings } = useOutlet();
 
   const orderTypes = [
     {
@@ -32,7 +32,6 @@ export const OrderTypeModal = () => {
 
   const handleOrderTypeSelect = (type) => {
     updateOrderSettings({ order_type: type });
-    localStorage.setItem('orderSettings', JSON.stringify({ ...orderSettings, order_type: type }));
     closeModal('orderType');
   };
 
@@ -43,7 +42,7 @@ export const OrderTypeModal = () => {
       onClose={() => closeModal('orderType')}
       size="modal-dialog-centered"
     >
-      <div className="px-4">
+      <div className="p-3">
         <div className="row g-3">
           {orderTypes.map((type) => (
             <div key={type.id} className="col-6">

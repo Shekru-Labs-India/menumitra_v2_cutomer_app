@@ -15,7 +15,7 @@ export const useCart = () => {
 
 export const CartProvider = ({ children, onLogout }) => {
   const { user, setShowAuthOffcanvas } = useAuth();
-  const { outletId, sectionId } = useOutlet();
+  const { outletId, sectionId, orderSettings } = useOutlet();
 
   // Initialize cart items from localStorage
   const [cartItems, setCartItems] = useState(() => {
@@ -23,30 +23,10 @@ export const CartProvider = ({ children, onLogout }) => {
     return savedCart ? JSON.parse(savedCart) : [];
   });
 
-  // Initialize orderSettings from localStorage or default values
-  const [orderSettings, setOrderSettings] = useState(() => {
-    const savedSettings = localStorage.getItem('orderSettings');
-    return savedSettings ? JSON.parse(savedSettings) : { order_type: null };
-  });
-
-  // Add useEffect to update settings when context values change
-  useEffect(() => {
-    setOrderSettings(prev => ({
-      ...prev,
-      outlet_id: 1,
-      section_id: sectionId
-    }));
-  }, [outletId, sectionId]);
-
   // Save cart items to localStorage when updated
   useEffect(() => {
     // localStorage.setItem('cart', JSON.stringify(cartItems));
   }, [cartItems]);
-
-  // Save order settings to localStorage when updated
-  useEffect(() => {
-    localStorage.setItem('orderSettings', JSON.stringify(orderSettings));
-  }, [orderSettings]);
 
   // Add item to cart with comment
   const addToCart = (menuItem, portionId, quantity, comment, immediate = false) => {
@@ -91,13 +71,6 @@ export const CartProvider = ({ children, onLogout }) => {
       }
       return prevItems;
     });
-  };
-
-  // Update order settings
-  const updateOrderSettings = (settings) => {
-    const newSettings = { ...orderSettings, ...settings };
-    setOrderSettings(newSettings);
-    localStorage.setItem('orderSettings', JSON.stringify(newSettings));
   };
 
   // Format cart for API
@@ -158,7 +131,6 @@ export const CartProvider = ({ children, onLogout }) => {
   const clearCart = useCallback(() => {
     setCartItems([]);
     localStorage.removeItem('cart');
-    localStorage.removeItem('orderSettings');
     
     // Call onLogout callback if provided
     if (onLogout) {
@@ -197,14 +169,12 @@ export const CartProvider = ({ children, onLogout }) => {
 
   const value = {
     cartItems,
-    orderSettings,
     addToCart,
     removeFromCart,
     updateQuantity,
     clearCart,
     getCartTotal,
     getCartCount,
-    updateOrderSettings,
     getFormattedOrderData,
     updateComment,
     getCartItemComment
