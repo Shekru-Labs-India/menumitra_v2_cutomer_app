@@ -76,7 +76,7 @@ function Checkout() {
     getCartCount,
     clearCart,
   } = useCart();
-  const { outletId, sectionId } = useOutlet();
+  const { outletId, sectionId, outletDetails } = useOutlet();
   const [checkoutDetails, setCheckoutDetails] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -270,14 +270,28 @@ function Checkout() {
       comment: item.comment || "",
     }));
 
+    // Get order settings from localStorage
+    const orderSettings = localStorage.getItem('orderSettings');
+    const orderType = orderSettings ? JSON.parse(orderSettings).order_type : null;
+
+    // Base payload
     const payload = {
       outlet_id: String(outletId),
       user_id: String(userId),
       section_id: String(sectionId),
-      order_type: "dine-in",
+      order_type: orderType || "takeaway", // Fallback to takeaway if no order type
       order_items: orderItems,
       action: "create_order",
     };
+
+    // Add table_id only for dine-in orders
+    if (orderType === "dine-in") {
+      // Get table_id from outletDetails or localStorage
+      const tableId = outletDetails?.tableId || localStorage.getItem('tableId');
+      if (tableId) {
+        payload.table_id = String(tableId);
+      }
+    }
 
     const response = await axios.post(
       `https://men4u.xyz/v2/common/create_order`,
