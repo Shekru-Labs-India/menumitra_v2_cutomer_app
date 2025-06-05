@@ -359,13 +359,8 @@ export const AddToCartModal = () => {
                     color: '#212529',
                     fontWeight: selectedPortion === portion.portion_id ? '500' : 'normal'
                   }}>
-                    {portion.portion_name} - ₹{portion.price}
+                    {`${portion.portion_name} - ₹${portion.price} (${portion.unit_value})`}
                   </span>
-                  {portion.unit_value && (
-                    <small style={{ fontSize: '12px', color: '#6c757d' }}>
-                      {portion.unit_value}
-                    </small>
-                  )}
                 </div>
                 {selectedPortion === portion.portion_id && (
                   <i className="fas fa-check" style={{ color: '#28a745' }}></i>
