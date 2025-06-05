@@ -286,7 +286,8 @@ function AllOutlets() {
                   }}
                 >
                   <div className="card-body p-3 rounded border border-1">
-                    <div className="d-flex justify-content-between align-items-start mb-2">
+                    {/* Header Section */}
+                    <div className="d-flex justify-content-between align-items-center mb-2">
                       <div className="d-flex align-items-center gap-2">
                         {outlet.veg_nonveg === "veg" ? (
                           <span className="d-flex align-items-center" title="Veg">
@@ -299,21 +300,22 @@ function AllOutlets() {
                         )}
                         <h6 className="card-title mb-0">{outlet.outlet_name}</h6>
                       </div>
-                      <span className={`badge ${outlet.is_open ? "bg-success" : "bg-danger"} rounded-pill`}>
+                      <span className={`badge rounded-pill px-3 py-2 ${outlet.is_open ? "bg-success" : ""}`} 
+                        style={!outlet.is_open ? { backgroundColor: '#dc3545' } : undefined}>
                         {outlet.is_open ? "OPEN" : "CLOSED"}
                       </span>
                     </div>
 
-                    <div className="card-text">
-                      <p className="text-muted small mb-1">
-                        <i className="fas fa-map-marker-alt me-2" style={{ fontSize: '16px', }}></i>
-                        {outlet.address}
+                    {/* Details Section */}
+                    <div className="card-text d-flex flex-column gap-2">
+                      <p className="d-flex align-items-center text-muted small mb-0">
+                        <i className="fas fa-map-marker-alt" style={{ fontSize: '16px', width: '24px' }}></i>
+                        <span>{outlet.address}</span>
                       </p>
-                      <p className="text-muted small mb-2">
-                        <i className="fas fa-phone me-2" style={{ fontSize: '16px' }}></i>
-                        {outlet.mobile}
+                      <p className="d-flex align-items-center text-muted small mb-0">
+                        <i className="fas fa-phone" style={{ fontSize: '16px', width: '24px' }}></i>
+                        <span>{outlet.mobile}</span>
                       </p>
-                      <div className="d-flex align-items-center"></div>
                     </div>
                   </div>
                 </div>
