@@ -169,7 +169,7 @@ const VerticalMenuCard = ({
               className="btn btn-primary add-btn light w-100"
               href="javascript:void(0);"
               onClick={handleAddToCartClick}
-            >
+            ><i class="fa-solid fa-cart-shopping me-2"></i>
               Add to cart
             </a>
           ) : null}

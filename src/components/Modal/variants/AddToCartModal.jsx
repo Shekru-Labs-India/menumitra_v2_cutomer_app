@@ -479,6 +479,7 @@ export const AddToCartModal = () => {
             opacity: hasValidQuantity() ? 1 : 0.5
           }}
         >
+        <i class="fa-solid fa-cart-shopping me-2"></i>
           {isInCart ? 'Update Cart' : 'Add to Cart'}
         </button>
       </div>

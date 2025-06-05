@@ -235,7 +235,7 @@ function Home() {
         {/* Page Content */}
         <div className="page-content">
           <div className=" pt-0">
-            <div className="container p-b40">
+            <div className="container p-b40 p-t0">
               {/* Search */}
               <div className="search-box mb-4">
                 <div className="mb-3 input-group input-radius">
