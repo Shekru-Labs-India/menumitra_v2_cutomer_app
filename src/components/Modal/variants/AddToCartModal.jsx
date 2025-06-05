@@ -253,6 +253,21 @@ export const AddToCartModal = () => {
     }
   }, [modalConfig.data, cartItems, getAccessToken, outletId]); // Add outletId to dependencies
 
+  // Add state for dropdown
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // Add click outside listener to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isDropdownOpen && !event.target.closest('.position-relative')) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isDropdownOpen]);
+
   // Update the portion selection UI section
   const renderPortionSelection = () => {
     if (isLoading) {
@@ -281,59 +296,80 @@ export const AddToCartModal = () => {
       );
     }
 
-    return menuDetails.portions.map(portion => (
-      <div 
-        className={
-          menuDetails.portions.length === 1 ? 'col-12' : 
-          menuDetails.portions.length === 2 ? 'col-6' : 
-          'col-4'
-        }
-        key={portion.portion_id}
-      >
+    return (
+      <div className="position-relative">
         <div 
-          onClick={() => handlePortionChange(portion.portion_id)}
+          className="form-control d-flex justify-content-between align-items-center"
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           style={{
-            border: `1.5px solid ${selectedPortion === portion.portion_id ? '#28a745' : '#e9ecef'}`,
+            border: '1.5px solid #e9ecef',
             borderRadius: '12px',
-            padding: '12px 8px',
+            padding: '12px 16px',
+            fontSize: '14px',
             cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            backgroundColor: selectedPortion === portion.portion_id ? '#f8fff8' : 'white',
-            width: '100%',
-            display: 'flex',
-            justifyContent: 'center'
+            backgroundColor: 'white',
+            color: '#212529',
+            userSelect: 'none'
           }}
         >
-          <div className="d-flex flex-column align-items-center">
-            <span style={{ 
-              fontSize: '16px',
-              fontWeight: '500',
-              color: '#212529',
-              marginBottom: '4px'
-            }}>
-              ₹{portion.price}
-            </span>
-            <div className="d-flex flex-column align-items-center">
-              <span style={{ 
-                fontSize: '13px',
-                color: '#6c757d',
-                textTransform: 'capitalize'
-              }}>
-                {portion.portion_name.toLowerCase()}
-              </span>
-              {portion.unit_value && (
-                <small style={{ 
-                  fontSize: '11px',
-                  color: '#adb5bd'
-                }}>
-                  {portion.unit_value}
-                </small>
-              )}
-            </div>
-          </div>
+          <span>
+            {selectedPortion ? 
+              `${menuDetails.portions.find(p => p.portion_id === selectedPortion)?.portion_name} - ₹${menuDetails.portions.find(p => p.portion_id === selectedPortion)?.price} (${menuDetails.portions.find(p => p.portion_id === selectedPortion)?.unit_value})` 
+              : 'Select a portion size'}
+          </span>
+          <i className={`fas fa-chevron-${isDropdownOpen ? 'up' : 'down'}`} style={{ color: '#6c757d' }}></i>
         </div>
+
+        {isDropdownOpen && (
+          <div 
+            className="position-absolute w-100 mt-1 shadow-sm"
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              border: '1.5px solid #e9ecef',
+              zIndex: 1000,
+              overflow: 'hidden'
+            }}
+          >
+            {menuDetails.portions.map(portion => (
+              <div
+                key={portion.portion_id}
+                onClick={() => {
+                  handlePortionChange(portion.portion_id);
+                  setIsDropdownOpen(false);
+                }}
+                className="d-flex justify-content-between align-items-center"
+                style={{
+                  padding: '12px 16px',
+                  cursor: 'pointer',
+                  backgroundColor: selectedPortion === portion.portion_id ? '#f8fff8' : 'white',
+                  borderBottom: '1px solid #e9ecef',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <div className="d-flex flex-column">
+                  <span style={{ 
+                    fontSize: '14px',
+                    color: '#212529',
+                    fontWeight: selectedPortion === portion.portion_id ? '500' : 'normal'
+                  }}>
+                    {portion.portion_name} - ₹{portion.price}
+                  </span>
+                  {portion.unit_value && (
+                    <small style={{ fontSize: '12px', color: '#6c757d' }}>
+                      {portion.unit_value}
+                    </small>
+                  )}
+                </div>
+                {selectedPortion === portion.portion_id && (
+                  <i className="fas fa-check" style={{ color: '#28a745' }}></i>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-    ));
+    );
   };
 
   return (
@@ -346,8 +382,10 @@ export const AddToCartModal = () => {
         <label className="text-secondary mb-2" style={{ fontSize: '14px' }}>
           Select Portion
         </label>
-        <div className="row g-2">
-          {renderPortionSelection()}
+        <div className="row">
+          <div className="col-12">
+            {renderPortionSelection()}
+          </div>
         </div>
       </div>
 
