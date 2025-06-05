@@ -259,46 +259,42 @@ function Checkout() {
   };
 
   const createOrder = async () => {
-    try {
-      const auth = JSON.parse(localStorage.getItem("auth"));
-      const accessToken = auth?.accessToken;
-      const userId = auth?.userId;
+    const auth = JSON.parse(localStorage.getItem("auth"));
+    const accessToken = auth?.accessToken;
+    const userId = auth?.userId;
 
-      const orderItems = cartItems.map((item) => ({
-        menu_id: item.menuId,
-        quantity: item.quantity,
-        portion_name: item.portionName.toLowerCase(),
-        comment: item.comment || "",
-      }));
+    const orderItems = cartItems.map((item) => ({
+      menu_id: item.menuId,
+      quantity: item.quantity,
+      portion_name: item.portionName.toLowerCase(),
+      comment: item.comment || "",
+    }));
 
-      const payload = {
-        outlet_id: String(outletId),
-        user_id: String(userId),
-        section_id: String(sectionId),
-        order_type: "parcel",
-        order_items: orderItems,
-        action: "create_order",
-      };
+    const payload = {
+      outlet_id: String(outletId),
+      user_id: String(userId),
+      section_id: String(sectionId),
+      order_type: "dine-in",
+      order_items: orderItems,
+      action: "create_order",
+    };
 
-      const response = await axios.post(
-        `https://men4u.xyz/v2/common/create_order`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        }
-      );
-
-      if (response.data?.order_id) {
-        clearCart();
-        localStorage.removeItem("cart");
-        navigate(`/orders`);
+    const response = await axios.post(
+      `https://men4u.xyz/v2/common/create_order`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
       }
-    } catch (error) {
-      throw error; // Re-throw to be caught by handleCheckout
+    );
+
+    if (response.data?.order_id) {
+      clearCart();
+      localStorage.removeItem("cart");
+      navigate(`/orders`);
     }
   };
 
@@ -334,7 +330,7 @@ function Checkout() {
       const response = await axios.post(
         "https://men4u.xyz/v2/user/complete_or_cancel_existing_order_create_new_order",
         {
-          order_number: existingOrderModal.orderDetails.order_number,
+          order_id: existingOrderModal.orderDetails.order_number,
           user_id: userId,
           order_status: "cancelled",
           outlet_id: outletId.toString(),
@@ -390,7 +386,7 @@ function Checkout() {
       const response = await axios.post(
         "https://men4u.xyz/v2/user/complete_or_cancel_existing_order_create_new_order",
         {
-          order_number: existingOrderModal.orderDetails.order_number,
+          order_id: existingOrderModal.orderDetails.order_number,
           user_id: userId,
           order_status: "completed",
           outlet_id: outletId.toString(),

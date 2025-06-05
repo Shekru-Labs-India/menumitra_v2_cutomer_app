@@ -266,6 +266,8 @@ function Home() {
                   {isSearching ? 'Search Results' : 'Menus'}
                 </span>
               </div>
+
+              
               <div className="row g-3 mb-3">
                 {isLoading ? (
                   // Skeleton for VerticalMenuCards
