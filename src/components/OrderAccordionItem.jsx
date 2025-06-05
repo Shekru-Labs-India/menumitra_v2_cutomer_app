@@ -58,13 +58,9 @@ const OrderAccordionItem = ({
         <button
           className={`accordion-button ${isExpanded ? '' : 'collapsed'}`}
           type="button"
-          data-bs-toggle="collapse"
-          data-bs-target={`#${collapseId}`}
-          aria-expanded={isExpanded}
-          aria-controls={collapseId}
           onClick={handleViewDetails}
         >
-          <div className="d-flex align-items-center w-100">
+          <div className="d-flex align-items-center w-100" style={{ backgroundImage: 'none' }}>
             <div className="me-3">
               {showTimer ? (
                 <Timer initialSeconds={remainingSeconds} />
