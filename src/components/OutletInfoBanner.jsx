@@ -113,10 +113,10 @@ function OutletInfoBanner() {
             </button>
           ) : (
             <div className="d-flex align-items-center">
-              <span className="fw-normal text-dark me-2">
+              <span className="fw-normal text-light me-2">
                 {sectionName ? sectionName : 'SectionName'}
               </span> 
-              <small className="fw-normal text-dark">
+              <small className="fw-normal text-light">
              - {tableId ? tableId : 'N/A'}
               </small>
             </div>
