@@ -11,7 +11,7 @@ function MenuMitra() {
         style={{ height: 55, width: 55, marginRight: 12 }}
       />
       <div className="d-flex flex-column">
-        <span className="fw-bold fs-4">MenuMitra</span>
+        <span className="fw-semibold fs-4">MenuMitra</span>
         <span className="text-muted" style={{ fontSize: 14 }}>v2.0</span>
       </div>
     </div>
