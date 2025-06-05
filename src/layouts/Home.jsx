@@ -263,123 +263,50 @@ function Home() {
               {/* Search */}
               {/* Dashboard Area */}
               <div className="dashboard-area">
-           
-                {isLoading ? (
-                  <div className="categories-box">
-                    <Swiper
-                      spaceBetween={15}
-                      slidesPerView={1.5}
-                      className="categories-swiper"
-                      breakpoints={{
-                        320: { slidesPerView: 1.5 },
-                        480: { slidesPerView: 2.5 },
-                        768: { slidesPerView: 3.5 },
-                        1024: { slidesPerView: 4.5 },
-                      }}
-                    >
-                      {[1, 2, 3, 4].map((item) => (
-                        <SwiperSlide key={item}>
-                          <div 
-                            style={{ 
-                              width: "100%",
-                              height: "160px",
-                              borderRadius: "16px",
-                              overflow: "hidden",
-                              position: "relative",
-                              backgroundColor: "#D1D1D1"
-                            }}
-                          >
-                            <Skeleton
-                              height="100%"
-                              width="100%"
-                              baseColor="#C8C8C8"
-                              highlightColor="#E0E0E0"
-                              style={{
-                                position: "absolute",
-                                top: 0,
-                                left: 0,
-                                opacity: 0.8
-                              }}
-                            />
-                            <div 
-                              style={{
-                                position: "absolute",
-                                bottom: "15px",
-                                left: "15px",
-                                zIndex: 1,
-                                width: "80%"
-                              }}
-                            >
-                              <Skeleton
-                                height={24}
-                                width="60%"
-                                baseColor="#C8C8C8"
-                                highlightColor="#E0E0E0"
-                                style={{ 
-                                  marginBottom: "4px",
-                                  opacity: 0.9
-                                }}
-                              />
-                              <Skeleton
-                                height={16}
-                                width="40%"
-                                baseColor="#C8C8C8"
-                                highlightColor="#E0E0E0"
-                                style={{ 
-                                  opacity: 0.7
-                                }}
-                              />
-                            </div>
-                          </div>
-                        </SwiperSlide>
-                      ))}
-                    </Swiper>
-                  </div>
-                ) : (
-                  <CategorySwiper
-                    categories={menuCategories}
-                    onCategoryClick={handleCategoryClick}
-                    ui={{
-                      card: {
-                        width: "100%",
-                        height: "160px",
-                        borderRadius: "16px",
-                        padding: "25px 15px",
-                        margin: "8px",
-                        shadow: "0 4px 12px rgba(0,0,0,0.15)",
-                        overlay: "rgba(0,0,0,0.6)",
-                        transition: "all 0.3s ease",
-                        hoverTransform: "translateY(-5px) scale(1.02)",
-                        backgroundColor: "#ffffff",
-                      },
-                      container: {
-                        width: "100%",
-                        padding: "20px",
-                        margin: "30px 0",
-                        backgroundColor: "#f5f5f5",
-                      },
-                      icon: {
-                        size: "3x",
-                        color: "#ffffff",
-                        marginBottom: "12px",
-                      },
-                      text: {
-                        titleSize: "16px",
-                        titleColor: "#ffffff",
-                        titleWeight: "600",
-                        countSize: "14px",
-                        countColor: "rgba(255,255,255,0.8)",
-                        countWeight: "400",
-                      },
-                    }}
-                    breakpoints={{
-                      320: { slidesPerView: 1.5 },
-                      480: { slidesPerView: 2.5 },
-                      768: { slidesPerView: 3.5 },
-                      1024: { slidesPerView: 4.5 },
-                    }}
-                  />
-                )}
+                <CategorySwiper
+                  categories={menuCategories}
+                  onCategoryClick={handleCategoryClick}
+                  isLoading={isLoading}
+                  ui={{
+                    card: {
+                      width: "100%",
+                      height: "160px",
+                      borderRadius: "16px",
+                      padding: "25px 15px",
+                      margin: "8px",
+                      shadow: "0 4px 12px rgba(0,0,0,0.15)",
+                      overlay: "rgba(0,0,0,0.6)",
+                      transition: "all 0.3s ease",
+                      hoverTransform: "translateY(-5px) scale(1.02)",
+                      backgroundColor: "#ffffff",
+                    },
+                    container: {
+                      width: "100%",
+                      padding: "20px",
+                      margin: "30px 0",
+                      backgroundColor: "#f5f5f5",
+                    },
+                    icon: {
+                      size: "3x",
+                      color: "#ffffff",
+                      marginBottom: "12px",
+                    },
+                    text: {
+                      titleSize: "16px",
+                      titleColor: "#ffffff",
+                      titleWeight: "600",
+                      countSize: "14px",
+                      countColor: "rgba(255,255,255,0.8)",
+                      countWeight: "400",
+                    },
+                  }}
+                  breakpoints={{
+                    320: { slidesPerView: 1.5 },
+                    480: { slidesPerView: 2.5 },
+                    768: { slidesPerView: 3.5 },
+                    1024: { slidesPerView: 4.5 },
+                  }}
+                />
                 
                 <div className="title-bar">
                   <span className="title mb-0 font-18">Menus</span>
