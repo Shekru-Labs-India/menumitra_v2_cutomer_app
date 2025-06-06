@@ -449,14 +449,16 @@ function Home() {
                           discount={menuItem.offer > 0 ? `${menuItem.offer}%` : null}
                           menuItem={{
                             menuId: menuItem.menu_id,
+                            menuCatId: menuItem.menu_cat_id,
                             menuName: menuItem.menu_name,
                             portions: menuItem.portions,
+                            image: menuItem.image,
+                            offer: menuItem.offer,
+                            rating: menuItem.rating,
+                            description: menuItem.description
                           }}
-                          onFavoriteClick={() =>
-                            handleFavoriteClick(menuItem.menu_id)
-                          }
+                          onFavoriteClick={() => handleFavoriteClick(menuItem.menu_id)}
                           isFavorite={menuItem.is_favourite === 1}
-                          productUrl="#"
                         />
                       </div>
                     ))}

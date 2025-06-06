@@ -5,6 +5,7 @@ import { useModal } from "../contexts/ModalContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useCart } from "../contexts/CartContext";
 import "./HorizontalMenuCard.css"; // We'll create this CSS file next
+import { Link } from "react-router-dom";
 
 const HorizontalMenuCard = ({
   image,
@@ -65,6 +66,11 @@ const HorizontalMenuCard = ({
     }
   };
 
+  // Generate the product URL from menuItem data with safety checks
+  const detailPageUrl = menuItem?.menuId && menuItem?.menuCatId
+    ? `/product-detail/${menuItem.menuId}/${menuItem.menuCatId}`
+    : "#";
+
   return (
     <div 
       className="horizontal-menu-card card product-card position-relative shadow border border-1 border-lighth"
@@ -78,12 +84,14 @@ const HorizontalMenuCard = ({
           className="position-relative"
           style={{ width: "95px", height: "95px" }}
         >
-          <img
-            src={image || fallbackImage}
-            alt={title}
-            className="rounded-3 w-100 h-100"
-            style={{ objectFit: "cover" }}
-          />
+          <Link to={detailPageUrl}>
+            <img
+              src={image || fallbackImage}
+              alt={title}
+              className="rounded-3 w-100 h-100"
+              style={{ objectFit: "cover" }}
+            />
+          </Link>
           <button
             className={`position-absolute top-0 end-0 btn btn-link p-0 m-2 ${
               isFavorite ? "text-danger" : "text-white"
@@ -106,9 +114,9 @@ const HorizontalMenuCard = ({
         {/* Right side - Content */}
         <div className="ms-3 flex-grow-1 pe-5">
           <h5 className="mb-2">
-            <a href={productUrl} className="text-dark text-decoration-none">
+            <Link to={detailPageUrl} className="text-dark text-decoration-none">
               {title}
-            </a>
+            </Link>
           </h5>
 
           {/* Price Section */}
@@ -143,13 +151,13 @@ const HorizontalMenuCard = ({
         </div>
 
         {/* Cart Button - Show different states based on cart */}
-        <a
-          href={productUrl}
+        <Link
+          to={detailPageUrl}
           className="position-absolute end-0 top-50 translate-middle-y me-3 btn btn-success rounded-3 p-2"
           onClick={handleAddToCart}
         >
           <i className="fa fa-shopping-cart text-white"></i>
-        </a>
+        </Link>
       </div>
     </div>
   );
