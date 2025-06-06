@@ -393,7 +393,7 @@ function Checkout() {
         {
           order_id: existingOrderModal.orderDetails.order_id.toString(),
           user_id: userId,
-          order_status: "completed",
+          order_status: "paid",
           outlet_id: outletId.toString(),
           section_id: sectionId.toString(),
           order_type: "parcel",
