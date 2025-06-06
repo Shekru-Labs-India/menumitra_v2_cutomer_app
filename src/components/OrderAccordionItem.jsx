@@ -8,9 +8,7 @@ const OrderAccordionItem = ({
   status,
   iconColor = '#FFA902', // default color
   iconBgClass = '', // for bg-primary, bg-danger etc
-  // orderSteps,
   isExpanded = false,
-  parentId = 'accordionExample',
   showTimer = false,
   remainingSeconds = 0
 }) => {
@@ -18,7 +16,6 @@ const OrderAccordionItem = ({
 
   // Generate unique IDs for accessibility
   const headingId = `heading${orderId}`;
-  const collapseId = `collapse${orderId}`;
 
   // SVG for the box icon in header
   const BoxIcon = ({ color }) => (
@@ -34,74 +31,41 @@ const OrderAccordionItem = ({
     </svg>
   );
 
-  // SVG for the status circles in timeline
-  const StatusCircle = ({ color = '#027335' }) => (
-    <svg width={14} height={14} viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width={14} height={14} rx={7} fill={color} />
-    </svg>
-  );
-
   const handleViewDetails = (e) => {
     e.preventDefault();
     e.stopPropagation(); // Prevent accordion toggle
     navigate(`/order-detail/${orderId}`);
   };
 
-  const handleAccordionToggle = (e) => {
-    e.preventDefault();
-    // Let Bootstrap handle the accordion toggle
-  };
-
   return (
-    <div className="accordion-item">
-      <div className="accordion-header" id={headingId}>
-        <button
-          className={`accordion-button ${isExpanded ? '' : 'collapsed'}`}
-          type="button"
-          onClick={handleViewDetails}
-        >
-          <div className="d-flex align-items-center w-100" style={{ backgroundImage: 'none' }}>
-            <div className="me-3">
-              {showTimer ? (
-                <Timer initialSeconds={remainingSeconds} />
-              ) : (
+    <>
+      {showTimer && (
+        <div className="d-flex justify-content-center align-items-center mb-2">
+          <Timer initialSeconds={remainingSeconds} />
+        </div>
+      )}
+      <div className="accordion-item">
+        <div className="accordion-header" id={headingId}>
+          <button
+            className={`accordion-button ${isExpanded ? '' : 'collapsed'}`}
+            type="button"
+            onClick={handleViewDetails}
+          >
+            <div className="d-flex align-items-center w-100" style={{ backgroundImage: 'none' }}>
+              <div className="me-3">
                 <div className={`icon-box ${iconBgClass}`}>
                   <BoxIcon color={iconColor} />
                 </div>
-              )}
+              </div>
+              <div className="flex-grow-1">
+                <h6 className="mb-0">Order ID #{orderId}</h6>
+                <span className="text-soft">{itemCount} Items {status}</span>
+              </div>
             </div>
-            <div className="flex-grow-1">
-              <h6 className="mb-0">Order ID #{orderId}</h6>
-              <span className="text-soft">{itemCount} Items {status}</span>
-            </div>
-          </div>
-        </button>
-      </div>
-      {/* <div
-        id={collapseId}
-        className={`accordion-collapse collapse ${isExpanded ? 'show' : ''}`}
-        aria-labelledby={headingId}
-        data-bs-parent={`#${parentId}`}
-      >
-        <div className="accordion-body pb-0">
-          <ul className="p-2">
-            {orderSteps.map((step, index) => (
-              <li key={index} className={`d-flex align-items-start ${index !== orderSteps.length - 1 ? 'mb-3' : ''}`}>
-                <div className="me-3">
-                  <StatusCircle color={step.completed ? '#027335' : '#7D8FAB'} />
-                </div>
-                <div>
-                  <h6 className={`sub-title mb-1 ${!step.completed ? 'text-soft' : ''}`}>
-                    {step.title}
-                  </h6>
-                  <span className="text-soft">{step.timestamp}</span>
-                </div>
-              </li>
-            ))}
-          </ul>
+          </button>
         </div>
-      </div> */}
-    </div>
+      </div>
+    </>
   );
 };
 
