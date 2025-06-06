@@ -365,18 +365,20 @@ function Orders() {
 
                           {/* Right side with cancel button */}
                           <div className="d-flex align-items-center gap-3">
-                            <button 
-                              className="btn btn-sm me-2 text-white"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleCancelOrder(order.orderId, order.orderNumber);
-                              }}
-                              style={{
-                                backgroundColor: '#FF0000',
-                              }}
-                            >
-                              Cancel Order
-                            </button>
+                            {order.status === 'placed' && (
+                              <button 
+                                className="btn btn-sm me-2 text-white"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCancelOrder(order.orderId, order.orderNumber);
+                                }}
+                                style={{
+                                  backgroundColor: '#FF0000',
+                                }}
+                              >
+                                Cancel Order
+                              </button>
+                            )}
                             {/* The collapse arrow will be automatically placed here by Bootstrap */}
                           </div>
                         </div>
