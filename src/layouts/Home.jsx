@@ -215,7 +215,7 @@ function Home() {
     try {
       const authData = localStorage.getItem("auth");
       const userData = authData ? JSON.parse(authData) : null;
-      
+
       const response = await fetch(
         `${API_BASE_URL}/user/get_all_menu_list_by_category`,
         {
@@ -292,19 +292,22 @@ function Home() {
             <div className="container p-b40 p-t0">
               <SearchBar onSearch={handleSearch} menuItems={menuItems || []} />
 
-              <div className="title-bar">
+              <div className="title-bar d-flex justify-content-between align-items-center" onClick={() => navigate('/categories')} style={{cursor: 'pointer'}}>
                 <span className="title mb-0 font-18">
                   {isSearching ? "Search Results" : "Categories"}
                 </span>
+                <i className="fas fa-chevron-right"></i>
               </div>
-              
+
               {/* Update CategorySwiper with new data */}
-              <CategorySwiper 
+              <CategorySwiper
                 categories={categoriesData.categories}
                 isLoading={isLoading}
                 onCategoryClick={handleCategoryClick}
               />
-
+              <div class="title-bar mt-0">
+                <span class="title mb-0 font-18">Menus</span>
+              </div>
               <div className="row g-3 mb-3">
                 {isLoading ? (
                   // Skeleton for VerticalMenuCards
