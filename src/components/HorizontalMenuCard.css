@@ -1,0 +1,75 @@
+/* Container for horizontal scrolling */
+.horizontal-menu-container {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  gap: 1rem;
+  padding: 1rem;
+  margin: 0 -1rem; /* Negative margin to extend to screen edges */
+  width: calc(100% + 2rem); /* Compensate for the negative margins */
+  position: relative;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.horizontal-menu-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Individual card styles */
+.horizontal-menu-card {
+  flex: 0 0 auto;
+  width: calc(100vw - 3rem); /* Full viewport width minus padding */
+  max-width: 400px; /* Maximum width for larger screens */
+  min-width: 280px; /* Minimum width for smaller screens */
+  scroll-snap-align: start;
+  cursor: grab;
+  transition: transform 0.2s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  margin-right: 1rem; /* Space between cards */
+}
+
+/* First card specific styling */
+.horizontal-menu-card:first-child {
+  margin-left: 1rem; /* Add left margin to first card */
+}
+
+/* Last card specific styling */
+.horizontal-menu-card:last-child {
+  margin-right: 1rem; /* Add right margin to last card */
+}
+
+.horizontal-menu-card:active {
+  cursor: grabbing;
+  transform: scale(0.98);
+}
+
+/* Smooth scrolling behavior */
+.horizontal-menu-container {
+  scroll-behavior: smooth;
+}
+
+/* Media queries for responsive design */
+@media screen and (min-width: 768px) {
+  .horizontal-menu-card {
+    width: calc(50vw - 2rem); /* Two cards visible on tablets */
+  }
+}
+
+@media screen and (min-width: 1024px) {
+  .horizontal-menu-card {
+    width: calc(33.333vw - 2rem); /* Three cards visible on desktop */
+  }
+}
+
+/* Add momentum-based scrolling for iOS */
+@supports (-webkit-overflow-scrolling: touch) {
+  .horizontal-menu-container {
+    -webkit-overflow-scrolling: touch;
+  }
+} 

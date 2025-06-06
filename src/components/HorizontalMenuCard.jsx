@@ -4,6 +4,7 @@ import fallbackImage from "../assets/images/food/small/6.png";
 import { useModal } from "../contexts/ModalContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useCart } from "../contexts/CartContext";
+import "./HorizontalMenuCard.css"; // We'll create this CSS file next
 
 const HorizontalMenuCard = ({
   image,
@@ -38,9 +39,40 @@ const HorizontalMenuCard = ({
     openModal("addToCart", menuItem);
   };
 
+  // Add touch handling for swipe gestures
+  const [touchStart, setTouchStart] = React.useState(null);
+  const [touchEnd, setTouchEnd] = React.useState(null);
+
+  // the required distance between touchStart and touchEnd to be detected as a swipe
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e) => {
+    setTouchEnd(null); // otherwise the swipe is fired even with usual touch events
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe || isRightSwipe) {
+      // You can add swipe actions here if needed
+      console.log('swiped', isLeftSwipe ? 'left' : 'right');
+    }
+  };
+
   return (
-    <div className="card product-card position-relative shadow border border-1 border-lighth">
-      <div className="d-flex align-items-center p-3 ">
+    <div 
+      className="horizontal-menu-card card product-card position-relative shadow border border-1 border-lighth"
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
+      <div className="d-flex align-items-center p-3">
         {/* Left side - Image and Favorite Button */}
         <div
           className="position-relative"

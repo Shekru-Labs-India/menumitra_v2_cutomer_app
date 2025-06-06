@@ -1,21 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import CategorySwiper from "../components/CategorySwiper/CategorySwiper";
-
 import BannerSwiper from "../components/BannerSwiper/BannerSwiper";
-import apiClient from "../services/apiService";
 import VerticalMenuCard from "../components/VerticalMenuCard";
 import { useAuth } from "../contexts/AuthContext";
 import { useCart } from "../contexts/CartContext";
-import { useCategories } from "../hooks/useCategories";
 import HorizontalMenuCard from "../components/HorizontalMenuCard";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { FreeMode } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/free-mode";
-import { Autoplay } from "swiper/modules";
 import { useMenuItems } from "../hooks/useMenuItems";
 import { useOutlet } from "../contexts/OutletContext";
 import Skeleton from "react-loading-skeleton";
@@ -46,10 +38,8 @@ function extractOutletParamsFromPath(pathname) {
 }
 
 function Home() {
-  const { menuCategories, menuItems, isLoading } = useMenuItems();
-  const { user } = useAuth();
-  const [greeting, setGreeting] = useState("");
-  const { cartItems, updateQuantity, addToCart } = useCart();
+  const { menuItems, isLoading } = useMenuItems();
+  const { cartItems } = useCart();
   const { orderSettings, isOutletOnlyUrl } = useOutlet();
   const [specialMenuItems, setSpecialMenuItems] = useState([]);
   const navigate = useNavigate();
@@ -57,7 +47,7 @@ function Home() {
   const location = useLocation();
 
   const { outletId } = useOutlet();
-  const { openModal, closeModal } = useModal();
+  const { openModal } = useModal();
 
   const [filteredMenuItems, setFilteredMenuItems] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -84,7 +74,7 @@ function Home() {
   // Update greeting when component mounts and every minute
   useEffect(() => {
     const updateGreeting = () => {
-      setGreeting(getGreeting());
+      // setGreeting(getGreeting());
     };
 
     // Set initial greeting
@@ -433,255 +423,173 @@ function Home() {
                 </div>
               )}
 
-              {/* Recomended Start */}
-               {/* Special Menus Section */}
-            <div className="title-bar mt-4">
-              <span className="title mb-0 font-18">Special Menus</span>
-            </div>
-            <div className="categories-box p-0 m-0">
-              {specialMenuItems && specialMenuItems.length > 0 ? (
-                <div className="swiper-btn-center-lr">
-                  <Swiper
-                    spaceBetween={10}
-                    slidesPerView={1}
-                    className="special-menu-swiper"
-                    breakpoints={{
-                      320: {
-                        slidesPerView: 1.2,
-                        slidesOffsetAfter: 0,
-                      },
-                      576: {
-                        slidesPerView: 2.2,
-                        slidesOffsetAfter: 0,
-                      },
-                      768: {
-                        slidesPerView: 2.5,
-                        slidesOffsetAfter: 0,
-                      },
-                    }}
-                    loop={true}
-                    autoplay={{
-                      delay: 3000,
-                      disableOnInteraction: false,
-                      pauseOnMouseEnter: true,
-                    }}
-                    watchSlidesProgress={true}
-                    watchslidesvisibility={1}
-                    centeredSlidesBounds={true}
-                    resistanceRatio={0}
-                    touchRatio={1}
-                    touchAngle={45}
-                    grabCursor={true}
-                    momentumbounce={1}
-                    momentumbounceratio={1}
-                    momentumratio={1}
-                    touchEventsTarget="wrapper"
-                    touchStartPreventDefault={false}
-                    touchMoveStopPropagation={true}
-                    cssMode={true}
-                    modules={[Autoplay]}
-                  >
+              {/* Special Menus Section */}
+              <div className="title-bar mt-4">
+                <span className="title mb-0 font-18">Special Menus</span>
+              </div>
+              <div className="categories-box p-0 m-0">
+                {specialMenuItems && specialMenuItems.length > 0 ? (
+                  <div className="horizontal-menu-container">
                     {specialMenuItems.map((menuItem) => (
-                      <SwiperSlide
-                        key={menuItem.menu_id}
-                        style={{
-                          width: "auto",
-                          height: "auto",
-                        }}
-                      >
-                        <div className="px-2">
-                          <HorizontalMenuCard
-                            image={menuItem.image || null}
-                            title={menuItem.menu_name}
-                            currentPrice={
-                              menuItem.portions && menuItem.portions[0]
-                                ? menuItem.portions[0].price
-                                : 0
-                            }
-                            originalPrice={
-                              menuItem.portions && menuItem.portions[0]
-                                ? menuItem.portions[0].price +
-                                  (menuItem.portions[0].price *
-                                    menuItem.offer) /
-                                    100
-                                : 0
-                            }
-                            discount={
-                              menuItem.offer > 0 ? `${menuItem.offer}%` : null
-                            }
-                            menuItem={{
-                              menuId: menuItem.menu_id,
-                              menuName: menuItem.menu_name,
-                              portions: menuItem.portions,
-                              // ... other menu item data
-                            }}
-                            onFavoriteClick={() =>
-                              handleFavoriteClick(menuItem.menu_id)
-                            }
-                            isFavorite={menuItem.is_favourite === 1}
-                            productUrl="#"
-                            isInCart={false}
-                            quantity={getCartItemQuantity(menuItem.menu_id)}
-                            onIncrement={() =>
-                              handleQuantityChange(
-                                menuItem.menu_id,
-                                getCartItemQuantity(menuItem.menu_id) + 1
-                              )
-                            }
-                            onDecrement={() =>
-                              handleQuantityChange(
-                                menuItem.menu_id,
-                                getCartItemQuantity(menuItem.menu_id) - 1
-                              )
-                            }
-                          />
-                        </div>
-                      </SwiperSlide>
+                      <div key={menuItem.menu_id} className="horizontal-menu-card">
+                        <HorizontalMenuCard
+                          image={menuItem.image || null}
+                          title={menuItem.menu_name}
+                          currentPrice={
+                            menuItem.portions && menuItem.portions[0]
+                              ? menuItem.portions[0].price
+                              : 0
+                          }
+                          originalPrice={
+                            menuItem.portions && menuItem.portions[0]
+                              ? menuItem.portions[0].price +
+                                (menuItem.portions[0].price * menuItem.offer) / 100
+                              : 0
+                          }
+                          discount={menuItem.offer > 0 ? `${menuItem.offer}%` : null}
+                          menuItem={{
+                            menuId: menuItem.menu_id,
+                            menuName: menuItem.menu_name,
+                            portions: menuItem.portions,
+                          }}
+                          onFavoriteClick={() =>
+                            handleFavoriteClick(menuItem.menu_id)
+                          }
+                          isFavorite={menuItem.is_favourite === 1}
+                          productUrl="#"
+                        />
+                      </div>
                     ))}
-                  </Swiper>
-                </div>
-              ) : isLoading ? (
-                // Skeleton for Special Menu Swiper
-                <div className="swiper-btn-center-lr">
-                  <Swiper
-                    spaceBetween={10}
-                    slidesPerView={1}
-                    className="special-menu-swiper"
-                    breakpoints={{
-                      320: { slidesPerView: 1.2 },
-                      576: { slidesPerView: 2.2 },
-                      768: { slidesPerView: 2.5 },
-                    }}
-                  >
+                  </div>
+                ) : isLoading ? (
+                  // Skeleton loader with horizontal scrolling
+                  <div className="horizontal-menu-container">
                     {[...Array(4)].map((_, index) => (
-                      <SwiperSlide key={`skeleton-${index}`}>
-                        <div className="px-2">
+                      <div key={`skeleton-${index}`} className="horizontal-menu-card">
+                        <div
+                          style={{
+                            borderRadius: "16px",
+                            overflow: "hidden",
+                            backgroundColor: "#fff",
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                            display: "flex",
+                            height: "120px",
+                          }}
+                        >
+                          {/* Image Section */}
                           <div
                             style={{
-                              borderRadius: "16px",
-                              overflow: "hidden",
-                              backgroundColor: "#fff",
-                              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                              display: "flex",
-                              height: "120px",
+                              width: "120px",
+                              position: "relative",
+                              flexShrink: 0,
                             }}
                           >
-                            {/* Image Section */}
+                            <Skeleton
+                              height="100%"
+                              width="100%"
+                              baseColor="#C8C8C8"
+                              highlightColor="#E0E0E0"
+                              style={{
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                                borderRadius: "16px 0 0 16px",
+                              }}
+                            />
+                            {/* Discount Badge */}
                             <div
                               style={{
-                                width: "120px",
-                                position: "relative",
-                                flexShrink: 0,
+                                position: "absolute",
+                                top: "8px",
+                                left: "8px",
+                                zIndex: 1,
                               }}
                             >
                               <Skeleton
-                                height="100%"
-                                width="100%"
+                                height={20}
+                                width={40}
                                 baseColor="#C8C8C8"
                                 highlightColor="#E0E0E0"
-                                style={{
-                                  position: "absolute",
-                                  top: 0,
-                                  left: 0,
-                                  borderRadius: "16px 0 0 16px",
-                                }}
+                                style={{ borderRadius: "10px" }}
                               />
-                              {/* Discount Badge */}
+                            </div>
+                          </div>
+
+                          {/* Content Section */}
+                          <div
+                            style={{
+                              flex: 1,
+                              padding: "12px",
+                              display: "flex",
+                              flexDirection: "column",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            {/* Top Section */}
+                            <div>
+                              {/* Title */}
+                              <Skeleton
+                                height={20}
+                                width="80%"
+                                baseColor="#C8C8C8"
+                                highlightColor="#E0E0E0"
+                                style={{ marginBottom: "8px" }}
+                              />
+
+                              {/* Price */}
                               <div
-                                style={{
-                                  position: "absolute",
-                                  top: "8px",
-                                  left: "8px",
-                                  zIndex: 1,
-                                }}
+                                className="d-flex align-items-center"
+                                style={{ gap: "8px" }}
                               >
                                 <Skeleton
-                                  height={20}
+                                  height={16}
+                                  width={60}
+                                  baseColor="#C8C8C8"
+                                  highlightColor="#E0E0E0"
+                                />
+                                <Skeleton
+                                  height={16}
                                   width={40}
                                   baseColor="#C8C8C8"
                                   highlightColor="#E0E0E0"
-                                  style={{ borderRadius: "10px" }}
+                                  style={{ opacity: 0.5 }}
                                 />
                               </div>
                             </div>
 
-                            {/* Content Section */}
-                            <div
-                              style={{
-                                flex: 1,
-                                padding: "12px",
-                                display: "flex",
-                                flexDirection: "column",
-                                justifyContent: "space-between",
-                              }}
-                            >
-                              {/* Top Section */}
-                              <div>
-                                {/* Title */}
-                                <Skeleton
-                                  height={20}
-                                  width="80%"
-                                  baseColor="#C8C8C8"
-                                  highlightColor="#E0E0E0"
-                                  style={{ marginBottom: "8px" }}
-                                />
+                            {/* Bottom Section */}
+                            <div className="d-flex justify-content-between align-items-center">
+                              {/* Favorite Button */}
+                              <Skeleton
+                                circle
+                                height={32}
+                                width={32}
+                                baseColor="#C8C8C8"
+                                highlightColor="#E0E0E0"
+                              />
 
-                                {/* Price */}
-                                <div
-                                  className="d-flex align-items-center"
-                                  style={{ gap: "8px" }}
-                                >
-                                  <Skeleton
-                                    height={16}
-                                    width={60}
-                                    baseColor="#C8C8C8"
-                                    highlightColor="#E0E0E0"
-                                  />
-                                  <Skeleton
-                                    height={16}
-                                    width={40}
-                                    baseColor="#C8C8C8"
-                                    highlightColor="#E0E0E0"
-                                    style={{ opacity: 0.5 }}
-                                  />
-                                </div>
-                              </div>
-
-                              {/* Bottom Section */}
-                              <div className="d-flex justify-content-between align-items-center">
-                                {/* Favorite Button */}
+                              {/* Add/Remove Buttons */}
+                              <div style={{ display: "flex", gap: "8px" }}>
                                 <Skeleton
-                                  circle
                                   height={32}
-                                  width={32}
+                                  width={80}
                                   baseColor="#C8C8C8"
                                   highlightColor="#E0E0E0"
+                                  style={{ borderRadius: "8px" }}
                                 />
-
-                                {/* Add/Remove Buttons */}
-                                <div style={{ display: "flex", gap: "8px" }}>
-                                  <Skeleton
-                                    height={32}
-                                    width={80}
-                                    baseColor="#C8C8C8"
-                                    highlightColor="#E0E0E0"
-                                    style={{ borderRadius: "8px" }}
-                                  />
-                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
-                      </SwiperSlide>
+                      </div>
                     ))}
-                  </Swiper>
-                </div>
-              ) : (
-                <div className="text-center text-muted">
-                  <p>No special menus available</p>
-                </div>
-              )}
-            </div>
+                  </div>
+                ) : (
+                  <div className="text-center text-muted">
+                    <p>No special menus available</p>
+                  </div>
+                )}
+              </div>
             </div>
 
            
