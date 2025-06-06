@@ -228,7 +228,10 @@ function Checkout() {
       if (existingOrder) {
         setExistingOrderModal({
           isOpen: true,
-          orderDetails: existingOrder,
+          orderDetails: {
+            ...existingOrder,
+            order_id: existingOrder.order_id // Ensure order_id is set correctly
+          }
         });
         return;
       }
@@ -322,7 +325,6 @@ function Checkout() {
         return;
       }
 
-      // Transform cart items to required format
       const orderItems = cartItems.map((item) => ({
         menu_id: item.menuId.toString(),
         quantity: item.quantity,
@@ -330,11 +332,11 @@ function Checkout() {
         comment: item.comment || "",
       }));
 
-      // Call API to cancel existing order and create new one
+      // Use order_id instead of order_number
       const response = await axios.post(
         "https://men4u.xyz/v2/user/complete_or_cancel_existing_order_create_new_order",
         {
-          order_id: existingOrderModal.orderDetails.order_number,
+          order_id: existingOrderModal.orderDetails.order_id.toString(),
           user_id: userId,
           order_status: "cancelled",
           outlet_id: outletId.toString(),
@@ -378,7 +380,6 @@ function Checkout() {
         return;
       }
 
-      // Transform cart items to required format
       const orderItems = cartItems.map((item) => ({
         menu_id: item.menuId.toString(),
         quantity: item.quantity,
@@ -386,11 +387,11 @@ function Checkout() {
         comment: item.comment || "",
       }));
 
-      // Call API to complete existing order and create new one
+      // Use order_id instead of order_number
       const response = await axios.post(
         "https://men4u.xyz/v2/user/complete_or_cancel_existing_order_create_new_order",
         {
-          order_id: existingOrderModal.orderDetails.order_number,
+          order_id: existingOrderModal.orderDetails.order_id.toString(),
           user_id: userId,
           order_status: "completed",
           outlet_id: outletId.toString(),
