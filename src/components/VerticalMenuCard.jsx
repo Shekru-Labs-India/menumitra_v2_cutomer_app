@@ -143,18 +143,30 @@ const VerticalMenuCard = ({
           style={{ pointerEvents: isLoading ? "none" : "auto" }}
         >
           <div
-            class="rounded-circle bg-white opacity-75 d-flex justify-content-center align-items-center"
-            style={{  height: 25, width: 25 }}
+            className="rounded-circle bg-white opacity-75 d-flex justify-content-center align-items-center"
+            style={{ width: 25, height: 25 }}
           >
-          <div className={`like-button ${initialIsFavorite ? "active" : ""}`}>
-         
+            <div 
+              className={`like-button ${initialIsFavorite ? "active" : ""}`}
+              style={{ 
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                width: '100%',
+                height: '100%'
+              }}
+            >
               <i
-                className={`fa-${
-                  initialIsFavorite ? "solid" : "regular"
-                } fa-heart`}
+                className={`fa-${initialIsFavorite ? "solid" : "regular"} fa-heart`}
+                style={{
+                  fontSize: '20px',
+                  lineHeight: 1,
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}
               ></i>
-         
-          </div>
+            </div>
           </div>
         </a>
         {discount && <div className="label">{discount} OFF</div>}
