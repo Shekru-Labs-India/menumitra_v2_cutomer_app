@@ -44,11 +44,6 @@
   margin-right: 1rem; /* Add right margin to last card */
 }
 
-.horizontal-menu-card:active {
-  cursor: grabbing;
-  transform: scale(0.98);
-}
-
 /* Smooth scrolling behavior */
 .horizontal-menu-container {
   scroll-behavior: smooth;
