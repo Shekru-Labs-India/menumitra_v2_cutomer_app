@@ -7,6 +7,7 @@ import { API_CONFIG } from "../constants/config";
 import { useNavigate } from "react-router-dom";
 import { useOutlet } from "../contexts/OutletContext";
 import OrderExistsModal from "../components/Modal/variants/OrderExistsModal";
+import toast, { Toaster } from 'react-hot-toast';
 
 const FooterSummary = React.memo(function FooterSummary({ checkoutDetails }) {
   // Fallback to zeros if no data yet
@@ -79,7 +80,6 @@ function Checkout() {
   const { outletId, sectionId, outletDetails } = useOutlet();
   const [checkoutDetails, setCheckoutDetails] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const MAX_QUANTITY = 20;
   const [existingOrderModal, setExistingOrderModal] = useState({
@@ -108,14 +108,12 @@ function Checkout() {
   const fetchCheckoutDetails = async () => {
     try {
       setLoading(true);
-      setError(null);
 
-      // Get token from localStorage.auth
       const auth = JSON.parse(localStorage.getItem("auth"));
       const accessToken = auth?.accessToken;
 
       if (!accessToken) {
-        setError("Authentication required");
+        toast.error("Authentication required");
         return;
       }
 
@@ -125,10 +123,6 @@ function Checkout() {
         portion_id: item.portionId,
         quantity: item.quantity,
       }));
-
-      // Debug logs
-      console.log("POST URL:", "https://men4u.xyz/v2/user/get_checkout_detail");
-      console.log("orderItems:", orderItems);
 
       const response = await axios.post(
         "https://men4u.xyz/v2/user/get_checkout_detail",
@@ -151,13 +145,10 @@ function Checkout() {
       }));
     } catch (err) {
       console.error("Checkout details error:", err);
-      if (err.response) {
-        console.error("API error response:", err.response);
-      }
       if (err.response?.status === 401) {
-        setError("Session expired. Please login again.");
+        toast.error("Session expired. Please login again.");
       } else {
-        setError("Failed to fetch checkout details");
+        toast.error("Failed to fetch checkout details");
       }
     } finally {
       setLoading(false);
@@ -221,14 +212,13 @@ function Checkout() {
   const handleCheckout = async () => {
     try {
       setLoading(true);
-      setError(null);
 
       const auth = JSON.parse(localStorage.getItem("auth"));
       const accessToken = auth?.accessToken;
       const userId = auth?.userId;
 
       if (!accessToken || !userId) {
-        setError("Authentication required");
+        toast.error("Authentication required");
         return;
       }
 
@@ -236,7 +226,6 @@ function Checkout() {
       const existingOrder = await checkExistingOrder(userId, outletId);
 
       if (existingOrder) {
-        // Show modal instead of error
         setExistingOrderModal({
           isOpen: true,
           orderDetails: existingOrder,
@@ -246,12 +235,13 @@ function Checkout() {
 
       // Proceed with creating new order
       await createOrder();
+      toast.success("Order placed successfully!");
     } catch (err) {
       console.error("Checkout error:", err);
       if (err.response?.status === 401) {
-        setError("Session expired. Please login again.");
+        toast.error("Session expired. Please login again.");
       } else {
-        setError("Failed to create order. Please try again.");
+        toast.error("Failed to create order. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -279,7 +269,7 @@ function Checkout() {
       outlet_id: String(outletId),
       user_id: String(userId),
       section_id: String(sectionId),
-      order_type: orderType || "takeaway", // Fallback to takeaway if no order type
+      order_type: orderType || "dine-in", // Fallback to takeaway if no order type
       order_items: orderItems,
       action: "create_order",
     };
@@ -328,7 +318,7 @@ function Checkout() {
       const userId = auth?.userId;
 
       if (!accessToken || !userId) {
-        setError("Authentication required");
+        toast.error("Authentication required");
         return;
       }
 
@@ -362,14 +352,14 @@ function Checkout() {
       );
 
       if (response.data?.order_id) {
-        // Clear cart and navigate on success
         clearCart();
         localStorage.removeItem("cart");
+        toast.success("Order cancelled and new order created successfully!");
         navigate("/");
       }
     } catch (error) {
       console.error("Error cancelling order:", error);
-      setError("Failed to cancel existing order and create new one");
+      toast.error("Failed to cancel existing order and create new one");
     } finally {
       setLoading(false);
       handleModalClose();
@@ -384,7 +374,7 @@ function Checkout() {
       const userId = auth?.userId;
 
       if (!accessToken || !userId) {
-        setError("Authentication required");
+        toast.error("Authentication required");
         return;
       }
 
@@ -418,14 +408,14 @@ function Checkout() {
       );
 
       if (response.data?.order_id) {
-        // Clear cart and navigate on success
         clearCart();
         localStorage.removeItem("cart");
+        toast.success("Items added to existing order successfully!");
         navigate("/");
       }
     } catch (error) {
       console.error("Error adding to existing order:", error);
-      setError("Failed to add to existing order");
+      toast.error("Failed to add to existing order");
     } finally {
       setLoading(false);
       handleModalClose();
@@ -435,6 +425,32 @@ function Checkout() {
   return (
     <>
       <Header />
+      <Toaster
+        position="bottom-center"
+        reverseOrder={true}
+        gutter={8}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#333',
+            color: '#fff',
+          },
+          success: {
+            duration: 3000,
+            iconTheme: {
+              primary: '#4aed88',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            duration: 5000,
+            iconTheme: {
+              primary: '#ff4b4b',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
       <div className="page-content">
         {/* shop-cart-wrapper */}
         <div
@@ -595,17 +611,12 @@ function Checkout() {
         {cartItems.length > 0 && (
           <div className="footer fixed p-b60">
             <div className="container">
-              {error && (
-                <div className="alert alert-danger" role="alert">
-                  {error}
-                </div>
-              )}
               <FooterSummary checkoutDetails={checkoutDetails} />
               <div className="footer-btn d-flex align-items-center">
                 <button
                   className="btn btn-primary flex-1"
                   onClick={handleCheckout}
-                  disabled={cartItems.length === 0 || !!error}
+                  disabled={cartItems.length === 0 || loading}
                 >
                   CHECKOUT ({getCartCount()} items)
                 </button>
