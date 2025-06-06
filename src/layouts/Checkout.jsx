@@ -429,11 +429,18 @@ function Checkout() {
         position="bottom-center"
         reverseOrder={true}
         gutter={8}
+        containerStyle={{
+          bottom: 40,
+          margin: "0 auto",
+        }}
         toastOptions={{
           duration: 4000,
           style: {
             background: '#333',
             color: '#fff',
+            marginBottom: '6rem',
+            padding: '1rem',
+            borderRadius: '8px',
           },
           success: {
             duration: 3000,
