@@ -8,7 +8,7 @@ const OrderAccordionItem = ({
   status,
   iconColor = '#FFA902', // default color
   iconBgClass = '', // for bg-primary, bg-danger etc
-  orderSteps,
+  // orderSteps,
   isExpanded = false,
   parentId = 'accordionExample',
   showTimer = false,
@@ -77,7 +77,7 @@ const OrderAccordionItem = ({
           </div>
         </button>
       </div>
-      <div
+      {/* <div
         id={collapseId}
         className={`accordion-collapse collapse ${isExpanded ? 'show' : ''}`}
         aria-labelledby={headingId}
@@ -100,7 +100,7 @@ const OrderAccordionItem = ({
             ))}
           </ul>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };
