@@ -39,7 +39,7 @@ function Profile() {
       <Header />
       <div className="page-content bottom-content ">
         <div className="container profile-area">
-          <div className="profile">
+          <div className="profile" onClick={!isAuthenticated ? handleLoginClick : undefined} style={!isAuthenticated ? { cursor: 'pointer' } : {}}>
             <div className="d-flex align-items-center mb-3">
               <div className="media media-70 me-3">
                 <img src={defaultAvatar} alt="Profile" />
@@ -54,7 +54,7 @@ function Profile() {
               </div>
               {isAuthenticated && (
                 <Link to="/edit-profile" className="edit-profile">
-                  <i className="fa-solid fa-pencil" />
+                  <i className="fa-solid fa-pencil" style={iconStyle} />
                 </Link>
               )}
             </div>
