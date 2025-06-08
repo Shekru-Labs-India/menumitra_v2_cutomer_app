@@ -86,7 +86,9 @@ function Favourite() {
                   favoriteMenus.map((menu) => (
                     <div className="col-6" key={menu.menu_id}>
                       <VerticalMenuCard
-                        image={menu.image || DEFAULT_IMAGE}
+                        image={
+                          menu.image ? menu.image : <i className="fa-solid fa-utensils font-55 opacity-50 text-muted"></i>
+                        }
                         title={menu.menu_name}
                         currentPrice={menu.portions?.[0]?.price || 0}
                         reviewCount={menu.rating ? parseInt(menu.rating) : null}
