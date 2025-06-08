@@ -290,7 +290,7 @@ function Categories() {
   return (
     <div>
       <Header />
-      <div className="page-content">
+      <div className="page-content p-b60">
         <div className="container">
           {/* View toggle and error message */}
           <div className="mb-4">
