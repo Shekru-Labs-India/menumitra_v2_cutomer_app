@@ -1,41 +1,76 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useOutlet } from '../contexts/OutletContext';
 
-const API_BASE_URL = "https://men4u.xyz/v2";
+// API configuration
+const axiosInstance = axios.create({
+  baseURL: "https://men4u.xyz/v2",
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  }
+});
+
+// API service function
+const fetchCategoryList = async (outletId, token) => {
+  try {
+    const response = await axiosInstance.post('/user/get_category_list_with_image', 
+      { outlet_id: outletId },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+    return response.data?.detail?.menu_list || [];
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      // Handle specific axios errors
+      if (error.response) {
+        // Server responded with error status
+        throw new Error(`Server Error: ${error.response.data?.message || 'Unknown server error'}`);
+      } else if (error.request) {
+        // Request made but no response
+        throw new Error('Network Error: No response from server');
+      }
+    }
+    throw new Error('Failed to fetch categories');
+  }
+};
 
 function Categories() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { outletId } = useOutlet();
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      console.log('🔄 Fetching categories...');
+    const loadCategories = async () => {
       try {
         setLoading(true);
+        setError(null);
+
+        // Get auth data
         const authData = localStorage.getItem('auth');
         const userData = authData ? JSON.parse(authData) : null;
+
+        if (!userData?.accessToken) {
+          throw new Error('Authentication required');
+        }
+
+        if (!outletId) {
+          throw new Error('Outlet ID is required');
+        }
+
+        // Fetch categories
+        const categoryList = await fetchCategoryList(outletId, userData.accessToken);
         
-        console.log('📦 Using outlet ID:', outletId);
-
-        const response = await fetch(`${API_BASE_URL}/user/get_category_list_with_image`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${userData?.accessToken}`
-          },
-          body: JSON.stringify({
-            outlet_id: outletId
-          })
-        });
-
-        const data = await response.json();
-        const mappedCategories = data.detail.menu_list.map(category => ({
+        // Map categories
+        const mappedCategories = categoryList.map(category => ({
           menuCatId: category.menu_cat_id,
           categoryName: category.category_name,
           outletId: category.outlet_id,
@@ -44,16 +79,17 @@ function Categories() {
         }));
 
         setCategories(mappedCategories);
-      } catch (error) {
-        console.error('❌ Error fetching categories:', error);
+      } catch (err) {
+        console.error('Error loading categories:', err);
+        setError(err.message);
         setCategories([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCategories();
-  }, []);
+    loadCategories();
+  }, [outletId]); // Added outletId as dependency
 
   const handleCategoryClick = (e, category) => {
     e.preventDefault();
@@ -64,6 +100,14 @@ function Categories() {
       } 
     });
   };
+
+  // Error component
+  const ErrorMessage = ({ message }) => (
+    <div className="alert alert-danger mx-3" role="alert">
+      <i className="fas fa-exclamation-circle me-2"></i>
+      {message}
+    </div>
+  );
 
   // Skeleton component for loading state
   const CategorySkeleton = () => {
@@ -146,10 +190,14 @@ function Categories() {
             `}
           </style>
           
+          {/* Error message */}
+          {error && <ErrorMessage message={error} />}
+
+          {/* Categories grid */}
           <div className="row g-3">
             {loading ? (
               <CategorySkeleton />
-            ) : (
+            ) : categories.length > 0 ? (
               categories.map((category, index) => (
                 <div key={category.menuCatId} className="col-6 col-md-4 col-lg-3">
                   <div 
@@ -177,6 +225,7 @@ function Categories() {
                       e.currentTarget.style.boxShadow = '0 .125rem .25rem rgba(0,0,0,.075)';
                     }}
                   >
+                    {/* Pattern overlay */}
                     <div 
                       style={{
                         position: 'absolute',
@@ -190,6 +239,7 @@ function Categories() {
                       }}
                     />
                     
+                    {/* Card content */}
                     <div className="card-body d-flex flex-column align-items-center justify-content-center p-3 position-relative">
                       <div className="icon-wrapper mb-3">
                         <i className={`${
@@ -219,6 +269,12 @@ function Categories() {
                   </div>
                 </div>
               ))
+            ) : (
+              // No categories found message
+              <div className="col-12 text-center py-5">
+                <i className="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                <h5 className="text-muted">No categories found</h5>
+              </div>
             )}
           </div>
         </div>
