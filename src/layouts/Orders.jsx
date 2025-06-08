@@ -417,12 +417,7 @@ function Orders() {
                 {ongoingOrders.map((order) => (
                   <div key={order.id} className="order-item mb-3">
                     <div
-                      className="order-header p-3 rounded"
-                      style={{
-                        border: "1px solid #ef962e",
-                        backgroundColor: "#fff",
-                        boxShadow: "0 2px 4px rgba(0,0,0,0.09)",
-                      }}
+                      className="border border-warning shadow-sm p-3 rounded bg-dark"
                     >
                       <div className="d-flex align-items-center justify-content-between w-100">
                         {/* Left side with icon and order details */}
