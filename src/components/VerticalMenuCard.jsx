@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
-import LazyImage from './Shared/LazyImage';
+import LazyImage from "./Shared/LazyImage";
 import fallbackImage from "../assets/images/food/food8.png";
 import { useModal } from "../contexts/ModalContext";
 import { useCart } from "../contexts/CartContext";
@@ -44,6 +44,13 @@ const VerticalMenuCard = ({
 
   const handleFavoriteToggle = async (e) => {
     e.preventDefault();
+
+    // Check if user is authenticated
+    if (!user) {
+      setShowAuthOffcanvas(true);
+      return;
+    }
+
     if (isLoading || !menuItem?.menuId) return;
 
     try {
@@ -143,8 +150,8 @@ const VerticalMenuCard = ({
             blur={true}
             className="menu-image"
             style={{
-              borderRadius: '12px',
-              width: '100%'
+              borderRadius: "12px",
+              width: "100%",
             }}
           />
         </Link>
@@ -152,27 +159,29 @@ const VerticalMenuCard = ({
           href="javascript:void(0);"
           className={`r-btn ${isLoading ? "disabled" : ""}`}
           onClick={handleFavoriteToggle}
-          style={{ 
+          style={{
             pointerEvents: isLoading ? "none" : "auto",
-            cursor: 'pointer'
+            cursor: "pointer",
           }}
         >
           <div
             className="d-flex justify-content-center align-items-center"
-            style={{ 
-              width: '25px', 
-              height: '25px',
-              borderRadius: '50%',
-              backgroundColor: 'rgba(255, 255, 255, 0.75)'
+            style={{
+              width: "25px",
+              height: "25px",
+              borderRadius: "50%",
+              backgroundColor: "rgba(255, 255, 255, 0.75)",
             }}
           >
             <div className={`like-button ${initialIsFavorite ? "active" : ""}`}>
               <i
-                className={`fa-${initialIsFavorite ? "solid" : "regular"} fa-heart`}
+                className={`fa-${
+                  initialIsFavorite ? "solid" : "regular"
+                } fa-heart`}
                 style={{
-                  fontSize: '16px',
-                  color: initialIsFavorite ? '#dc3545' : 'inherit',
-                  lineHeight: 1
+                  fontSize: "16px",
+                  color: initialIsFavorite ? "#dc3545" : "inherit",
+                  lineHeight: 1,
                 }}
               />
             </div>
