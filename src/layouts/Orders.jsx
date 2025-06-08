@@ -7,30 +7,46 @@ import Timer from "../components/Timer";
 import CancelOrderModal from "../components/Modal/variants/CancelOrderModal";
 import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
-// Add this new component for no orders state
-const NoOrders = ({ message }) => (
-  <div className="text-center py-5">
-    <svg
-      width="48"
-      height="48"
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="mx-auto mb-3"
-    >
-      <path
-        d="M20.929 1.628C20.8546 1.44247 20.7264 1.28347 20.5608 1.17153C20.3952 1.05959 20.1999 0.999847 20 1H4C3.80012 0.999847 3.60479 1.05959 3.43919 1.17153C3.2736 1.28347 3.14535 1.44247 3.071 1.628L1.071 6.628C1.02414 6.74643 1.00005 6.87264 1 7V22C1 22.2652 1.10536 22.5196 1.29289 22.7071C1.48043 22.8946 1.73478 23 2 23H22C22.2652 23 22.5196 22.8946 22.7071 22.7071C22.8946 22.5196 23 22.2652 23 22V7C23 6.87264 22.9759 6.74643 22.929 6.628L20.929 1.628ZM4.677 3H19.323L20.523 6H3.477L4.677 3ZM3 21V8H21V21H3Z"
-        fill="#7D8FAB"
-      />
-      <path
-        d="M10 17H6C5.73478 17 5.48043 17.1054 5.29289 17.2929C5.10536 17.4804 5 17.7348 5 18C5 18.2652 5.10536 18.5196 5.29289 18.7071C5.48043 18.8947 5.73478 19 6 19H10C10.2652 19 10.5196 18.8947 10.7071 18.7071C10.8946 18.5196 11 18.2652 11 18C11 17.7348 10.8946 17.4804 10.7071 17.2929C10.5196 17.1054 10.2652 17 10 17Z"
-        fill="#7D8FAB"
-      />
-    </svg>
-    <p className="text-soft mb-0">{message}</p>
-  </div>
-);
+// Update the NoOrders component with new icon
+const NoOrders = ({ message }) => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="d-flex align-items-center justify-content-center" style={{ minHeight: 'calc(100vh - 400px)' }}>
+      <div className="text-center">
+        <div className="mb-4">
+          <svg 
+            width="80" 
+            height="80" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="1.5" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+            style={{ opacity: '0.5' }}
+            className="text-muted"
+          >
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <path d="M16 10a4 4 0 0 1-8 0" />
+          </svg>
+        </div>
+        <h5 className="mb-3">{message}</h5>
+        <p className="text-muted mb-4">Check back later for your order history</p>
+        <button 
+          className="btn btn-primary px-4 py-3"
+          style={{ borderRadius: 12, fontWeight: 500 }}
+          onClick={() => navigate('/')}
+        >
+          Browse Menu
+        </button>
+      </div>
+    </div>
+  );
+};
 
 function Orders() {
   const { outletId } = useOutlet();
