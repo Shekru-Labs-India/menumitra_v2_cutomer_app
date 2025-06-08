@@ -46,6 +46,7 @@ function Categories() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const { outletId } = useOutlet();
 
   useEffect(() => {
@@ -168,111 +169,151 @@ function Categories() {
     ));
   };
 
+  // View toggle component
+  const ViewToggle = () => (
+    <div className="d-flex justify-content-end align-items-center mb-4">
+      <div className="bg-light rounded-pill p-1 shadow-sm" role="group" aria-label="View mode">
+        <button
+          type="button"
+          className={`btn btn-sm rounded-pill px-3 py-2 me-1 ${
+            viewMode === 'grid' 
+              ? 'text-white shadow-sm' 
+              : 'text-muted'
+          }`}
+          onClick={() => setViewMode('grid')}
+          style={{
+            background: viewMode === 'grid' 
+              ? 'linear-gradient(135deg, #FF7043 0%, #F4511E 100%)' 
+              : 'transparent',
+            border: 'none',
+            transition: 'all 0.3s ease',
+          }}
+        >
+          <i className="fas fa-th-large"></i>
+        </button>
+        <button
+          type="button"
+          className={`btn btn-sm rounded-pill px-3 py-2 ${
+            viewMode === 'list' 
+              ? 'text-white shadow-sm' 
+              : 'text-muted'
+          }`}
+          onClick={() => setViewMode('list')}
+          style={{
+            background: viewMode === 'list' 
+              ? 'linear-gradient(135deg, #FF7043 0%, #F4511E 100%)' 
+              : 'transparent',
+            border: 'none',
+            transition: 'all 0.3s ease',
+          }}
+        >
+          <i className="fas fa-bars"></i>
+        </button>
+      </div>
+      <style>
+        {`
+          .btn:focus {
+            box-shadow: none !important;
+          }
+          .btn:hover {
+            transform: translateY(-1px);
+          }
+          .btn:not(.text-white):hover {
+            background: rgba(0,0,0,0.05) !important;
+          }
+        `}
+      </style>
+    </div>
+  );
+
+  // Category Card Component
+  const CategoryCard = ({ category, index, isList }) => {
+    const gradients = {
+      0: 'linear-gradient(135deg, #FF7043 0%, #F4511E 100%)', // Warm Orange
+      1: 'linear-gradient(135deg, #26A69A 0%, #00796B 100%)', // Teal
+      2: 'linear-gradient(135deg, #5C6BC0 0%, #3949AB 100%)', // Indigo
+      3: 'linear-gradient(135deg, #7E57C2 0%, #512DA8 100%)', // Deep Purple
+    };
+
+    const icons = {
+      0: 'fa-utensils',
+      1: 'fa-hamburger',
+      2: 'fa-pizza-slice',
+      3: 'fa-coffee',
+    };
+
+    return (
+      <div className={isList ? 'col-12' : 'col-6 col-md-4 col-lg-3'}>
+        <div 
+          onClick={(e) => handleCategoryClick(e, category)}
+          className="card border-0 rounded-4 shadow-sm cursor-pointer mb-3"
+          style={{
+            background: gradients[index % 4],
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.transform = 'translateY(-3px)';
+            e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.15)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 .125rem .25rem rgba(0,0,0,.075)';
+          }}
+        >
+          <div className="card-body">
+            <div className={`d-flex ${isList ? 'align-items-center' : 'flex-column align-items-center text-center'}`}>
+              <div className={`icon-wrapper ${isList ? 'me-3' : 'mb-3'}`}>
+                <i className={`fas ${icons[index % 4]} fa-${isList ? '1x' : '2x'} text-white opacity-90`}></i>
+              </div>
+              <div className={isList ? 'flex-grow-1' : ''}>
+                <h6 className="text-white mb-2"
+                  style={{
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                  }}>
+                  {category.categoryName}
+                </h6>
+                <span className="badge bg-white bg-opacity-25 text-white px-2 py-1 rounded-pill">
+                  {category.menuCount} Items
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Main render
   return (
     <div>
       <Header />
-      <div className="page-content py-4">
+      <div className="page-content">
         <div className="container">
-          {/* Add shimmer animation styles */}
-          <style>
-            {`
-              @keyframes shimmer {
-                0% {
-                  transform: translateX(-100%);
-                }
-                100% {
-                  transform: translateX(100%);
-                }
-              }
-              .skeleton-shimmer {
-                pointer-events: none;
-              }
-            `}
-          </style>
-          
-          {/* Error message */}
-          {error && <ErrorMessage message={error} />}
+          {/* View toggle and error message */}
+          <div className="mb-4">
+            {!loading && !error && categories.length > 0 && <ViewToggle />}
+            {error && <ErrorMessage message={error} />}
+          </div>
 
-          {/* Categories grid */}
-          <div className="row g-3">
+          {/* Categories display */}
+          <div className="row">
             {loading ? (
               <CategorySkeleton />
             ) : categories.length > 0 ? (
               categories.map((category, index) => (
-                <div key={category.menuCatId} className="col-6 col-md-4 col-lg-3">
-                  <div 
-                    onClick={(e) => handleCategoryClick(e, category)}
-                    className="card h-100 border-0 rounded-4 shadow-sm cursor-pointer"
-                    style={{
-                      background: index % 4 === 0 
-                        ? 'linear-gradient(135deg, #FF7043 0%, #F4511E 100%)' // Warm Orange
-                        : index % 4 === 1
-                        ? 'linear-gradient(135deg, #26A69A 0%, #00796B 100%)' // Teal
-                        : index % 4 === 2
-                        ? 'linear-gradient(135deg, #5C6BC0 0%, #3949AB 100%)' // Indigo
-                        : 'linear-gradient(135deg, #7E57C2 0%, #512DA8 100%)', // Deep Purple
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      position: 'relative',
-                      overflow: 'hidden',
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-3px)';
-                      e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.15)';
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = '0 .125rem .25rem rgba(0,0,0,.075)';
-                    }}
-                  >
-                    {/* Pattern overlay */}
-                    <div 
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        opacity: 0.1,
-                        backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)',
-                        backgroundSize: '10px 10px',
-                      }}
-                    />
-                    
-                    {/* Card content */}
-                    <div className="card-body d-flex flex-column align-items-center justify-content-center p-3 position-relative">
-                      <div className="icon-wrapper mb-3">
-                        <i className={`${
-                          index % 4 === 0 
-                            ? 'fas fa-utensils'
-                            : index % 4 === 1
-                            ? 'fas fa-hamburger'
-                            : index % 4 === 2
-                            ? 'fas fa-pizza-slice'
-                            : 'fas fa-coffee'
-                        } fa-2x text-white opacity-90`}></i>
-                      </div>
-                      <h6 className="card-title text-white text-center mb-2"
-                        style={{
-                          fontSize: '1rem',
-                          fontWeight: '600',
-                          textShadow: '0 1px 2px rgba(0,0,0,0.2)'
-                        }}>
-                        {category.categoryName}
-                      </h6>
-                      <div className="d-flex align-items-center">
-                        <span className="badge bg-white bg-opacity-25 text-white px-2 py-1 rounded-pill">
-                          {category.menuCount} Items
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <CategoryCard 
+                  key={category.menuCatId}
+                  category={category}
+                  index={index}
+                  isList={viewMode === 'list'}
+                />
               ))
             ) : (
-              // No categories found message
               <div className="col-12 text-center py-5">
-                <i className="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                <i className="fas fa-folder-open fa-3x text-muted mb-3 d-block"></i>
                 <h5 className="text-muted">No categories found</h5>
               </div>
             )}
