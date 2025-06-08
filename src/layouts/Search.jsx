@@ -485,6 +485,7 @@ function Search() {
                         discount={menu.offer > 0 ? `${menu.offer}%` : null}
                         menuItem={{
                           menuId: menu.menu_id,
+                          menuCatId: menu.menu_cat_id,
                           menuName: menu.menu_name,
                           portions: menu.portions?.map(portion => ({
                             portion_id: portion.portion_id,
@@ -501,7 +502,6 @@ function Search() {
                         }}
                         onFavoriteClick={() => handleFavoriteClick(menu.menu_id)}
                         isFavorite={menu.is_favourite === 1}
-                        productUrl={`/product-detail/${menu.menu_id}`}
                         rating={menu.rating}
                         categoryName={menu.category_name}
                         spicyIndex={menu.spicy_index}
