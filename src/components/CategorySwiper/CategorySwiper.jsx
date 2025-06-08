@@ -30,7 +30,7 @@ const CategorySwiper = ({
       <div className={`categories-box p-0 m-0 ${containerClassName || ''}`}>
         <div className="swiper-btn-center-lr">
           <Swiper
-            spaceBetween={8}
+            spaceBetween={2}
             slidesPerView="auto"
             className="categorie-swiper px-2"
             loop={false}
@@ -48,34 +48,24 @@ const CategorySwiper = ({
                 className="swiper-slide-auto"
               >
                 <div 
-                  className="category-pill cursor-pointer d-inline-flex align-items-center px-4 py-2 rounded-pill border"
+                  className="category-pill cursor-pointer d-inline-flex align-items-center rounded-pill border"
                   style={{ 
-                    backgroundColor: "#f5f5f5",
-                    boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.08)",
-                    borderColor: "#E0E0E0"
+                    backgroundColor: "#f8f9fa",
+                    boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.05)",
+                    borderColor: "#dee2e6",
+                    padding: "6px 16px",
+                    height: "32px"
                   }}
                 >
-                  <div className="d-flex align-items-center">
-                    <Skeleton
-                      width={60}
-                      height={16}
-                      baseColor="#E0E0E0"
-                      highlightColor="#F5F5F5"
-                      style={{
-                        borderRadius: "25px"
-                      }}
-                    />
-                    <Skeleton
-                      width={30}
-                      height={16}
-                      baseColor="#E0E0E0"
-                      highlightColor="#F5F5F5"
-                      style={{
-                        borderRadius: "25px",
-                        marginLeft: "8px"
-                      }}
-                    />
-                  </div>
+                  <Skeleton
+                    width={60}
+                    height={20}
+                    baseColor="#E9ECEF"
+                    highlightColor="#F8F9FA"
+                    style={{
+                      borderRadius: "12px"
+                    }}
+                  />
                 </div>
               </SwiperSlide>
             ))}
@@ -89,7 +79,7 @@ const CategorySwiper = ({
     <div className={`categories-box p-0 m-0 ${containerClassName || ''}`}>
       <div className="swiper-btn-center-lr">
         <Swiper
-          spaceBetween={8}
+          spaceBetween={2}
           slidesPerView="auto"
           className="categorie-swiper px-2"
           loop={false}
@@ -113,18 +103,16 @@ const CategorySwiper = ({
                   cursor-pointer 
                   d-inline-flex 
                   align-items-center 
-                  px-4 
-                  py-2 
                   rounded-pill 
                   border 
-                  ${category.menuCatId === 'all' ? 'bg-success text-white' : 'bg-white text-dark'}
+                  ${category.menuCatId === 'all' ? 'active' : ''}
                 `}
               >
-                <span className="fw-medium">
+                <span className="category-text">
                   {category.categoryName}
-                </span>
-                <span className="ms-1 opacity-75">
-                  ({category.menuCount || 0})
+                  <span className="count">
+                    {category.menuCount || 0}
+                  </span>
                 </span>
               </div>
             </SwiperSlide>
@@ -135,45 +123,61 @@ const CategorySwiper = ({
   );
 };
 
-// Update the styles to include skeleton specific styles
+// Update the styles to match Google Images search suggestions
 const styles = `
   .swiper-slide-auto {
     width: auto !important;
   }
 
   .category-pill {
-    transition: all 0.3s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    border-color: #E0E0E0 !important;
-    min-height: 44px;
+    height: 32px;
+    padding: 6px 12px;
+    background-color: #f8f9fa;
+    border-color: #dee2e6 !important;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    font-size: 14px;
   }
 
   .category-pill:hover {
-    transform: translateY(-1px);
+    background-color: #e9ecef;
+    border-color: #ced4da !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
 
-  .category-pill.bg-success {
-    border-color: transparent !important;
+  .category-pill.active {
+    background-color: #e9ecef;
+    border-color: #ced4da !important;
+    font-weight: 500;
   }
 
-  .category-pill.bg-success:hover {
-    background-color: #005432 !important;
+  .category-text {
+    color: #212529;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
-  .category-pill.bg-white:hover {
-    background-color: #F5F5F5 !important;
+  .count {
+    color: #6c757d;
+    font-size: 13px;
   }
 
   .swiper-wrapper {
     transform: translate3d(0, 0, 0) !important;
     will-change: transform;
     padding: 4px 0;
+    gap: 0;
   }
 
   /* Skeleton specific styles */
   .category-pill .react-loading-skeleton {
     line-height: 1;
     display: inline-block;
+  }
+
+  .categorie-swiper {
+    padding: 0 8px !important;
   }
 `;
 
