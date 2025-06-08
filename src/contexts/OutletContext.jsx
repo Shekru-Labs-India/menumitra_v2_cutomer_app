@@ -10,6 +10,10 @@ const URL_PATTERN = /^\/o(\d+)\/s(\d+)\/t(\d+)$/;
 // Regex: matches /o123, /o456, etc. (no /s or /t after)
 const outletOnlyPattern = /^\/o\d+$/;
 
+// Update the regex patterns at the top
+const FULL_OUTLET_PATTERN = /^(\/menumitra_customer_app)?\/o\d+\/s\d+\/t\d+\/?$/;
+const OUTLET_ONLY_PATTERN = /^(\/menumitra_customer_app)?\/o\d+\/?$/;
+
 export const useOutlet = () => {
   const context = useContext(OutletContext);
   if (!context) {
@@ -136,13 +140,28 @@ export const OutletProvider = ({ children }) => {
 
   // Updated pattern to handle basename
   useEffect(() => {
-    // This regex pattern will:
-    // 1. Optionally match /menumitra_customer_app
-    // 2. Then match /o followed by numbers
-    // 3. Match end of path or trailing slash
-    const outletOnlyPattern = /^(\/menumitra_customer_app)?\/o\d+\/?$/;
-    
-    setIsOutletOnlyUrl(outletOnlyPattern.test(location.pathname));
+    const fullPath = location.pathname;
+    const isFullOutletUrl = FULL_OUTLET_PATTERN.test(fullPath);
+    const isOutletOnlyPath = OUTLET_ONLY_PATTERN.test(fullPath);
+
+    // Only update isOutletOnlyUrl in two cases:
+    // 1. When we first encounter an outlet-only URL (set to true)
+    // 2. When we encounter a full outlet URL (set to false)
+    if (isOutletOnlyPath && !isFullOutletUrl) {
+        setIsOutletOnlyUrl(true);
+    } else if (isFullOutletUrl) {
+        setIsOutletOnlyUrl(false);
+    }
+    // Note: We don't change isOutletOnlyUrl in any other case
+
+    console.log('URL State Change:', {
+        pathname: fullPath,
+        isFullOutletUrl,
+        isOutletOnlyPath,
+        isOutletOnlyUrl: isOutletOnlyUrl,
+        action: isFullOutletUrl ? 'setting_false' : (isOutletOnlyPath ? 'setting_true' : 'no_change')
+    });
+
   }, [location.pathname]);
 
   const fetchOutletDetailsByCode = async (outletCode) => {
