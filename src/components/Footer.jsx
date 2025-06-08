@@ -36,6 +36,12 @@ function Footer() {
             <i className="fa-solid fa-house"></i>
           </NavLink>
           <NavLink
+          onClick={() => {
+              if (!user) {
+                setShowAuthOffcanvas(true);
+                return;
+              }
+            }}
             to="/favourites"
             className={({ isActive }) =>
               `nav-link ${isActive ? 'active text-primary' : ''}`
@@ -83,6 +89,12 @@ function Footer() {
           </NavLink>
 
           <NavLink
+          onClick={() => {
+              if (!user) {
+                setShowAuthOffcanvas(true);
+                return;
+              }
+            }}
             to="/orders"
             className={({ isActive }) =>
               `nav-link ${isOrderRoute() ? 'active text-primary' : ''}`
