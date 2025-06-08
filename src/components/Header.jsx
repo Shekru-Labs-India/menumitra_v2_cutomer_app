@@ -36,12 +36,13 @@ function Header() {
     );
   };
 
+  // Move username initialization to a separate useEffect with empty dependency array
   useEffect(() => {
-    // Get the username using the getUserName from useAuth context
-    const username = getUserName();
-    console.log(username)
-    setUserName(username);
+    setUserName(getUserName());
+  }, []); // This will run only once when component mounts
 
+  // Keep scroll handler in separate useEffect
+  useEffect(() => {
     const handleScroll = () => {
       if (!mainBarRef.current) return;
 
@@ -54,11 +55,10 @@ function Header() {
 
     window.addEventListener("scroll", handleScroll);
 
-    // Cleanup on unmount
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [getUserName]);
+  }, []); // Empty dependency array since it doesn't depend on any props or state
 
   return (
     <>
