@@ -85,12 +85,21 @@ const HorizontalMenuCard = ({
           style={{ width: "95px", height: "95px" }}
         >
           <Link to={detailPageUrl}>
-            <img
-              src={image || fallbackImage}
-              alt={title}
-              className="rounded-3 w-100 h-100"
-              style={{ objectFit: "cover" }}
-            />
+            {image ? (
+              <img
+                src={image}
+                alt={title}
+                className="rounded-3 w-100 h-100"
+                style={{ objectFit: "cover" }}
+              />
+            ) : (
+              <div 
+                className="rounded-3 w-100 h-100 d-flex justify-content-center align-items-center border border-2 border-light-subtle"
+                style={{ objectFit: "cover" }}
+              >
+                <i className="fa-solid fa-utensils font-55 opacity-50 text-muted"></i>
+              </div>
+            )}
           </Link>
           <button
             className={`position-absolute top-0 end-0 btn btn-link p-0 m-2 ${
