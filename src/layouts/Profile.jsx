@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useModal } from '../contexts/ModalContext';
 import { useCart } from "../contexts/CartContext";
-
+import MenuMitra from "../components/MenuMitra";
 function Profile() {
   const { handleLogout, user, isAuthenticated, setShowAuthOffcanvas } = useAuth();
   const { clearCart } = useCart();
@@ -203,7 +203,9 @@ function Profile() {
           </div>
         </div>
       </div>
-
+      <div className="d-flex justify-content-center">
+        <MenuMitra />
+      </div>
       <Footer />
     </>
   );
