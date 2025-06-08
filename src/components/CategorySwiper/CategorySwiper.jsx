@@ -53,19 +53,31 @@ const CategorySwiper = ({
                     backgroundColor: "#f8f9fa",
                     boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.05)",
                     borderColor: "#dee2e6",
-                    padding: "6px 16px",
+                    padding: "6px 12px",
                     height: "32px"
                   }}
                 >
-                  <Skeleton
-                    width={60}
-                    height={20}
-                    baseColor="#E9ECEF"
-                    highlightColor="#F8F9FA"
-                    style={{
-                      borderRadius: "12px"
-                    }}
-                  />
+                  <div className="d-flex align-items-center">
+                    <Skeleton
+                      width={40}
+                      height={16}
+                      baseColor="#E9ECEF"
+                      highlightColor="#F8F9FA"
+                      style={{
+                        borderRadius: "12px"
+                      }}
+                    />
+                    <Skeleton
+                      width={20}
+                      height={16}
+                      baseColor="#E9ECEF"
+                      highlightColor="#F8F9FA"
+                      style={{
+                        borderRadius: "12px",
+                        marginLeft: "6px"
+                      }}
+                    />
+                  </div>
                 </div>
               </SwiperSlide>
             ))}
