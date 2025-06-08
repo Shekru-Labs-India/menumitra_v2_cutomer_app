@@ -72,6 +72,14 @@ export const OutletProvider = ({ children }) => {
     return null;
   }
 
+  // First, add a function to extract just the outlet code
+  function extractOutletCode(pathname) {
+    const segments = pathname.split('/').filter(Boolean);
+    const lastSegment = segments[segments.length - 1];
+    const match = lastSegment?.match(/^o(\d+)$/);
+    return match ? match[1] : null;
+  }
+
   // Add function to update orderSettings
   const updateOrderSettings = (settings) => {
     const newSettings = { ...orderSettings, ...settings };
@@ -86,10 +94,8 @@ export const OutletProvider = ({ children }) => {
 
     if (params) {
       const { outletCode, sectionId, tableId } = params;
-
-      // Case 1: Full URL with outlet/section/table - Set dine-in
+      // Existing full URL handling
       updateOrderSettings({ order_type: 'dine-in' });
-
       if (!stored || 
           stored.outletCode !== outletCode || 
           stored.sectionId !== sectionId || 
@@ -111,8 +117,19 @@ export const OutletProvider = ({ children }) => {
       // Check if it's outlet-only URL
       const outletOnlyPattern = /^(\/menumitra_customer_app)?\/o\d+\/?$/;
       if (outletOnlyPattern.test(fullPath)) {
-        // Case 2: Outlet-only URL - Clear order type
-        updateOrderSettings({ order_type: null });
+        const outletCode = extractOutletCode(fullPath);
+        if (outletCode) {
+          updateOrderSettings({ order_type: null });
+          // Add API call for outlet-only URL
+          fetchOutletDetailsByCode(outletCode).then((details) => {
+            if (details) {
+              localStorage.setItem('selectedOutlet', JSON.stringify(details));
+              setOutletInfo(details);
+              setOutletId(details.outletId);
+              setOutletDetails(details);
+            }
+          });
+        }
       }
     }
   }, [location.pathname]);
