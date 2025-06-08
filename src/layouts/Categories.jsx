@@ -5,21 +5,18 @@ import Footer from "../components/Footer";
 import { useOutlet } from '../contexts/OutletContext';
 
 const API_BASE_URL = "https://men4u.xyz/v2";
-const DEFAULT_IMAGE = 'https://as2.ftcdn.net/jpg/02/79/12/03/1000_F_279120368_WzIoR2LV2Cgy33oxy6eEKQYSkaWr8AFU.jpg';
 
 function Categories() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
-  const [imageErrors, setImageErrors] = useState({});
   const { outletId } = useOutlet();
+
   useEffect(() => {
     const fetchCategories = async () => {
       console.log('🔄 Fetching categories...');
       try {
         const authData = localStorage.getItem('auth');
         const userData = authData ? JSON.parse(authData) : null;
-
-
         
         console.log('📦 Using outlet ID:', outletId);
 
@@ -36,19 +33,14 @@ function Categories() {
         });
 
         const data = await response.json();
-        console.log('✅ API Response:', data);
-
-        // Map categories without image validation
         const mappedCategories = data.detail.menu_list.map(category => ({
           menuCatId: category.menu_cat_id,
           categoryName: category.category_name,
-          image: category.image,
           outletId: category.outlet_id,
           outletVegNonveg: category.outlet_veg_nonveg,
           menuCount: category.menu_count
         }));
 
-        console.log('✨ Formatted categories:', mappedCategories);
         setCategories(mappedCategories);
       } catch (error) {
         console.error('❌ Error fetching categories:', error);
@@ -57,23 +49,10 @@ function Categories() {
     };
 
     fetchCategories();
-  }, []); // Removed outletId dependency
-
-  const handleImageError = (categoryId) => {
-    console.log('🖼️ Image error for category:', categoryId);
-    setImageErrors(prev => ({
-      ...prev,
-      [categoryId]: true
-    }));
-  };
-
-  const getImageUrl = (category) => {
-    return imageErrors[category.menuCatId] ? DEFAULT_IMAGE : (category.image || DEFAULT_IMAGE);
-  };
+  }, []);
 
   const handleCategoryClick = (e, category) => {
     e.preventDefault();
-    console.log('🔍 Navigating to category:', category);
     navigate(`/category-menu/${category.menuCatId}`, { 
       state: { 
         categoryName: category.categoryName,
@@ -85,66 +64,78 @@ function Categories() {
   return (
     <div>
       <Header />
-      <div className="page-content">
+      <div className="page-content py-4">
         <div className="container">
-          <div className="dz-list style-2">
-            <ul className="categore-list">
-              {categories.map((category) => (
-                <li key={category.menuCatId}>
-                  <a
-                    href="#"
-                    onClick={(e) => handleCategoryClick(e, category)}
-                    className="categore-box box-lg"
+          <div className="row g-3">
+            {categories.map((category, index) => (
+              <div key={category.menuCatId} className="col-6 col-md-4 col-lg-3">
+                <div 
+                  onClick={(e) => handleCategoryClick(e, category)}
+                  className="card h-100 border-0 rounded-4 shadow-sm cursor-pointer"
+                  style={{
+                    background: index % 4 === 0 
+                      ? 'linear-gradient(135deg, #FF7043 0%, #F4511E 100%)' // Warm Orange
+                      : index % 4 === 1
+                      ? 'linear-gradient(135deg, #26A69A 0%, #00796B 100%)' // Teal
+                      : index % 4 === 2
+                      ? 'linear-gradient(135deg, #5C6BC0 0%, #3949AB 100%)' // Indigo
+                      : 'linear-gradient(135deg, #7E57C2 0%, #512DA8 100%)', // Deep Purple
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    position: 'relative',
+                    overflow: 'hidden',
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-3px)';
+                    e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.15)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 .125rem .25rem rgba(0,0,0,.075)';
+                  }}
+                >
+                  <div 
                     style={{
-                      cursor: 'pointer',
-                      backgroundImage: `linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.8)), url(${getImageUrl(category)})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center center',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      transition: '0.3s',
-                      position: 'relative',
-                      padding: '25px 15px',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      opacity: 0.1,
+                      backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)',
+                      backgroundSize: '10px 10px',
                     }}
-                  >
-                    <img 
-                      src={category.image || DEFAULT_IMAGE}
-                      alt=""
-                      style={{ display: 'none' }}
-                      onError={() => handleImageError(category.menuCatId)}
-                    />
-                    
-                    <h6 
-                      className="text-white mb-0"
+                  />
+                  
+                  <div className="card-body d-flex flex-column align-items-center justify-content-center p-3 position-relative">
+                    <div className="icon-wrapper mb-3">
+                      <i className={`${
+                        index % 4 === 0 
+                          ? 'fas fa-utensils'
+                          : index % 4 === 1
+                          ? 'fas fa-hamburger'
+                          : index % 4 === 2
+                          ? 'fas fa-pizza-slice'
+                          : 'fas fa-coffee'
+                      } fa-2x text-white opacity-90`}></i>
+                    </div>
+                    <h6 className="card-title text-white text-center mb-2"
                       style={{
-                        fontSize: '14px',
-                        lineHeight: '1.2',
-                        color: '#FFFFFF',
+                        fontSize: '1rem',
                         fontWeight: '600',
-                        margin: '0 0 4px 0',
-                        textShadow: '0px 1px 2px rgba(0, 0, 0, 0.3)'
-                      }}
-                    >
+                        textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                      }}>
                       {category.categoryName}
                     </h6>
-                    <span 
-                      className="text-white"
-                      style={{
-                        fontSize: '12px',
-                        lineHeight: '1.2',
-                        color: 'rgba(255, 255, 255, 0.8)',
-                        fontWeight: '400',
-                        textShadow: '0px 1px 2px rgba(0, 0, 0, 0.3)'
-                      }}
-                    >
-                      {category.menuCount} Items
-                    </span>
-                  </a>
-                </li>
-              ))}
-            </ul>
+                    <div className="d-flex align-items-center">
+                      <span className="badge bg-white bg-opacity-25 text-white px-2 py-1 rounded-pill">
+                        {category.menuCount} Items
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
