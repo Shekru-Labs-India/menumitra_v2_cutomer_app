@@ -140,32 +140,29 @@ const VerticalMenuCard = ({
           href="javascript:void(0);"
           className={`r-btn ${isLoading ? "disabled" : ""}`}
           onClick={handleFavoriteToggle}
-          style={{ pointerEvents: isLoading ? "none" : "auto" }}
+          style={{ 
+            pointerEvents: isLoading ? "none" : "auto",
+            cursor: 'pointer'
+          }}
         >
           <div
-            className="rounded-circle bg-white opacity-75 d-flex justify-content-center align-items-center"
-            style={{ width: 25, height: 25 }}
+            className="d-flex justify-content-center align-items-center"
+            style={{ 
+              width: '25px', 
+              height: '25px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(255, 255, 255, 0.75)'
+            }}
           >
-            <div 
-              className={`like-button ${initialIsFavorite ? "active" : ""}`}
-              style={{ 
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                width: '100%',
-                height: '100%'
-              }}
-            >
+            <div className={`like-button ${initialIsFavorite ? "active" : ""}`}>
               <i
                 className={`fa-${initialIsFavorite ? "solid" : "regular"} fa-heart`}
                 style={{
-                  fontSize: '20px',
-                  lineHeight: 1,
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center'
+                  fontSize: '16px',
+                  color: initialIsFavorite ? '#dc3545' : 'inherit',
+                  lineHeight: 1
                 }}
-              ></i>
+              />
             </div>
           </div>
         </a>
