@@ -123,7 +123,7 @@ const CategorySwiper = ({
                 <span className="category-text">
                   {category.categoryName}
                   <span className="count">
-                    {category.menuCount || 0}
+                    ({category.menuCount || 0})
                   </span>
                 </span>
               </div>
