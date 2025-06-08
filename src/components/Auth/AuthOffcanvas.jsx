@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Offcanvas from '../Shared/Offcanvas';
 import { useAuth } from '../../contexts/AuthContext';
+import axios from 'axios';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const STEPS = {
   LOGIN: 'login',
@@ -10,6 +12,15 @@ const STEPS = {
 };
 
 const API_BASE_URL = 'https://men4u.xyz/v2';
+
+// Create axios instance with common config
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  }
+});
 
 const AuthOffcanvas = () => {
   const { showAuthOffcanvas, setShowAuthOffcanvas, handleLoginSuccess } = useAuth();
@@ -22,6 +33,7 @@ const AuthOffcanvas = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const { isDarkMode } = useTheme();
 
   useEffect(() => {
     if (currentStep === STEPS.OTP) {
@@ -151,31 +163,18 @@ const AuthOffcanvas = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/common/login`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({ 
-          mobile: phoneNumber
-        })
+      const { data } = await api.post('/common/login', { 
+        mobile: phoneNumber 
       });
       
-      const data = await response.json();
-      
-      if (response.ok) {
-        if (data.role === 'customer') {
-          setCurrentStep(STEPS.OTP);
-        } else {
-          setError('This mobile number is not registered as a customer.');
-        }
+      if (data.role === 'customer') {
+        setCurrentStep(STEPS.OTP);
       } else {
-        setError(data.detail || 'Something went wrong. Please try again.');
+        setError('This mobile number is not registered as a customer.');
       }
     } catch (err) {
       console.error('Login error:', err);
-      setError('Unable to process request. Please try again.');
+      setError(err.response?.data?.detail || 'Unable to process request. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -187,32 +186,19 @@ const AuthOffcanvas = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/user/account_signup`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          mobile: phoneNumber,
-          name: userDetails.name
-        })
+      await api.post('/user/account_signup', {
+        mobile: phoneNumber,
+        name: userDetails.name
       });
-
-      const data = await response.json();
       
-      if (response.ok) {
-        setError('Account created successfully!');
-        setTimeout(() => {
-          setCurrentStep(STEPS.OTP);
-          setError('');
-        }, 1500);
-      } else {
-        setError(data.detail || 'Failed to create account. Please try again.');
-      }
+      setError('Account created successfully!');
+      setTimeout(() => {
+        setCurrentStep(STEPS.OTP);
+        setError('');
+      }, 1500);
     } catch (err) {
       console.error('Signup error:', err);
-      setError('Failed to create account. Please try again.');
+      setError(err.response?.data?.detail || 'Failed to create account. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -230,33 +216,20 @@ const AuthOffcanvas = () => {
     };
 
     try {
-      const response = await fetch(`${API_BASE_URL}/common/verify_otp`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          mobile: phoneNumber,
-          otp: otp,
-          ...deviceInfo
-        })
+      const { data } = await api.post('/common/verify_otp', {
+        mobile: phoneNumber,
+        otp: otp,
+        ...deviceInfo
       });
-
-      const data = await response.json();
       
-      if (response.ok) {
-        handleLoginSuccess({
-          ...data,
-          mobile: phoneNumber
-        });
-        handleClose();
-      } else {
-        setError(data.message || 'Invalid OTP. Please try again.');
-      }
+      handleLoginSuccess({
+        ...data,
+        mobile: phoneNumber
+      });
+      handleClose();
     } catch (err) {
       console.error('OTP verification error:', err);
-      setError('Failed to verify OTP. Please try again.');
+      setError(err.response?.data?.message || 'Invalid OTP. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -267,21 +240,12 @@ const AuthOffcanvas = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/common/resend-otp`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          phone: phoneNumber,
-          country_code: '+91'
-        })
+      const { data } = await api.post('/common/resend-otp', {
+        phone: phoneNumber,
+        country_code: '+91'
       });
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+      if (data.success) {
         setError('OTP resent successfully!');
         setTimeout(() => setError(''), 3000);
       } else {
@@ -289,11 +253,22 @@ const AuthOffcanvas = () => {
       }
     } catch (err) {
       console.error('Resend OTP error:', err);
-      setError('Failed to resend OTP. Please try again.');
+      setError(err.response?.data?.message || 'Failed to resend OTP. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  const backButtonIcon = (
+    <svg width="10" height="16" viewBox="0 0 10 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path 
+        fillRule="evenodd" 
+        clipRule="evenodd" 
+        d="M4.40366 8L9.91646 2.58333L7.83313 0.499999L0.333132 8L7.83313 15.5L9.91644 13.4167L4.40366 8Z" 
+        fill={isDarkMode ? '#ffffff' : '#027335'}
+      />
+    </svg>
+  );
 
   const renderLoginStep = () => (
     <div className="px-1">
@@ -400,7 +375,7 @@ const AuthOffcanvas = () => {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: isDarkMode ? '#027335' : '#e8f5eb',
     border: 'none',
     borderRadius: '8px',
     cursor: 'pointer',
@@ -459,16 +434,9 @@ const AuthOffcanvas = () => {
             style={backButtonStyle}
             onClick={() => setCurrentStep(STEPS.LOGIN)}
             disabled={isLoading}
-            className="back-btn"
+            className={`back-btn ${isDarkMode ? 'dark-mode' : ''}`}
           >
-            <svg width="10" height="16" viewBox="0 0 10 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path 
-                fillRule="evenodd" 
-                clipRule="evenodd" 
-                d="M4.40366 8L9.91646 2.58333L7.83313 0.499999L0.333132 8L7.83313 15.5L9.91644 13.4167L4.40366 8Z" 
-                fill="#666666"
-              />
-            </svg>
+            {backButtonIcon}
           </button>
           <button 
             type="submit" 
@@ -546,16 +514,9 @@ const AuthOffcanvas = () => {
             style={backButtonStyle}
             onClick={() => setCurrentStep(STEPS.LOGIN)}
             disabled={isLoading}
-            className="back-btn"
+            className={`back-btn ${isDarkMode ? 'dark-mode' : ''}`}
           >
-            <svg width="10" height="16" viewBox="0 0 10 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path 
-                fillRule="evenodd" 
-                clipRule="evenodd" 
-                d="M4.40366 8L9.91646 2.58333L7.83313 0.499999L0.333132 8L7.83313 15.5L9.91644 13.4167L4.40366 8Z" 
-                fill="#666666"
-              />
-            </svg>
+            {backButtonIcon}
           </button>
           <button 
             type="submit" 
