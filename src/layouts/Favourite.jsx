@@ -13,7 +13,7 @@ function Favourite() {
   const navigate = useNavigate();
   const [favoriteMenus, setFavoriteMenus] = useState([]);
   const { getFavorites, toggleFavorite, loading, error } = useFavorite();
-  const { user } = useAuth();
+  const { user, setShowAuthOffcanvas } = useAuth();
 
   useEffect(() => {
     const loadFavorites = async () => {
@@ -31,6 +31,59 @@ function Favourite() {
   const navigateToMenus = () => {
     navigate('/');
   };
+
+  // Add navigation handler for login
+  const navigateToLogin = () => {
+    if (!user) {
+      setShowAuthOffcanvas(true);
+      return;
+    }
+  };
+
+  // Check if user is not logged in
+  if (!user) {
+    return (
+      <>
+        <Header />
+        <div className="page-content">
+          <div className="content-inner pt-0">
+            <div className="container p-b20">
+              <div className="d-flex align-items-center justify-content-center" style={{ minHeight: 'calc(100vh - 300px)' }}>
+                <div className="text-center">
+                  <div className="mb-4">
+                    <svg 
+                      width="80" 
+                      height="80" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="1.5" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                      style={{ opacity: '0.5' }}
+                      className="text-muted"
+                    >
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                  </div>
+                  <h5 className="mb-3">Please Login First</h5>
+                  <p className="text-muted mb-4">Login to view and manage your favorite menus</p>
+                  <button 
+                    className="btn btn-primary" 
+                    onClick={navigateToLogin}
+                  >
+                    Login Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
   if (loading) {
     return (
