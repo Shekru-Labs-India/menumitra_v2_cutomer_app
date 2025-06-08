@@ -1,12 +1,13 @@
 import React from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useCart } from "../contexts/CartContext";
+import { useAuth } from "../contexts/AuthContext";
 
 function Footer() {
   const { getCartCount } = useCart();
   const cartCount = getCartCount();
   const location = useLocation();
-
+  const { user, setShowAuthOffcanvas } = useAuth();
   const isOrderRoute = () => {
     const pathname = location.pathname;
     return pathname === '/orders' || 
@@ -43,6 +44,12 @@ function Footer() {
             <i className="fa-solid fa-heart"></i>
           </NavLink>
           <NavLink
+            onClick={() => {
+              if (!user) {
+                setShowAuthOffcanvas(true);
+                return;
+              }
+            }}
             to="/checkout"
             className={({ isActive }) =>
               `nav-link position-relative d-flex align-items-center justify-content-center ${isActive ? 'active text-primary' : ''}`
