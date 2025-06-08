@@ -5,7 +5,6 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination } from 'swiper/modules';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import fallbackImage from '../assets/images/food/food8.png';
 import { useCart } from '../contexts/CartContext';
 import { useModal } from '../contexts/ModalContext';
 import { useOutlet } from '../contexts/OutletContext';
@@ -64,9 +63,9 @@ function ProductDetail() {
     // Format menu details to include required fields for checkout
     const formattedMenuDetails = {
       ...menuDetails,
-      menuId: Number(menuId), // Add menuId explicitly
+      menuId: Number(menuId),
       menuName: menuDetails.menu_name,
-      image: menuDetails.images?.[0] || fallbackImage,
+      image: menuDetails.images?.[0] || null,
       portions: menuDetails.portions.map(portion => ({
         ...portion,
         portion_id: portion.portion_id,
@@ -95,7 +94,7 @@ function ProductDetail() {
             }}
             className="demo-swiper swiper-initialized swiper-horizontal swiper-pointer-events swiper-watch-progress swiper-backface-hidden"
           >
-            {(menuDetails.images?.length ? menuDetails.images : [fallbackImage]).map((image, index) => (
+            {(menuDetails.images?.length ? menuDetails.images : [null]).map((image, index) => (
               <SwiperSlide 
                 key={index} 
                 role="group" 
@@ -104,14 +103,22 @@ function ProductDetail() {
               >
                 <div className="dz-banner-heading">
                   <div className="overlay-black-light">
-                    <LazyImage
-                      src={image}
-                      alt={`${menuDetails.menu_name} image ${index + 1}`}
-                      fallbackSrc={fallbackImage}
-                      className="bnr-img"
-                      aspectRatio="16/9"
-                      blur={true}
-                    />
+                    {image ? (
+                      <LazyImage
+                        src={image}
+                        alt={`${menuDetails.menu_name} image ${index + 1}`}
+                        className="bnr-img"
+                        aspectRatio="16/9"
+                        blur={true}
+                      />
+                    ) : (
+                      <div 
+                        className="bnr-img d-flex justify-content-center align-items-center border border-2 border-light-subtle"
+                        style={{ aspectRatio: "16/9" }}
+                      >
+                        <i className="fa-solid fa-utensils font-100 opacity-50 text-muted"></i>
+                      </div>
+                    )}
                   </div>
                 </div>
               </SwiperSlide>
