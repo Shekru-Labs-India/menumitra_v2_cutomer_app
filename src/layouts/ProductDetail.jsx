@@ -9,6 +9,7 @@ import fallbackImage from '../assets/images/food/food8.png';
 import { useCart } from '../contexts/CartContext';
 import { useModal } from '../contexts/ModalContext';
 import { useOutlet } from '../contexts/OutletContext';
+import { useAuth } from '../contexts/AuthContext';
 
 // Import Swiper styles
 import 'swiper/css';
@@ -20,6 +21,7 @@ function ProductDetail() {
   const { openModal } = useModal();
   const { cartItems, removeFromCart, updateQuantity } = useCart();
   const { outletId } = useOutlet();
+  const { user, setShowAuthOffcanvas } = useAuth();
 
   useEffect(() => {
     const fetchMenuDetails = async () => {
@@ -50,6 +52,14 @@ function ProductDetail() {
   );
 
   const handleAddToCart = () => {
+
+
+    // Check if user is authenticated
+    if (!user) {
+      setShowAuthOffcanvas(true);
+      return;
+    }
+
     // Format menu details to include required fields for checkout
     const formattedMenuDetails = {
       ...menuDetails,
