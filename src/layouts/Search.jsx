@@ -388,7 +388,7 @@ function Search() {
                       }
                     }}
                   />
-                  <span className="input-group-text">
+                  {/* <span className="input-group-text">
                     <a
                       href="javascript:void(0);"
                       className={`input-icon search-icon ${!hasSearchResults() ? 'disabled' : ''}`}
@@ -412,7 +412,7 @@ function Search() {
                         />
                       </svg>
                     </a>
-                  </span>
+                  </span> */}
                 </div>
               </div>
             </div>

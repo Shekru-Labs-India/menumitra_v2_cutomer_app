@@ -6,6 +6,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { useModal } from '../contexts/ModalContext';
 import { useCart } from "../contexts/CartContext";
 import MenuMitra from "../components/MenuMitra";
+import defaultAvatar from "../assets/images/avatar/avatar-default.png"
+
 function Profile() {
   const { handleLogout, user, isAuthenticated, setShowAuthOffcanvas } = useAuth();
   const { clearCart } = useCart();
@@ -32,7 +34,7 @@ function Profile() {
           <div className="profile">
             <div className="d-flex align-items-center mb-3">
               <div className="media media-70 me-3">
-                <img src="assets/images/avatar/5.jpg" alt="/" />
+                <img src={defaultAvatar} alt="Profile" />
               </div>
               <div className="about-profile">
                 <h5 className="sub-title mb-0">{user?.name || "Guest User"}</h5>
