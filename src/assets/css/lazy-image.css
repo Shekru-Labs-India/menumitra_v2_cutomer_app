@@ -1,0 +1,36 @@
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.lazy-image-wrapper {
+  background-color: #f0f0f0;
+  position: relative;
+  overflow: hidden;
+  transform: translateZ(0); /* Force GPU acceleration */
+}
+
+.lazy-image-wrapper img {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+  perspective: 1000;
+  will-change: transform, opacity;
+}
+
+/* Add smooth transition for blur effect */
+.blur-placeholder {
+  transform: scale(1.1);
+  filter: blur(20px);
+  transition: opacity 0.2s ease-out;
+}
+
+/* Optional: Add a subtle hover effect */
+.lazy-image-wrapper:hover img {
+  transform: scale(1.05);
+  transition: transform 0.3s ease-out;
+} 

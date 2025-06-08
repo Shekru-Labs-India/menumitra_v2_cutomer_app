@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
+import LazyImage from './Shared/LazyImage';
 import fallbackImage from "../assets/images/food/food8.png";
 import { useModal } from "../contexts/ModalContext";
 import { useCart } from "../contexts/CartContext";
@@ -134,7 +135,18 @@ const VerticalMenuCard = ({
     <div className="card-item style-1">
       <div className="dz-media">
         <Link to={detailPageUrl}>
-          <img alt={title} src={image || fallbackImage} />
+          <LazyImage
+            src={image}
+            alt={title}
+            fallbackSrc={fallbackImage}
+            // aspectRatio="4/3"
+            blur={true}
+            className="menu-image"
+            style={{
+              borderRadius: '12px',
+              width: '100%'
+            }}
+          />
         </Link>
         <a
           href="javascript:void(0);"
