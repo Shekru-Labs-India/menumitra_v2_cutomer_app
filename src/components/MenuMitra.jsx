@@ -27,65 +27,62 @@ const SOCIAL_LINKS = [
 
 const MenuMitra = () => {
   const renderLogo = () => (
-    <div className="d-flex justify-content-center">
-      <a href="/" className="text-decoration-none">
-        <div className="d-flex align-items-center mt-4">
-          <img 
-            src={logo} 
-            alt="MenuMitra Logo" 
-            width="40" 
-            height="40"
-            className="img-fluid" 
-          />
-          <div className="text-dark mb-0 mt-1 fw-semibold ms-2 fs-4">
-            MenuMitra
-          </div>
+    <div className="d-flex flex-column align-items-center mb-4">
+      <a href="/" className="text-decoration-none d-flex align-items-center">
+        <img 
+          src={logo} 
+          alt="MenuMitra Logo" 
+          width="32" 
+          height="32"
+          className="img-fluid" 
+        />
+        <div className="text-dark fw-semibold ms-2 fs-5">
+          MenuMitra
         </div>
       </a>
     </div>
   );
 
   const renderSocialLinks = () => (
-    <div className="d-flex justify-content-center">
+    <div className="d-flex justify-content-center gap-4 mb-3">
       {SOCIAL_LINKS.map(({ platform, url, icon }) => (
         <a
           key={platform}
           href={url}
-          className="mx-3 text-dark"
+          className="text-dark"
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`Visit MenuMitra on ${platform}`}
         >
-          <i className={`${icon} fs-4`}></i>
+          <i className={`${icon} fs-5`}></i>
         </a>
       ))}
     </div>
   );
 
   const renderFooter = () => (
-    <div className="mt-3">
-      <i className="fa-solid fa-bolt"></i> Powered by <br />
+    <div className="text-center">
+      <div className="d-flex align-items-center justify-content-center gap-1 mb-1">
+        <i className="fa-solid fa-bolt"></i>
+        <span>Powered by</span>
+      </div>
       <a 
-        className="text-success text-decoration-none" 
+        className="text-success text-decoration-none d-block mb-1" 
         href="https://www.shekruweb.com" 
         target="_blank" 
         rel="noopener noreferrer"
       >
         Shekru Labs India Pvt. Ltd.
       </a>
-      <p className="text-center mb-0 mt-2">Version 2.0</p>
+      <p className="text-muted mb-0 small">Version 2.0</p>
     </div>
   );
 
   return (
-    <div className="border-top">
+    <div className="border-top pt-4 pb-4">
       {renderLogo()}
-      <div className="text-center pb-5">
-        <div className="my-4">
-          {renderSocialLinks()}
-        </div>
-        {renderFooter()}
-      </div>
+      {renderSocialLinks()}
+      {renderFooter()}
     </div>
   );
 };
