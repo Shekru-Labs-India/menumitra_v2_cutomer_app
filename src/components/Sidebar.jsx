@@ -82,7 +82,7 @@ function Sidebar() {
           {({ isActive }) => (
             <>
               <span className="dz-icon">
-              <i class="fa-solid fa-house"></i>
+              <i className="fa-solid fa-house"></i>
               </span>
               <span>Home</span>
             </>

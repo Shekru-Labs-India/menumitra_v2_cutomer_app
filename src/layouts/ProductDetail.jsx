@@ -10,6 +10,7 @@ import { useCart } from '../contexts/CartContext';
 import { useModal } from '../contexts/ModalContext';
 import { useOutlet } from '../contexts/OutletContext';
 import { useAuth } from '../contexts/AuthContext';
+import LazyImage from '../components/Shared/LazyImage';
 
 // Import Swiper styles
 import 'swiper/css';
@@ -94,16 +95,23 @@ function ProductDetail() {
             }}
             className="demo-swiper swiper-initialized swiper-horizontal swiper-pointer-events swiper-watch-progress swiper-backface-hidden"
           >
-            {[1, 2, 3, 4].map((_, index) => (
+            {(menuDetails.images?.length ? menuDetails.images : [fallbackImage]).map((image, index) => (
               <SwiperSlide 
                 key={index} 
                 role="group" 
-                aria-label={`${index + 1} / 4`}
+                aria-label={`${index + 1} / ${menuDetails.images?.length || 1}`}
                 className={index === 0 ? "swiper-slide-visible swiper-slide-active" : ""}
               >
                 <div className="dz-banner-heading">
                   <div className="overlay-black-light">
-                    <img src={fallbackImage} className="bnr-img" alt="bg-image" />
+                    <LazyImage
+                      src={image}
+                      alt={`${menuDetails.menu_name} image ${index + 1}`}
+                      fallbackSrc={fallbackImage}
+                      className="bnr-img"
+                      aspectRatio="16/9"
+                      blur={true}
+                    />
                   </div>
                 </div>
               </SwiperSlide>
