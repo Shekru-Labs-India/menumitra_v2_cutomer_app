@@ -131,25 +131,23 @@ function ProductDetail() {
         </div>
 
         <div className="account-box style-1">
-          <div className="container">
+          <div className="container p-b60">
             <div className="company-detail">
               <div className="detail-content">
                 <div className="flex-1">
                   <h6 className="text-secondary sub-title">{menuDetails.category_name?.toUpperCase()}</h6>
                   <h4>{menuDetails.menu_name}</h4>
-                  <p>{menuDetails.description || 'No description available'}</p>
                 </div>
               </div>
               <ul className="item-inner">
                 <li>
                   <div className="reviews-info">
-                   
                     <h6 className="reviews">{menuDetails.rating || '0'} ({menuDetails.reviews_count || '0'} reviews)</h6>
                   </div>
                 </li>
-               
               </ul>
             </div>
+
             <div className="item-list-2">
               <div className="price">
                 <span className="text-style text-soft">Price</span>
@@ -197,13 +195,27 @@ function ProductDetail() {
                 </div>
               )}
             </div>
+
             {menuDetails.offer > 0 && (
-              <div className="d-flex align-items-center justify-content-between">
+              <div className="d-flex align-items-center justify-content-between mb-3">
                 <div className="badge bg-accent badge-lg badge-warning font-w400 px-3">
                   {menuDetails.offer}% OFF DISCOUNT
                 </div>     
               </div>
             )}
+
+            {menuDetails.ingredients && (
+              <div className="mb-3">
+                <h6 className="text-style text-soft mb-2">Ingredients</h6>
+                <p>{menuDetails.ingredients}</p>
+              </div>
+            )}
+
+            <div className="mb-3">
+              <h6 className="text-style text-soft mb-2">Description</h6>
+              <p>{menuDetails.description || 'No description available'}</p>
+            </div>
+
           </div>
         </div>
       </div>
