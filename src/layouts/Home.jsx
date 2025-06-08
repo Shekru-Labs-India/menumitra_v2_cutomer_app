@@ -16,8 +16,33 @@ import { OrderTypeModal } from "../components/Modal/variants/OrderTypeModal";
 import { useModal } from "../contexts/ModalContext";
 import OutletInfoBanner from "../components/OutletInfoBanner";
 import SearchBar from "../components/SearchBar";
+import axios from 'axios';
 
 const API_BASE_URL = "https://men4u.xyz/v2";
+
+// Create axios instance with default config
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  }
+});
+
+// Helper function to get auth data
+const getAuthData = () => {
+  const authData = localStorage.getItem("auth");
+  return authData ? JSON.parse(authData) : null;
+};
+
+// Add request interceptor to handle auth token
+api.interceptors.request.use((config) => {
+  const userData = getAuthData();
+  if (userData?.accessToken) {
+    config.headers.Authorization = `Bearer ${userData.accessToken}`;
+  }
+  return config;
+});
 
 // Helper to extract outlet params from the path
 function extractOutletParamsFromPath(pathname) {
@@ -114,12 +139,11 @@ function Home() {
     return cartItem ? cartItem.quantity : 0;
   };
 
-  // Add this function to fetch special menu items
+  // Refactored fetchSpecialMenuItems using axios
   const fetchSpecialMenuItems = async () => {
     console.log("🔄 Fetching special menu items...");
     try {
-      const authData = localStorage.getItem("auth");
-      const userData = authData ? JSON.parse(authData) : null;
+      const userData = getAuthData();
       const userId = userData?.userId || null;
       console.log("📦 Using outlet ID:", outletId);
 
@@ -129,23 +153,10 @@ function Home() {
         return;
       }
 
-      const response = await fetch(
-        `${API_BASE_URL}/user/get_special_menu_list`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${userData?.accessToken}`,
-          },
-          body: JSON.stringify({
-            user_id: userId,
-            outlet_id: outletId,
-          }),
-        }
-      );
-
-      const data = await response.json();
+      const { data } = await api.post('/user/get_special_menu_list', {
+        user_id: userId,
+        outlet_id: outletId,
+      });
 
       if (data.detail && data.detail.special_menu_list) {
         console.log(
@@ -155,7 +166,7 @@ function Home() {
         setSpecialMenuItems(data.detail.special_menu_list);
       }
     } catch (error) {
-      console.error("❌ Error fetching special menu items:", error);
+      console.error("❌ Error fetching special menu items:", error.response?.data || error.message);
     }
   };
 
@@ -210,28 +221,12 @@ function Home() {
     setFilteredMenuItems(searchResults);
   };
 
-  // Add this new function to fetch menu list by category
+  // Refactored fetchMenuListByCategory using axios
   const fetchMenuListByCategory = async () => {
     try {
-      const authData = localStorage.getItem("auth");
-      const userData = authData ? JSON.parse(authData) : null;
-
-      const response = await fetch(
-        `${API_BASE_URL}/user/get_all_menu_list_by_category`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${userData?.accessToken}`,
-          },
-          body: JSON.stringify({
-            outlet_id: outletId,
-          }),
-        }
-      );
-
-      const data = await response.json();
+      const { data } = await api.post('/user/get_all_menu_list_by_category', {
+        outlet_id: outletId,
+      });
 
       if (data.detail) {
         // Transform the data into a more usable format
@@ -272,7 +267,7 @@ function Home() {
         });
       }
     } catch (error) {
-      console.error("Error fetching menu list by category:", error);
+      console.error("Error fetching menu list by category:", error.response?.data || error.message);
     }
   };
 
