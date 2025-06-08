@@ -145,35 +145,36 @@ function Checkout() {
       <>
         <Header />
         <div className="page-content">
-          <div className="container bottom-content" style={{ paddingBottom: "390px" }}>
-            <div className="item-list style-2">
-              <div
-                className="d-flex flex-column justify-content-center align-items-center"
-                style={{
-                  minHeight: "60vh",
-                  width: "100%",
-                }}
-              >
-                <svg width="64" height="64" fill="none" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="12" fill="#f8f9fa" />
-                  <path
-                    d="M7 18a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7.16 15l.94-2h7.45a2 2 0 0 0 1.92-1.45l2.13-7.11A1 1 0 0 0 18.64 3H6.21l-.94-2H1v2h2l3.6 7.59-1.35 2.44A2 2 0 0 0 5 17h12v-2H7.42a.25.25 0 0 1-.26-.19z"
-                    fill="#adb5bd"
-                  />
-                </svg>
-                <span
-                  className="text-muted fs-5 mt-3 mb-2"
-                  style={{ color: "#b0b3b8" }}
-                >
-                  Your cart is empty
-                </span>
-                <button
-                  className="btn btn-outline-success px-4 py-3 mt-4"
-                  style={{ borderRadius: 12, fontWeight: 500 }}
-                  onClick={() => navigate("/")}
-                >
-                  Go to Home
-                </button>
+          <div className="content-inner pt-0">
+            <div className="container p-b20">
+              <div className="d-flex align-items-center justify-content-center" style={{ minHeight: 'calc(100vh - 300px)' }}>
+                <div className="text-center">
+                  <div className="mb-4">
+                    <svg 
+                      width="80" 
+                      height="80" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="1.5" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                      style={{ opacity: '0.5' }}
+                      className="text-muted"
+                    >
+                      <path d="M7 18a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7.16 15l.94-2h7.45a2 2 0 0 0 1.92-1.45l2.13-7.11A1 1 0 0 0 18.64 3H6.21l-.94-2H1v2h2l3.6 7.59-1.35 2.44A2 2 0 0 0 5 17h12v-2H7.42a.25.25 0 0 1-.26-.19z" />
+                    </svg>
+                  </div>
+                  <h5 className="mb-3">Your cart is empty</h5>
+                  <p className="text-muted mb-4">Add some items to your cart to get started</p>
+                  <button 
+                    className="btn btn-primary px-4 py-3"
+                    style={{ borderRadius: 12, fontWeight: 500 }}
+                    onClick={() => navigate("/")}
+                  >
+                    Go to Home
+                  </button>
+                </div>
               </div>
             </div>
           </div>
