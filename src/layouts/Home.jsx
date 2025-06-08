@@ -407,8 +407,7 @@ function Home() {
                       <div className="col-6" key={menuItem.menuId}>
                         <VerticalMenuCard
                           image={
-                            menuItem.image ||
-                            "https://cdn.vox-cdn.com/thumbor/aNM9cSJCkTc4-RK1avHURrKBOjU=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/20059022/shutterstock_1435374326.jpg"
+                            menuItem.image ? menuItem.image : <i className="fa-solid fa-utensils font-55"></i>
                           }
                           title={menuItem.menuName}
                           currentPrice={menuItem.portions?.[0]?.price ?? 0}
@@ -437,8 +436,7 @@ function Home() {
                     <div className="col-6" key={menuItem.menuId}>
                       <VerticalMenuCard
                         image={
-                          menuItem.image ||
-                          "https://cdn.vox-cdn.com/thumbor/aNM9cSJCkTc4-RK1avHURrKBOjU=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/20059022/shutterstock_1435374326.jpg"
+                          menuItem.image ? menuItem.image : <i className="fa-solid fa-utensils font-55 opacity-50 text-muted"></i>
                         }
                         title={menuItem.menuName}
                         currentPrice={menuItem.portions?.[0]?.price ?? 0}

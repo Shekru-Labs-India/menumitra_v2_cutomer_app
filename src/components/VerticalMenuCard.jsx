@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import LazyImage from "./Shared/LazyImage";
-import fallbackImage from "../assets/images/food/food8.png";
 import { useModal } from "../contexts/ModalContext";
 import { useCart } from "../contexts/CartContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -142,18 +141,30 @@ const VerticalMenuCard = ({
     <div className="card-item style-1">
       <div className="dz-media">
         <Link to={detailPageUrl}>
-          <LazyImage
-            src={image}
-            alt={title}
-            fallbackSrc={fallbackImage}
-            // aspectRatio="4/3"
-            blur={true}
-            className="menu-image"
-            style={{
-              borderRadius: "12px",
-              width: "100%",
-            }}
-          />
+          {typeof image === 'string' ? (
+            <LazyImage
+              src={image}
+              alt={title}
+              blur={true}
+              className="menu-image"
+              style={{
+                borderRadius: "12px",
+                width: "100%",
+              }}
+            />
+          ) : (
+            <div 
+              className="d-flex justify-content-center align-items-center"
+              style={{
+                borderRadius: "12px",
+                width: "100%",
+                aspectRatio: "4/3",
+                backgroundColor: "#f8f9fa"
+              }}
+            >
+              {image}
+            </div>
+          )}
         </Link>
         <a
           href="javascript:void(0);"
@@ -296,7 +307,7 @@ const VerticalMenuCard = ({
 };
 
 VerticalMenuCard.propTypes = {
-  image: PropTypes.string.isRequired,
+  image: PropTypes.oneOfType([PropTypes.string, PropTypes.element]).isRequired,
   title: PropTypes.string.isRequired,
   currentPrice: PropTypes.number.isRequired,
   reviewCount: PropTypes.number,
