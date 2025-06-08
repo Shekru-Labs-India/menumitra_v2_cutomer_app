@@ -6,6 +6,7 @@ import { useOutlet } from "../contexts/OutletContext";
 import Timer from "../components/Timer";
 import CancelOrderModal from "../components/Modal/variants/CancelOrderModal";
 import axios from "axios";
+import { useAuth } from "../contexts/AuthContext";
 
 // Add this new component for no orders state
 const NoOrders = ({ message }) => (
@@ -33,6 +34,7 @@ const NoOrders = ({ message }) => (
 
 function Orders() {
   const { outletId } = useOutlet();
+  const { user, setShowAuthOffcanvas } = useAuth();
   const [ordersData, setOrdersData] = useState({
     paid: {},
     cancelled: {},
@@ -335,6 +337,56 @@ function Orders() {
     setSelectedOrderId(null);
     setSelectedOrderNumber(null);
   };
+
+  const handleLogin = () => {
+    setShowAuthOffcanvas(true);
+  };
+
+  // First check if user is not logged in
+  if (!user) {
+    return (
+      <>
+        <Header />
+        <div className="page-content">
+          <div className="content-inner pt-0">
+            <div className="container p-b20">
+              <div className="d-flex align-items-center justify-content-center" style={{ minHeight: 'calc(100vh - 300px)' }}>
+                <div className="text-center">
+                  <div className="mb-4">
+                    <svg 
+                      width="80" 
+                      height="80" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="1.5" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                      style={{ opacity: '0.5' }}
+                      className="text-muted"
+                    >
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                  </div>
+                  <h5 className="mb-3">Please Login to View Orders</h5>
+                  <p className="text-muted mb-4">Login to your account to see your order history</p>
+                  <button 
+                    className="btn btn-primary px-4 py-3"
+                    style={{ borderRadius: 12, fontWeight: 500 }}
+                    onClick={handleLogin}
+                  >
+                    Login Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>
