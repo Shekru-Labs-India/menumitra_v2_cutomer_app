@@ -24,7 +24,9 @@ function Footer() {
 
   return (
     <div>
-      <div className="menubar-area style-2 footer-fixed border-top">
+      <div className="menubar-area style-2 footer-fixed border-top"
+      style={{boxShadow: '0 -4px 6px -1px rgba(0,0,0,0.2)'}}
+      >
         <div className="toolbar-inner menubar-nav">
           <NavLink
             to="/"
