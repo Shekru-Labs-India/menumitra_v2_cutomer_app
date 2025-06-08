@@ -37,14 +37,18 @@ function Profile() {
                 <img src={defaultAvatar} alt="Profile" />
               </div>
               <div className="about-profile">
-                <h5 className="sub-title mb-0">{user?.name || "Guest User"}</h5>
+                <h5 className="sub-title mb-0">
+                  {isAuthenticated ? user?.name : "Please login to continue"}
+                </h5>
                 <h6 className="sub-title fade-text mb-0 font-w500">
-                  {user?.mobile ? `+91 ${user.mobile}` : "No phone number"}
+                  {isAuthenticated ? `+91 ${user?.mobile}` : "Login to view your details"}
                 </h6>
               </div>
-              <Link to="/edit-profile" className="edit-profile">
-                <i className="fa-solid fa-pencil" />
-              </Link>
+              {isAuthenticated && (
+                <Link to="/edit-profile" className="edit-profile">
+                  <i className="fa-solid fa-pencil" />
+                </Link>
+              )}
             </div>
             {/* <div className="location-box">
               <i className="location fa-solid fa-location-dot" />
