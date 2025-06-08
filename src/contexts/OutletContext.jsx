@@ -221,6 +221,9 @@ export const OutletProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Error fetching outlet details:', error);
+      if (error.response?.status === 404) {
+        navigate('/notfound');
+      }
       throw error;
     }
   };

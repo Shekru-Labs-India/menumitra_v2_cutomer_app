@@ -25,6 +25,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { ThemeColorProvider } from "./contexts/ThemeColorContext";
 import CustomerSavings from "./layouts/CustomerSavings";
 import OutletDetails from "./layouts/OutletDetails";
+import OutletNotFound from "./components/OutletNotFound";
 import axios from "axios";
 
 function App() {
@@ -73,6 +74,7 @@ function App() {
                         path="/outlet-details"
                         element={<OutletDetails />}
                       />
+                      <Route path="/notfound" element={<OutletNotFound />} />
                     </Routes>
                     <Sidebar />
                   </SidebarProvider>
