@@ -371,7 +371,9 @@ function OrderDetail() {
           </div>
 
           {/* Table Information */}
-          {orderDetails.order_details.table_number && (
+          {orderDetails.order_details.table_number && 
+           orderDetails.order_details.table_number.length > 0 && 
+           !['counter', 'drive-through', 'delivery', 'parcel'].includes(orderDetails.order_details.order_type.toLowerCase()) && (
             <div className="card dz-card mt-3">
               <div className="card-header border-0 pb-0">
                 <h5 className="card-title">Table Information</h5>
