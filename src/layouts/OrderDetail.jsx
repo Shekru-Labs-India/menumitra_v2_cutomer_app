@@ -144,6 +144,73 @@ function OrderDetail() {
     </svg>
   );
 
+  // Move getStatusClass outside of getStatusBadgeStyle
+  const getStatusClass = (status) => {
+    switch (status.toLowerCase()) {
+      case 'placed': return 'status-placed';
+      case 'cooking': return 'status-cooking';
+      case 'served': return 'status-served';
+      case 'cancelled': return 'status-cancelled';
+      case 'paid': return 'status-paid';
+      default: return 'status-default';
+    }
+  };
+
+  // Enhanced status badge style with better color coding
+  const getStatusBadgeStyle = (status) => {
+    const statusColors = {
+      'placed': { 
+        backgroundColor: '#FFF8E1', 
+        color: '#FFA000',
+        border: '1px solid #FFE082',
+        padding: '6px 15px',
+        fontSize: '12px',
+        fontWeight: '500'
+      },
+      'cooking': { 
+        backgroundColor: '#E8F5E9', 
+        color: '#027335',
+        border: '1px solid #A5D6A7',
+        padding: '6px 15px',
+        fontSize: '12px',
+        fontWeight: '500'
+      },
+      'served': { 
+        backgroundColor: '#E3F2FD', 
+        color: '#1565C0',
+        border: '1px solid #90CAF9',
+        padding: '6px 15px',
+        fontSize: '12px',
+        fontWeight: '500'
+      },
+      'cancelled': { 
+        backgroundColor: '#FFEBEE', 
+        color: '#C62828',
+        border: '1px solid #FFCDD2',
+        padding: '6px 15px',
+        fontSize: '12px',
+        fontWeight: '500'
+      },
+      'paid': { 
+        backgroundColor: '#E0F2F1', 
+        color: '#00796B',
+        border: '1px solid #80CBC4',
+        padding: '6px 15px',
+        fontSize: '12px',
+        fontWeight: '500'
+      }
+    };
+
+    return statusColors[status.toLowerCase()] || {
+      backgroundColor: '#FAFAFA',
+      color: '#616161',
+      border: '1px solid #E0E0E0',
+      padding: '6px 15px',
+      fontSize: '12px',
+      fontWeight: '500'
+    };
+  };
+
   useEffect(() => {
     const fetchOrderDetails = async () => {
       try {
@@ -217,163 +284,145 @@ function OrderDetail() {
   return (
     <>
       <Header />
-      <div className="page-content bottom-content">
-        <div className="container">
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <h5 className="title border-bottom pb-1 font-w600">
-              Order #{orderDetails.order_details.order_number}
-            </h5>
-            <span className="status-badge">
-              {orderDetails.order_details.order_status}
-            </span>
-          </div>
-
-          <div className="order-summery">
-            <ul className="summery-list mb-4">
-              {orderDetails.menu_details.map((menu, index) => (
-                <li key={index}>
-                  <p className="order-name">{menu.menu_name}</p>
-                  <div className="d-flex align-items-center">
-                    <span className="me-2">
-                      {menu.menu_food_type.toLowerCase() === "veg" ? <VegIcon /> : <NonVegIcon />}
-                    </span>
-                    <span className="order-quantity">x{menu.quantity}</span>
-                  </div>
-                </li>
-              ))}
-              <li>
-                <h6 className="mb-0 font-12">Bill Amount</h6>
-                <span className="font-12 font-w600 text-dark">₹{orderDetails.order_details.total_bill_amount}</span>
-              </li>
-              <li>
-                <h6 className="mb-0 font-12">Service Charge ({orderDetails.order_details.service_charges_percent}%)</h6>
-                <span className="font-12 font-w600 text-dark">₹{orderDetails.order_details.service_charges_amount}</span>
-              </li>
-              <li>
-                <h6 className="mb-0 font-12">GST ({orderDetails.order_details.gst_percent}%)</h6>
-                <span className="font-12 font-w600 text-dark">₹{orderDetails.order_details.gst_amount}</span>
-              </li>
-              {orderDetails.order_details.discount_amount > 0 && (
-                <li>
-                  <h6 className="mb-0 font-12">Discount ({orderDetails.order_details.discount_percent}%)</h6>
-                  <span className="font-12 font-w600 text-success">-₹{orderDetails.order_details.discount_amount}</span>
-                </li>
-              )}
-              <li>
-                <h6 className="mb-0 font-14 text-primary">FINAL AMOUNT</h6>
-                <span className="font-14 font-w600 text-primary">₹{orderDetails.order_details.final_grand_total}</span>
-              </li>
-            </ul>
-
-            <div className="deliver-location mb-4">
-              <div className="d-flex align-items-center mb-3">
-                <span className="font-w600 flex-1">Deliver to</span>
-                <span className="font-w800">{orderDetails.order_details.order_type}</span>
+      <div className="page-content bottom-content" style={{ backgroundColor: 'var(--bs-gray-100)' }}>
+        <div className="container pb-4">
+          {/* Order Header Card */}
+          <div className="card dz-card">
+            <div className="card-body">
+              <div className="d-flex align-items-center justify-content-between mb-2">
+                <div>
+                  <span className="text-soft mb-2 d-block">Order ID</span>
+                  <h5 className="mb-0">#{orderDetails.order_details.order_number}</h5>
+                </div>
+                <span 
+                  className={`badge rounded-pill ${getStatusClass(orderDetails.order_details.order_status)}`}
+                  style={getStatusBadgeStyle(orderDetails.order_details.order_status)}
+                >
+                  {orderDetails.order_details.order_status}
+                </span>
               </div>
-              {orderDetails.order_details.table_number && (
-                <h6 className="address font-14">
-                  Table: {orderDetails.order_details.table_number.join(", ")}
-                  ({orderDetails.order_details.section_name})
-                </h6>
-              )}
+              <div className="d-flex align-items-center justify-content-between">
+                <span className="text-soft">
+                  <i className="fa-regular fa-clock me-2"></i>
+                  {`${orderDetails.order_details.date} ${orderDetails.order_details.time}`}
+                </span>
+                <span className="text-soft">
+                  <i className="fa-solid fa-location-dot me-2"></i>
+                  {orderDetails.order_details.order_type}
+                </span>
+              </div>
             </div>
+          </div>
 
-            <h5 className="title border-bottom pb-2 mb-2 font-w600">Basic Detail</h5>
-            <div className="view-title mb-4">
-              <ul>
-                <li>
-                  <span>Order ID</span>
-                  <span className="text-dark">{orderDetails.order_details.order_number}</span>
-                </li>
-                <li>
-                  <span>Payment Method</span>
-                  <span className="text-dark">{orderDetails.order_details.payment_method || "Not Paid"}</span>
-                </li>
-                <li>
-                  <span>Delivery On</span>
-                  <span className="text-dark">{`${orderDetails.order_details.date} ${orderDetails.order_details.time}`}</span>
-                </li>
-              </ul>
+          {/* Order Items */}
+          <div className="card dz-card mt-3">
+            <div className="card-header border-0 pb-0">
+              <h5 className="card-title">Order Items</h5>
             </div>
-
-            {/* <h5 className="title border-bottom pb-2 mb-2 font-w600">
-              Order Tracking
-            </h5>
-            <ul className="dz-timeline style-2 mb-5">
-              <li className="timeline-item active">
-                <h6 className="timeline-tilte">Order Created</h6>
-                <p className="timeline-date">30 May 2025 12:19 PM</p>
-              </li>
-              <li className="timeline-item active">
-                <h6 className="timeline-tilte">Order Received</h6>
-                <p className="timeline-date">30 May 2025 12:19 PM</p>
-              </li>
-              <li className="timeline-item active">
-                <h6 className="timeline-tilte">Order Cooking</h6>
-                <p className="timeline-date">30 May 2025 12:19 PM</p>
-              </li>
-              <li className="timeline-item">
-                <h6 className="timeline-tilte">Order Processed</h6>
-                <p className="timeline-date">30 May 2025 12:19 PM</p>
-              </li>
-              <li className="timeline-item">
-                <h6 className="timeline-tilte">Order Delivered</h6>
-                <p className="timeline-date">30 May 2025 12:19 PM</p>
-              </li>
-            </ul> */}
-
-            <h5 className="title border-bottom pb-2 mb-2 font-w600">
-              User Information
-            </h5>
-            <div className="item-list style-6 m-b30">
-              <ul>
-                <li>
-                  <div className="item-content">
-                    <div className="item-inner">
-                      <div className="item-title-row">
-                        <h6 className="item-title mb-1 sub-title">
-                          <a href="#">{orderDetails.order_details.user_name}</a>
-                        </h6>
-                        <span className="info">
-                          <i className="fa-solid me-1 fa-phone" />
-                          {orderDetails.order_details.user_mobile}
-                        </span>
-                      </div>
+            <div className="card-body pt-3">
+              {orderDetails.menu_details.map((menu, index) => (
+                <div key={index} className="dz-order-item d-flex align-items-center justify-content-between py-3" 
+                     style={{ borderBottom: index !== orderDetails.menu_details.length - 1 ? '1px solid var(--border-color)' : 'none' }}>
+                  <div className="d-flex align-items-center">
+                    <div className="food-type-icon me-3">
+                      {menu.menu_food_type.toLowerCase() === "veg" ? <VegIcon /> : <NonVegIcon />}
+                    </div>
+                    <div>
+                      <h6 className="mb-1">{menu.menu_name}</h6>
+                      <p className="mb-0 text-soft">Qty: {menu.quantity}</p>
                     </div>
                   </div>
-                </li>
-              </ul>
+                </div>
+              ))}
             </div>
+          </div>
 
-            <h5 className="title border-bottom pb-2 mb-2 font-w600">
-              Store Information
-            </h5>
-            <div className="item-list style-6">
-              <ul>
-                <li>
-                  <div className="item-content">
-                    <div className="item-inner">
-                      <div className="item-title-row">
-                        <h6 className="item-title mb-1 sub-title">
-                          <a href="#">{orderDetails.order_details.outlet_name}</a>
-                        </h6>
-                      </div>
-                    </div>
-                  </div>
+          {/* Bill Details */}
+          <div className="card dz-card mt-3">
+            <div className="card-header border-0 pb-0">
+              <h5 className="card-title">Payment Details</h5>
+            </div>
+            <div className="card-body pt-3">
+              <ul className="list-group list-group-flush">
+                <li className="list-group-item d-flex justify-content-between px-0">
+                  <span>Bill Amount</span>
+                  <strong>₹{orderDetails.order_details.total_bill_amount}</strong>
+                </li>
+                <li className="list-group-item d-flex justify-content-between px-0">
+                  <span>Service Charge ({orderDetails.order_details.service_charges_percent}%)</span>
+                  <strong>₹{orderDetails.order_details.service_charges_amount}</strong>
+                </li>
+                <li className="list-group-item d-flex justify-content-between px-0">
+                  <span>GST ({orderDetails.order_details.gst_percent}%)</span>
+                  <strong>₹{orderDetails.order_details.gst_amount}</strong>
+                </li>
+                {orderDetails.order_details.discount_amount > 0 && (
+                  <li className="list-group-item d-flex justify-content-between px-0 text-success">
+                    <span>Discount ({orderDetails.order_details.discount_percent}%)</span>
+                    <strong>-₹{orderDetails.order_details.discount_amount}</strong>
+                  </li>
+                )}
+                <li className="list-group-item d-flex justify-content-between px-0 border-0">
+                  <h6 className="mb-0">Total Amount</h6>
+                  <h6 className="mb-0 text-primary">₹{orderDetails.order_details.final_grand_total}</h6>
                 </li>
               </ul>
             </div>
           </div>
 
-          
-          <OrderRating 
-            orderId={orderDetails.order_details.order_id}
-            initialRating={orderDetails.order_details.rating ? 
-              parseInt(orderDetails.order_details.rating) : 
-              undefined
-            }
-          />
+          {/* Table Information */}
+          {orderDetails.order_details.table_number && (
+            <div className="card dz-card mt-3">
+              <div className="card-header border-0 pb-0">
+                <h5 className="card-title">Table Information</h5>
+              </div>
+              <div className="card-body pt-3">
+                <div className="d-flex align-items-center">
+                  <i className="fa-solid fa-table me-3 text-primary"></i>
+                  <div>
+                    <h6 className="mb-1">Table {orderDetails.order_details.table_number.join(", ")}</h6>
+                    <p className="mb-0 text-soft">{orderDetails.order_details.section_name}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
+          {/* Customer & Restaurant Info */}
+          <div className="card dz-card mt-3">
+            <div className="card-header border-0 d-flex justify-content-between align-items-center">
+              <h5 className="card-title mb-0">Contact Information</h5>
+              <a href={`tel:${orderDetails.order_details.user_mobile}`} className="btn btn-primary btn-sm">
+                <i className="fa-solid fa-phone me-2"></i>Call
+              </a>
+            </div>
+            <div className="card-body pt-3">
+              <div className="d-flex align-items-center mb-3">
+                <div className="avatar avatar-lg me-3">
+                  <img src="/assets/images/avatar/1.jpg" alt="user" className="rounded-circle" />
+                </div>
+                <div>
+                  <h6 className="mb-1">{orderDetails.order_details.user_name}</h6>
+                  <p className="mb-0 text-soft">{orderDetails.order_details.user_mobile}</p>
+                </div>
+              </div>
+              <div className="border-top pt-3">
+                <h6 className="mb-2">Restaurant</h6>
+                <p className="mb-0">{orderDetails.order_details.outlet_name}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Rating Section */}
+          <div className="mt-3">
+            <OrderRating 
+              orderId={orderDetails.order_details.order_id}
+              initialRating={orderDetails.order_details.rating ? 
+                parseInt(orderDetails.order_details.rating) : 
+                undefined
+              }
+            />
+          </div>
         </div>
       </div>
       <Footer />

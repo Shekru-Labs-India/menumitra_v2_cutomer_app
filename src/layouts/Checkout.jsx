@@ -479,22 +479,18 @@ function Checkout() {
       }
 
       const orderItems = cartItems.map((item) => ({
-        menu_id: item.menuId.toString(),
+        menu_id: item.menuId,
+        portion_id: item.portionId,
         quantity: item.quantity,
-        portion_name: item.portionName.toLowerCase(),
         comment: item.comment || "",
       }));
 
-      // Use order_id instead of order_number
       const response = await axios.post(
-        "https://men4u.xyz/v2/user/complete_or_cancel_existing_order_create_new_order",
+        "https://men4u.xyz/v2/user/add_to_existing_order",
         {
           order_id: existingOrderModal.orderDetails.order_id.toString(),
-          user_id: userId,
-          order_status: "paid",
+          user_id: userId.toString(),
           outlet_id: outletId.toString(),
-          section_id: sectionId.toString(),
-          order_type: "parcel",
           order_items: orderItems,
         },
         {
@@ -506,11 +502,11 @@ function Checkout() {
         }
       );
 
-      if (response.data?.order_id) {
+      if (response.data?.detail?.order_id) {
         clearCart();
         localStorage.removeItem("cart");
         toast.success("Items added to existing order successfully!");
-        navigate("/");
+        navigate("/orders");
       }
     } catch (error) {
       console.error("Error adding to existing order:", error);
