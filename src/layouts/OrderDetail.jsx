@@ -398,9 +398,9 @@ function OrderDetail() {
             </div>
             <div className="card-body pt-3">
               <div className="d-flex align-items-center mb-3">
-                <div className="avatar avatar-lg me-3">
+                {/* <div className="avatar avatar-lg me-3">
                   <img src="/assets/images/avatar/1.jpg" alt="user" className="rounded-circle" />
-                </div>
+                </div> */}
                 <div>
                   <h6 className="mb-1">{orderDetails.order_details.user_name}</h6>
                   <p className="mb-0 text-soft">{orderDetails.order_details.user_mobile}</p>
@@ -415,13 +415,15 @@ function OrderDetail() {
 
           {/* Rating Section */}
           <div className="mt-3">
-            <OrderRating 
-              orderId={orderDetails.order_details.order_id}
-              initialRating={orderDetails.order_details.rating ? 
-                parseInt(orderDetails.order_details.rating) : 
-                undefined
-              }
-            />
+            {orderDetails.order_details.order_status.toLowerCase() === 'paid' && (
+              <OrderRating 
+                orderId={orderDetails.order_details.order_id}
+                initialRating={orderDetails.order_details.rating ? 
+                  parseInt(orderDetails.order_details.rating) : 
+                  undefined
+                }
+              />
+            )}
           </div>
         </div>
       </div>
