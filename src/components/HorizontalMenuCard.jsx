@@ -73,7 +73,7 @@ const HorizontalMenuCard = ({
 
   return (
     <div 
-      className="horizontal-menu-card card product-card position-relative shadow border border-1 border-lighth"
+      className="horizontal-menu-card card product-card position-relative shadow border border-1 border-light"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}

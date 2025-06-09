@@ -39,7 +39,7 @@ function Header() {
   // Modify the useEffect to get first name
   useEffect(() => {
     const fullName = getUserName();
-    const firstName = fullName.split(' ')[0];
+    const firstName = fullName?.split(' ')[0];
     setUserName(firstName);
   }, []); 
 
