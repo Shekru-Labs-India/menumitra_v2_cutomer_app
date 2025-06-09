@@ -348,14 +348,30 @@ function OrderDetail() {
                   <span>Bill Amount</span>
                   <strong>₹{orderDetails.order_details.total_bill_amount}</strong>
                 </li>
-                <li className="list-group-item d-flex justify-content-between px-0">
-                  <span>Service Charge ({orderDetails.order_details.service_charges_percent}%)</span>
-                  <strong>₹{orderDetails.order_details.service_charges_amount}</strong>
-                </li>
-                <li className="list-group-item d-flex justify-content-between px-0">
-                  <span>GST ({orderDetails.order_details.gst_percent}%)</span>
-                  <strong>₹{orderDetails.order_details.gst_amount}</strong>
-                </li>
+                {orderDetails.order_details.service_charges_amount > 0 && (
+                  <li className="list-group-item d-flex justify-content-between px-0">
+                    <span>Service Charge ({orderDetails.order_details.service_charges_percent}%)</span>
+                    <strong>₹{orderDetails.order_details.service_charges_amount}</strong>
+                  </li>
+                )}
+                {orderDetails.order_details.gst_amount > 0 && (
+                  <li className="list-group-item d-flex justify-content-between px-0">
+                    <span>GST ({orderDetails.order_details.gst_percent}%)</span>
+                    <strong>₹{orderDetails.order_details.gst_amount}</strong>
+                  </li>
+                )}
+                {orderDetails.order_details.charges > 0 && (
+                  <li className="list-group-item d-flex justify-content-between px-0">
+                    <span>Additional Charges</span>
+                    <strong>₹{orderDetails.order_details.charges}</strong>
+                  </li>
+                )}
+                {orderDetails.order_details.tip > 0 && (
+                  <li className="list-group-item d-flex justify-content-between px-0">
+                    <span>Tip</span>
+                    <strong>₹{orderDetails.order_details.tip}</strong>
+                  </li>
+                )}
                 {orderDetails.order_details.discount_amount > 0 && (
                   <li className="list-group-item d-flex justify-content-between px-0 text-success">
                     <span>Discount ({orderDetails.order_details.discount_percent}%)</span>
