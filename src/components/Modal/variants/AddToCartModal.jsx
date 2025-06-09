@@ -611,17 +611,10 @@ export const AddToCartModal = () => {
 
         <button 
           type="button" 
-          className="btn btn-success" 
+          className="btn btn-primary py-3 px-2 border-0 rounded-pill fs-6 fw-500 flex-grow-1"
           onClick={handleAddToCart}
           disabled={!hasValidQuantity()}
           style={{
-            backgroundColor: '#28a745',
-            border: 'none',
-            borderRadius: '8px',
-            padding: '12px 24px',
-            fontSize: '15px',
-            fontWeight: '500',
-            flex: '1',
             opacity: hasValidQuantity() ? 1 : 0.5
           }}
         >

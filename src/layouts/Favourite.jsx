@@ -7,7 +7,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useFavorite } from '../hooks/api/useFavorite';
 
 const API_BASE_URL = 'https://men4u.xyz/v2';
-const DEFAULT_IMAGE = 'https://as2.ftcdn.net/jpg/02/79/12/03/1000_F_279120368_WzIoR2LV2Cgy33oxy6eEKQYSkaWr8AFU.jpg';
 
 function Favourite() {
   const navigate = useNavigate();
@@ -160,7 +159,7 @@ function Favourite() {
                           isSpecial: menu.is_special,
                           isFavourite: true,
                           isActive: true,
-                          image: menu.image || DEFAULT_IMAGE
+                          image: menu.image
                         }}
                         onFavoriteToggle={() => handleFavoriteToggle(menu.menu_id)}
                       />
