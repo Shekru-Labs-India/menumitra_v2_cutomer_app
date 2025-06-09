@@ -65,6 +65,7 @@ function Orders() {
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [selectedOrderNumber, setSelectedOrderNumber] = useState(null);
   const [cancelOrderStatus, setCancelOrderStatus] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Call both APIs independently
@@ -324,7 +325,12 @@ function Orders() {
                 {ongoingOrders.map((order) => {
                   console.log('Order status:', order.status, 'Order time:', order.time);
                   return (
-                    <div key={order.id} className="order-item mb-3">
+                    <div 
+                      key={order.id} 
+                      className="order-item mb-3"
+                      onClick={() => navigate(`/order-detail/${order.orderId}`)}
+                      style={{ cursor: 'pointer' }}
+                    >
                       <div
                         className="border border-warning shadow-sm p-3 rounded"
                       >
