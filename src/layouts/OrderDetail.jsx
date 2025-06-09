@@ -317,7 +317,7 @@ function OrderDetail() {
           {/* Order Items */}
           <div className="card dz-card mt-3">
             <div className="card-header border-0 pb-0">
-              <h5 className="card-title">Order Items</h5>
+              <h5 className="card-title">Order Items ({orderDetails.order_details.menu_count})</h5>
             </div>
             <div className="card-body pt-3">
               {orderDetails.menu_details.map((menu, index) => (
@@ -328,9 +328,25 @@ function OrderDetail() {
                       {menu.menu_food_type.toLowerCase() === "veg" ? <VegIcon /> : <NonVegIcon />}
                     </div>
                     <div>
-                      <h6 className="mb-1">{menu.menu_name}</h6>
-                      <p className="mb-0 text-soft">Qty: {menu.quantity}</p>
+                      <div className="d-flex align-items-center gap-2">
+                        <h6 className="mb-1">{menu.menu_name}</h6>
+                        {menu.is_favourite === 1 && (
+                          <i className="fa-solid fa-heart text-danger"></i>
+                        )}
+                      </div>
+                      <p className="mb-0 text-soft">
+                        Qty: {menu.quantity} × ₹{menu.price}
+                        {menu.comment && <span className="ms-2">• {menu.comment}</span>}
+                      </p>
+                      {menu.offer > 0 && (
+                        <span className="badge bg-success-light text-success">
+                          {menu.offer}% OFF
+                        </span>
+                      )}
                     </div>
+                  </div>
+                  <div className="text-end">
+                    <h6 className="mb-0">₹{menu.net_price}</h6>
                   </div>
                 </div>
               ))}
@@ -339,8 +355,13 @@ function OrderDetail() {
 
           {/* Bill Details */}
           <div className="card dz-card mt-3">
-            <div className="card-header border-0 pb-0">
+            <div className="card-header border-0 pb-0 d-flex justify-content-between align-items-center">
               <h5 className="card-title">Payment Details</h5>
+              {orderDetails.order_details.payment_method && (
+                <span className="badge bg-primary-light text-primary">
+                  {orderDetails.order_details.payment_method}
+                </span>
+              )}
             </div>
             <div className="card-body pt-3">
               <ul className="list-group list-group-flush">
@@ -372,17 +393,35 @@ function OrderDetail() {
                     <strong>₹{orderDetails.order_details.tip}</strong>
                   </li>
                 )}
+                {orderDetails.order_details.special_discount > 0 && (
+                  <li className="list-group-item d-flex justify-content-between px-0 text-success">
+                    <span>Special Discount</span>
+                    <strong>-₹{orderDetails.order_details.special_discount}</strong>
+                  </li>
+                )}
                 {orderDetails.order_details.discount_amount > 0 && (
                   <li className="list-group-item d-flex justify-content-between px-0 text-success">
                     <span>Discount ({orderDetails.order_details.discount_percent}%)</span>
                     <strong>-₹{orderDetails.order_details.discount_amount}</strong>
                   </li>
                 )}
-                <li className="list-group-item d-flex justify-content-between px-0 border-0">
-                  <h6 className="mb-0">Total Amount</h6>
-                  <h6 className="mb-0 text-primary">₹{orderDetails.order_details.final_grand_total}</h6>
+                <li className="list-group-item d-flex justify-content-between px-0">
+                  <h6 className="mb-0">Grand Total</h6>
+                  <h6 className="mb-0">₹{orderDetails.order_details.grand_total}</h6>
                 </li>
+                {orderDetails.order_details.final_grand_total !== orderDetails.order_details.grand_total && (
+                  <li className="list-group-item d-flex justify-content-between px-0 border-0">
+                    <h6 className="mb-0">Final Amount</h6>
+                    <h6 className="mb-0 text-primary">₹{orderDetails.order_details.final_grand_total}</h6>
+                  </li>
+                )}
               </ul>
+              {orderDetails.order_details.order_payment_settle_type && 
+               orderDetails.order_details.order_payment_settle_type !== "null" && (
+                <div className="mt-3 pt-3 border-top">
+                  <span className="text-soft">Settlement Type: {orderDetails.order_details.order_payment_settle_type}</span>
+                </div>
+              )}
             </div>
           </div>
 
