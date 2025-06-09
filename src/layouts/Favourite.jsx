@@ -23,7 +23,6 @@ function Favourite() {
       setLoading(true);
       setError(null);
 
-      // Get auth data from localStorage
       const authData = localStorage.getItem("auth");
       const auth = authData ? JSON.parse(authData) : null;
 
@@ -47,15 +46,14 @@ function Favourite() {
 
       const data = await response.json();
 
-      if (response.ok) {
-        // Transform the new response structure into a flat array of menus
+      if (response.ok || response.status === 404) {
         const allMenus = [];
         if (data.detail?.lists) {
           Object.entries(data.detail.lists).forEach(([outletName, menus]) => {
             menus.forEach(menu => {
               allMenus.push({
                 ...menu,
-                outlet_name: outletName // Add outlet name to each menu item
+                outlet_name: outletName
               });
             });
           });
@@ -160,8 +158,42 @@ function Favourite() {
       <>
         <Header />
         <div className="page-content">
-          <div className="container">
-            <div className="alert alert-danger">{error}</div>
+          <div className="content-inner pt-0">
+            <div className="container p-b20">
+              <div
+                className="d-flex flex-column justify-content-center align-items-center"
+                style={{
+                  minHeight: "60vh",
+                  width: "100%",
+                }}
+              >
+                {/* Error SVG Icon */}
+                <svg width="64" height="64" fill="none" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="12" fill="#f8f9fa" />
+                  <path
+                    d="M12 8v5M12 16h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    stroke="#adb5bd"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span
+                  className="text-muted fs-5 mt-3 mb-2"
+                  style={{ color: "#b0b3b8" }}
+                >
+                  Oops! Something went wrong
+                </span>
+                <p className="text-muted mb-4">Unable to fetch your favourite items</p>
+                <button
+                  className="btn btn-outline-success px-4 py-3"
+                  style={{ borderRadius: 12, fontWeight: 500 }}
+                  onClick={() => window.location.reload()}
+                >
+                  Try Again
+                </button>
+              </div>
+            </div>
           </div>
         </div>
         <Footer />
@@ -259,33 +291,36 @@ function Favourite() {
                   ))
                 ) : (
                   <div className="col-12">
-                    <div className="d-flex align-items-center justify-content-center" style={{ minHeight: 'calc(100vh - 300px)' }}>
-                      <div className="text-center">
-                        <div className="mb-4">
-                          <svg 
-                            width="80" 
-                            height="80" 
-                            viewBox="0 0 24 24" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            strokeWidth="1.5" 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round"
-                            style={{ opacity: '0.5' }}
-                            className="text-muted"
-                          >
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                          </svg>
-                        </div>
-                        <h5 className="mb-3">No Favourite Menus</h5>
-                        <p className="text-muted mb-4">You haven't added any menus to your favorites yet</p>
-                        <button 
-                          className="btn btn-primary" 
-                          onClick={navigateToMenus}
-                        >
-                          See Menus
-                        </button>
-                      </div>
+                    <div
+                      className="d-flex flex-column justify-content-center align-items-center"
+                      style={{
+                        minHeight: "calc(100vh - 300px)",
+                        width: "100%",
+                      }}
+                    >
+                      {/* Heart SVG Icon */}
+                      <svg 
+                        width="80" 
+                        height="80" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="1.5" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                        style={{ opacity: '0.5' }}
+                        className="text-muted"
+                      >
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                      </svg>
+                      <h5 className="mb-3">No Favourite Items</h5>
+                      <p className="text-muted mb-4">You haven't added any menus to your favorites yet</p>
+                      <button 
+                        className="btn btn-primary" 
+                        onClick={navigateToMenus}
+                      >
+                        Browse Menu
+                      </button>
                     </div>
                   </div>
                 )}
