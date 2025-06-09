@@ -1,8 +1,49 @@
 import React, { useState, useEffect } from 'react';
 
-const Timer = ({ initialSeconds }) => {
-  const [seconds, setSeconds] = useState(initialSeconds);
-  const [isCompleted, setIsCompleted] = useState(false);
+const Timer = ({ orderTime }) => {
+  console.log('Timer component received orderTime:', orderTime);
+
+  const [seconds, setSeconds] = useState(() => {
+    try {
+      // Add error handling for time parsing
+      if (!orderTime) {
+        console.error('No orderTime provided to Timer component');
+        return 0;
+      }
+
+      // Calculate initial seconds remaining when component mounts
+      const [timeStr, period] = orderTime.split(" ");
+      const [hours, minutes, seconds] = timeStr.split(":");
+      const orderDateTime = new Date();
+      
+      console.log('Parsing time:', { hours, minutes, seconds, period });
+      
+      // Set the order time
+      if (period === "PM" && hours !== "12") {
+        orderDateTime.setHours(parseInt(hours) + 12);
+      } else if (period === "AM" && hours === "12") {
+        orderDateTime.setHours(0);
+      } else {
+        orderDateTime.setHours(parseInt(hours));
+      }
+      orderDateTime.setMinutes(parseInt(minutes));
+      orderDateTime.setSeconds(parseInt(seconds));
+
+      const currentTime = new Date();
+      const timeDifferenceInSeconds = Math.floor(
+        (currentTime - orderDateTime) / 1000
+      );
+      
+      const remainingSeconds = Math.max(90 - timeDifferenceInSeconds, 0);
+      console.log('Calculated remaining seconds:', remainingSeconds);
+      
+      return remainingSeconds;
+    } catch (error) {
+      console.error('Error in Timer initialization:', error);
+      return 0;
+    }
+  });
+  const [isCompleted, setIsCompleted] = useState(seconds === 0);
   const TOTAL_SECONDS = 90;
 
   useEffect(() => {

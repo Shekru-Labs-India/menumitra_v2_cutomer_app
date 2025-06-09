@@ -135,77 +135,23 @@ function Orders() {
 
       if (data.detail?.orders) {
         const transformedOngoingOrders = data.detail.orders.map((order) => {
-          // Parse order time
-          const [hours, minutes, seconds] = order.time.split(":");
-          const [_, period] = order.time.split(" ");
-          const orderTime = new Date();
-
-          // Set the order time
-          if (period === "PM" && hours !== "12") {
-            orderTime.setHours(parseInt(hours) + 12);
-          } else if (period === "AM" && hours === "12") {
-            orderTime.setHours(0);
-          } else {
-            orderTime.setHours(parseInt(hours));
-          }
-          orderTime.setMinutes(parseInt(minutes));
-          orderTime.setSeconds(parseInt(seconds.split(" ")[0]));
-
-          const currentTime = new Date();
-          const timeDifferenceInSeconds = Math.floor(
-            (currentTime - orderTime) / 1000
-          );
-          const remainingSeconds = Math.max(90 - timeDifferenceInSeconds, 0);
-          const showTimer = order.status === "placed" && remainingSeconds > 0;
-
+          console.log('Raw order data:', order);
+          
           return {
             id: order.order_number,
             orderId: order.order_id,
             orderNumber: order.order_number,
             itemCount: order.menu_count,
-            status:
-              order.status === "placed"
-                ? "Order Placed"
-                : order.status === "cooking"
-                ? "Preparing"
-                : order.status.charAt(0).toUpperCase() + order.status.slice(1),
+            status: order.status,
             iconColor: "#FFA902",
             iconBgClass: "bg-warning",
-            orderSteps: [
-              {
-                title: "Order Created",
-                timestamp: order.time,
-                completed: true,
-              },
-              {
-                title: "Order Received",
-                timestamp: order.time,
-                completed: order.status !== "placed",
-              },
-              {
-                title: "Order Confirmed",
-                timestamp: order.time,
-                completed: order.status === "cooking",
-              },
-              {
-                title: "Order Processed",
-                timestamp: order.time,
-                completed: false,
-              },
-              {
-                title: "Order Delivered",
-                timestamp: order.time,
-                completed: false,
-              },
-            ],
             isExpanded: false,
             parentId: "accordionExample1",
             orderType: order.order_type,
             outletName: order.outlet_name,
             totalAmount: order.final_grand_total,
             paymentMethod: order.payment_method || "Not selected",
-            showTimer,
-            remainingSeconds,
+            time: order.time,
           };
         });
 
@@ -241,33 +187,6 @@ function Orders() {
             status: "Completed",
             iconColor: "#00B67A",
             iconBgClass: "bg-success",
-            orderSteps: [
-              {
-                title: "Order Created",
-                timestamp: order.datetime,
-                completed: true,
-              },
-              {
-                title: "Order Received",
-                timestamp: order.datetime,
-                completed: true,
-              },
-              {
-                title: "Order Confirmed",
-                timestamp: order.datetime,
-                completed: true,
-              },
-              {
-                title: "Order Processed",
-                timestamp: order.datetime,
-                completed: true,
-              },
-              {
-                title: "Order Delivered",
-                timestamp: order.datetime,
-                completed: true,
-              },
-            ],
             isExpanded: false,
             parentId: "accordionExample3",
           });
@@ -286,18 +205,6 @@ function Orders() {
             status: "Cancelled",
             iconColor: "#E74C3C",
             iconBgClass: "bg-danger",
-            orderSteps: [
-              {
-                title: "Order Created",
-                timestamp: order.datetime,
-                completed: true,
-              },
-              {
-                title: "Order Cancelled",
-                timestamp: order.datetime,
-                completed: true,
-              },
-            ],
             isExpanded: false,
             parentId: "accordionExample2",
           });
@@ -414,50 +321,57 @@ function Orders() {
             <div className="mb-4">
               <h6 className="mb-3">Ongoing Orders</h6>
               <div className="orders-list">
-                {ongoingOrders.map((order) => (
-                  <div key={order.id} className="order-item mb-3">
-                    <div
-                      className="border border-warning shadow-sm p-3 rounded"
-                    >
-                      <div className="d-flex align-items-center justify-content-between w-100">
-                        {/* Left side with icon and order details */}
-                        <div className="d-flex align-items-center">
-                          <span className={`icon-box ${order.iconBgClass}`}>
-                            <i className="fa-solid fa-bag-shopping text-white"></i>
-                          </span>
-                          <div className="ms-3">
-                            <h6 className="mb-0">Order #{order.orderNumber}</h6>
-                            <span className="text-soft">
-                              {order.itemCount} Items {order.status}
+                {ongoingOrders.map((order) => {
+                  console.log('Order status:', order.status, 'Order time:', order.time);
+                  return (
+                    <div key={order.id} className="order-item mb-3">
+                      <div
+                        className="border border-warning shadow-sm p-3 rounded"
+                      >
+                        <div className="d-flex align-items-center justify-content-between w-100">
+                          {/* Left side with icon and order details */}
+                          <div className="d-flex align-items-center">
+                            <span className={`icon-box ${order.iconBgClass}`}>
+                              <i className="fa-solid fa-bag-shopping text-white"></i>
                             </span>
+                            <div className="ms-3">
+                              <h6 className="mb-0">Order #{order.orderNumber}</h6>
+                              <span className="text-soft">
+                                {order.itemCount} Items {order.status}
+                              </span>
+                            </div>
                           </div>
-                        </div>
 
-                        {/* Right side with dine-in status and cancel button */}
-                        <div className="d-flex flex-column align-items-end">
-                          <span className="text-soft mb-2">{order.orderType} </span>
-                          {order.status === "placed" && (
-                            <button
-                              className="btn btn-sm text-white"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleCancelOrder(
-                                  order.orderId,
-                                  order.orderNumber
-                                );
-                              }}
-                              style={{
-                                backgroundColor: "#FF0000",
-                              }}
-                            >
-                              Cancel Order
-                            </button>
+                          {/* Center with Timer */}
+                          {order.status === "placed" && order.time && (
+                            <div style={{ marginRight: '16px' }}>
+                              <Timer orderTime={order.time} />
+                            </div>
                           )}
+
+                          {/* Right side with dine-in status and cancel button */}
+                          <div className="d-flex flex-column align-items-end">
+                            <span className="text-soft mb-2">{order.orderType}</span>
+                            {order.status === "placed" && (
+                              <button
+                                className="btn btn-sm text-white"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCancelOrder(order.orderId, order.orderNumber);
+                                }}
+                                style={{
+                                  backgroundColor: "#FF0000",
+                                }}
+                              >
+                                Cancel Order
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -556,7 +470,6 @@ function Orders() {
                             status={order.status}
                             iconColor={order.iconColor}
                             iconBgClass={order.iconBgClass}
-                            orderSteps={order.orderSteps}
                             isExpanded={order.isExpanded}
                             parentId={order.parentId}
                           />
@@ -587,7 +500,6 @@ function Orders() {
                             status={order.status}
                             iconColor={order.iconColor}
                             iconBgClass={order.iconBgClass}
-                            orderSteps={order.orderSteps}
                             isExpanded={order.isExpanded}
                             parentId={order.parentId}
                           />
