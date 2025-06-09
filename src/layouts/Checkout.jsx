@@ -9,6 +9,7 @@ import { useOutlet } from "../contexts/OutletContext";
 import OrderExistsModal from "../components/Modal/variants/OrderExistsModal";
 import toast, { Toaster } from 'react-hot-toast';
 import { useAuth } from "../contexts/AuthContext";
+import LazyImage from "../components/Shared/LazyImage";
 
 const FooterSummary = React.memo(function FooterSummary({ checkoutDetails }) {
   // Fallback to zeros if no data yet
@@ -603,12 +604,20 @@ function Checkout() {
                   >
                     <div className="item-content">
                       <div className="item-media media media-100">
-                        <img
+                        <LazyImage
                           src={
                             item.image ||
                             "https://cdn.vox-cdn.com/thumbor/aNM9cSJCkTc4-RK1avHURrKBOjU=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/20059022/shutterstock_1435374326.jpg"
                           }
                           alt={item.menuName}
+                          blur={true}
+                          className="menu-image"
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            borderRadius: "12px"
+                          }}
                         />
                       </div>
                       <div className="item-inner">
