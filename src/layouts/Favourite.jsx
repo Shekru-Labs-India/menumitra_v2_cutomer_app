@@ -90,6 +90,58 @@ function Favourite() {
     }
   };
 
+  // Silent refresh function - no loading state
+  const silentRefresh = async () => {
+    try {
+      const authData = localStorage.getItem("auth");
+      const auth = authData ? JSON.parse(authData) : null;
+
+      if (!auth || !auth.userId || !auth.accessToken) {
+        return;
+      }
+
+      const response = await axios.post(
+        `${API_BASE_URL}/user/get_favourite_list`,
+        {
+          outlet_id: outletId,
+          user_id: auth.userId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${auth.accessToken}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+
+      const allMenus = [];
+      if (response.data.detail?.lists) {
+        Object.entries(response.data.detail.lists).forEach(([outletName, menus]) => {
+          menus.forEach(menu => {
+            allMenus.push({
+              ...menu,
+              outlet_name: outletName
+            });
+          });
+        });
+      }
+      setFavoriteMenus(allMenus);
+    } catch (err) {
+      console.error("Error in silent refresh:", err);
+    }
+  };
+
+  // Handle favorite update
+  const handleFavoriteUpdate = async (menuId, isFavorite) => {
+    if (!isFavorite) { // If item was removed
+      // Remove item optimistically from UI first
+      setFavoriteMenus(prev => prev.filter(menu => menu.menu_id !== menuId));
+      // Then refresh the list silently
+      await silentRefresh();
+    }
+  };
+
   // Check if user is not logged in
   if (!user) {
     return (
@@ -183,44 +235,6 @@ function Favourite() {
     );
   }
 
-  const handleFavoriteToggle = async (menuId) => {
-    try {
-      const authData = localStorage.getItem("auth");
-      const auth = authData ? JSON.parse(authData) : null;
-
-      if (!auth || !auth.userId || !auth.accessToken) {
-        setShowAuthOffcanvas(true);
-        return;
-      }
-
-      await axios.post(
-        `${API_BASE_URL}/user/remove_favourite_menu`,
-        {
-          outlet_id: outletId,
-          menu_id: menuId,
-          user_id: auth.userId,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${auth.accessToken}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        }
-      );
-
-      // If successful, refresh the favorites list
-      loadFavorites();
-
-    } catch (err) {
-      console.error("Error updating favorite status:", err);
-      const errorMessage = err.response?.data?.detail || "Failed to connect to the server";
-      openModal("ERROR", {
-        message: errorMessage,
-      });
-    }
-  };
-
   return (
     <>
       <Header />
@@ -261,7 +275,7 @@ function Favourite() {
                           outletName: menu.outlet_name,
                           outletId: menu.outlet_id
                         }}
-                        onFavoriteUpdate={() => handleFavoriteToggle(menu.menu_id)}
+                        onFavoriteUpdate={handleFavoriteUpdate}
                       />
                     </div>
                   ))
