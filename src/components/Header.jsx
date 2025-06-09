@@ -36,10 +36,12 @@ function Header() {
     );
   };
 
-  // Move username initialization to a separate useEffect with empty dependency array
+  // Modify the useEffect to get first name
   useEffect(() => {
-    setUserName(getUserName());
-  }, []); // This will run only once when component mounts
+    const fullName = getUserName();
+    const firstName = fullName.split(' ')[0];
+    setUserName(firstName);
+  }, []); 
 
   // Keep scroll handler in separate useEffect
   useEffect(() => {
@@ -80,23 +82,23 @@ function Header() {
                   className="menu-toggler me-2"
                   onClick={toggleSidebar}
                 >
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M3.5 7C3.5 6.44772 3.94772 6 4.5 6H19.5C20.0523 6 20.5 6.44772 20.5 7C20.5 7.55228 20.0523 8 19.5 8H4.5C3.94772 8 3.5 7.55228 3.5 7ZM3.5 12C3.5 11.4477 3.94772 11 4.5 11H19.5C20.0523 11 20.5 11.4477 20.5 12C20.5 12.5523 20.0523 13 19.5 13H4.5C3.94772 13 3.5 12.5523 3.5 12ZM3.5 17C3.5 16.4477 3.94772 16 4.5 16H19.5C20.0523 16 20.5 16.4477 20.5 17C20.5 17.5523 20.0523 18 19.5 18H4.5C3.94772 18 3.5 17.5523 3.5 17Z"
-                      fill="currentColor"
-                    />
-                  </svg>
+                  <i className="fas fa-bars"></i>
                 </a>
                 <h5 className="title mb-0 text-nowrap">MenuMitra</h5>
               </div>
               <div className="mid-content" />
-              <div className="right-content">{userName}</div>
+              <div className="right-content">
+                {!isProfileRoute() && (
+                  <Link to="/profile" className="text-decoration-none" style={{ color: 'inherit' }}>
+                    <div className="d-flex align-items-center">
+                      <div className="user-icon me-2">
+                        <i className="fas fa-user"></i>
+                      </div>
+                      <span>{userName}</span>
+                    </div>
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
         </div>
