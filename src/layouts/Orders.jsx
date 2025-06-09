@@ -331,9 +331,13 @@ function Orders() {
                         <div className="d-flex align-items-center justify-content-between w-100">
                           {/* Left side with icon and order details */}
                           <div className="d-flex align-items-center">
-                            <span className={`icon-box ${order.iconBgClass}`}>
-                              <i className="fa-solid fa-bag-shopping text-white"></i>
-                            </span>
+                            {order.status === "placed" ? (
+                              <Timer orderTime={order.time} />
+                            ) : (
+                              <span className={`icon-box ${order.iconBgClass}`}>
+                                <i className="fa-solid fa-bag-shopping text-white"></i>
+                              </span>
+                            )}
                             <div className="ms-3">
                               <h6 className="mb-0">Order #{order.orderNumber}</h6>
                               <span className="text-soft">
@@ -341,13 +345,6 @@ function Orders() {
                               </span>
                             </div>
                           </div>
-
-                          {/* Center with Timer */}
-                          {order.status === "placed" && order.time && (
-                            <div style={{ marginRight: '16px' }}>
-                              <Timer orderTime={order.time} />
-                            </div>
-                          )}
 
                           {/* Right side with dine-in status and cancel button */}
                           <div className="d-flex flex-column align-items-end">
