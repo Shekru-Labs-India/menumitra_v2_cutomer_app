@@ -394,15 +394,9 @@ function OrderDetail() {
           <div className="card dz-card mt-3">
             <div className="card-header border-0 d-flex justify-content-between align-items-center">
               <h5 className="card-title mb-0">Contact Information</h5>
-              <a href={`tel:${orderDetails.order_details.user_mobile}`} className="btn btn-primary btn-sm">
-                <i className="fa-solid fa-phone me-2"></i>Call
-              </a>
             </div>
             <div className="card-body pt-3">
               <div className="d-flex align-items-center mb-3">
-                {/* <div className="avatar avatar-lg me-3">
-                  <img src="/assets/images/avatar/1.jpg" alt="user" className="rounded-circle" />
-                </div> */}
                 <div>
                   <h6 className="mb-1">{orderDetails.order_details.user_name}</h6>
                   <p className="mb-0 text-soft">{orderDetails.order_details.user_mobile}</p>
