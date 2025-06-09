@@ -14,7 +14,6 @@ function Favourite() {
   const navigate = useNavigate();
   const [favoriteMenus, setFavoriteMenus] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const { user, setShowAuthOffcanvas } = useAuth();
   const { openModal } = useModal();
   const { outletId } = useOutlet();
@@ -22,7 +21,6 @@ function Favourite() {
   const loadFavorites = async () => {
     try {
       setLoading(true);
-      setError(null);
 
       const authData = localStorage.getItem("auth");
       const auth = authData ? JSON.parse(authData) : null;
@@ -62,11 +60,7 @@ function Favourite() {
 
     } catch (err) {
       console.error("Error fetching favorites:", err);
-      const errorMessage = err.response?.data?.detail || "Failed to connect to the server";
-      setError(errorMessage);
-      openModal("ERROR", {
-        message: errorMessage,
-      });
+      setFavoriteMenus([]);
     } finally {
       setLoading(false);
     }
@@ -187,54 +181,6 @@ function Favourite() {
     );
   }
 
-  if (error) {
-    return (
-      <>
-        <Header />
-        <div className="page-content">
-          <div className="content-inner pt-0">
-            <div className="container p-b20">
-              <div
-                className="d-flex flex-column justify-content-center align-items-center"
-                style={{
-                  minHeight: "60vh",
-                  width: "100%",
-                }}
-              >
-                {/* Error SVG Icon */}
-                <svg width="64" height="64" fill="none" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="12" fill="#f8f9fa" />
-                  <path
-                    d="M12 8v5M12 16h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    stroke="#adb5bd"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                <span
-                  className="text-muted fs-5 mt-3 mb-2"
-                  style={{ color: "#b0b3b8" }}
-                >
-                  Oops! Something went wrong
-                </span>
-                <p className="text-muted mb-4">Unable to fetch your favourite items</p>
-                <button
-                  className="btn btn-outline-success px-4 py-3"
-                  style={{ borderRadius: 12, fontWeight: 500 }}
-                  onClick={() => window.location.reload()}
-                >
-                  Try Again
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <Footer />
-      </>
-    );
-  }
-
   return (
     <>
       <Header />
@@ -242,9 +188,6 @@ function Favourite() {
         <div className="content-inner pt-0">
           <div className="container p-b20">
             <div className="dashboard-area">
-              {/* <div className="title-bar">
-                <span className="title mb-0 font-18">Favorite Items</span>
-              </div> */}
               <div className="row g-3 mb-3">
                 {favoriteMenus.length > 0 ? (
                   favoriteMenus.map((menu) => (
