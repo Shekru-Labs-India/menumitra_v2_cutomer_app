@@ -4,28 +4,85 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import VerticalMenuCard from "../components/VerticalMenuCard";
 import { useAuth } from '../contexts/AuthContext';
-import { useFavorite } from '../hooks/api/useFavorite';
+import { useModal } from "../contexts/ModalContext";
+import { useOutlet } from "../contexts/OutletContext";
 
 const API_BASE_URL = 'https://men4u.xyz/v2';
 
 function Favourite() {
   const navigate = useNavigate();
   const [favoriteMenus, setFavoriteMenus] = useState([]);
-  const { getFavorites, toggleFavorite, loading, error } = useFavorite();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const { user, setShowAuthOffcanvas } = useAuth();
+  const { openModal } = useModal();
+  const { outletId } = useOutlet();
+
+  const loadFavorites = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Get auth data from localStorage
+      const authData = localStorage.getItem("auth");
+      const auth = authData ? JSON.parse(authData) : null;
+
+      if (!auth || !auth.userId || !auth.accessToken) {
+        setShowAuthOffcanvas(true);
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/user/get_favourite_list`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${auth.accessToken}`,
+        },
+        body: JSON.stringify({
+          outlet_id: outletId,
+          user_id: auth.userId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Transform the new response structure into a flat array of menus
+        const allMenus = [];
+        if (data.detail?.lists) {
+          Object.entries(data.detail.lists).forEach(([outletName, menus]) => {
+            menus.forEach(menu => {
+              allMenus.push({
+                ...menu,
+                outlet_name: outletName // Add outlet name to each menu item
+              });
+            });
+          });
+        }
+        setFavoriteMenus(allMenus);
+      } else {
+        setError(data.detail || "Failed to fetch favorites");
+        openModal("ERROR", {
+          message: data.detail || "Failed to fetch favorites",
+        });
+      }
+    } catch (err) {
+      console.error("Error fetching favorites:", err);
+      setError("Failed to connect to the server");
+      openModal("ERROR", {
+        message: "Failed to connect to the server",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadFavorites = async () => {
-      try {
-        const favorites = await getFavorites();
-        setFavoriteMenus(favorites);
-      } catch (err) {
-        // Error handling is managed by the hook
-      }
-    };
-
-    loadFavorites();
-  }, []);
+    if (user) {
+      loadFavorites();
+    }
+  }, [user]);
 
   const navigateToMenus = () => {
     navigate('/');
@@ -114,12 +171,45 @@ function Favourite() {
 
   const handleFavoriteToggle = async (menuId) => {
     try {
-      await toggleFavorite(menuId, true);
-      // Refresh the favorites list
-      const updatedFavorites = await getFavorites();
-      setFavoriteMenus(updatedFavorites);
+      // Get auth data from localStorage
+      const authData = localStorage.getItem("auth");
+      const auth = authData ? JSON.parse(authData) : null;
+
+      if (!auth || !auth.userId || !auth.accessToken) {
+        setShowAuthOffcanvas(true);
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/user/remove_favourite_menu`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${auth.accessToken}`,
+        },
+        body: JSON.stringify({
+          outlet_id: outletId,
+          menu_id: menuId,
+          user_id: auth.userId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Refresh the favorites list
+        loadFavorites();
+      } else {
+        console.error("Failed to update favorite status:", data.detail);
+        openModal("ERROR", {
+          message: data.detail || "Failed to update favorite status",
+        });
+      }
     } catch (err) {
-      // Error handling is managed by the hook
+      console.error("Error updating favorite status:", err);
+      openModal("ERROR", {
+        message: "Failed to connect to the server",
+      });
     }
   };
 
@@ -143,7 +233,7 @@ function Favourite() {
                         }
                         title={menu.menu_name}
                         currentPrice={menu.portions?.[0]?.price || 0}
-                        reviewCount={menu.rating ? parseInt(menu.rating) : null}
+                        reviewCount={menu.rating ? parseFloat(menu.rating) : null}
                         isFavorite={true}
                         discount={menu.offer > 0 ? `${menu.offer}%` : null}
                         menuItem={{
@@ -159,9 +249,11 @@ function Favourite() {
                           isSpecial: menu.is_special,
                           isFavourite: true,
                           isActive: true,
-                          image: menu.image
+                          image: menu.image,
+                          outletName: menu.outlet_name,
+                          outletId: menu.outlet_id
                         }}
-                        onFavoriteToggle={() => handleFavoriteToggle(menu.menu_id)}
+                        onFavoriteUpdate={() => handleFavoriteToggle(menu.menu_id)}
                       />
                     </div>
                   ))
