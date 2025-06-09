@@ -6,6 +6,7 @@ import VerticalMenuCard from "../components/VerticalMenuCard";
 import { useAuth } from '../contexts/AuthContext';
 import { useModal } from "../contexts/ModalContext";
 import { useOutlet } from "../contexts/OutletContext";
+import axios from "axios";
 
 const API_BASE_URL = 'https://men4u.xyz/v2';
 
@@ -31,45 +32,40 @@ function Favourite() {
         return;
       }
 
-      const response = await fetch(`${API_BASE_URL}/user/get_favourite_list`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${auth.accessToken}`,
-        },
-        body: JSON.stringify({
+      const response = await axios.post(
+        `${API_BASE_URL}/user/get_favourite_list`,
+        {
           outlet_id: outletId,
           user_id: auth.userId,
-        }),
-      });
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${auth.accessToken}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
 
-      const data = await response.json();
-
-      if (response.ok || response.status === 404) {
-        const allMenus = [];
-        if (data.detail?.lists) {
-          Object.entries(data.detail.lists).forEach(([outletName, menus]) => {
-            menus.forEach(menu => {
-              allMenus.push({
-                ...menu,
-                outlet_name: outletName
-              });
+      const allMenus = [];
+      if (response.data.detail?.lists) {
+        Object.entries(response.data.detail.lists).forEach(([outletName, menus]) => {
+          menus.forEach(menu => {
+            allMenus.push({
+              ...menu,
+              outlet_name: outletName
             });
           });
-        }
-        setFavoriteMenus(allMenus);
-      } else {
-        setError(data.detail || "Failed to fetch favorites");
-        openModal("ERROR", {
-          message: data.detail || "Failed to fetch favorites",
         });
       }
+      setFavoriteMenus(allMenus);
+
     } catch (err) {
       console.error("Error fetching favorites:", err);
-      setError("Failed to connect to the server");
+      const errorMessage = err.response?.data?.detail || "Failed to connect to the server";
+      setError(errorMessage);
       openModal("ERROR", {
-        message: "Failed to connect to the server",
+        message: errorMessage,
       });
     } finally {
       setLoading(false);
@@ -139,20 +135,6 @@ function Favourite() {
     );
   }
 
-  if (loading) {
-    return (
-      <>
-        <Header />
-        <div className="page-content">
-          <div className="container">
-            <div className="text-center p-5">Loading...</div>
-          </div>
-        </div>
-        <Footer />
-      </>
-    );
-  }
-
   if (error) {
     return (
       <>
@@ -203,7 +185,6 @@ function Favourite() {
 
   const handleFavoriteToggle = async (menuId) => {
     try {
-      // Get auth data from localStorage
       const authData = localStorage.getItem("auth");
       const auth = authData ? JSON.parse(authData) : null;
 
@@ -212,35 +193,30 @@ function Favourite() {
         return;
       }
 
-      const response = await fetch(`${API_BASE_URL}/user/remove_favourite_menu`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${auth.accessToken}`,
-        },
-        body: JSON.stringify({
+      await axios.post(
+        `${API_BASE_URL}/user/remove_favourite_menu`,
+        {
           outlet_id: outletId,
           menu_id: menuId,
           user_id: auth.userId,
-        }),
-      });
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${auth.accessToken}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
 
-      const data = await response.json();
+      // If successful, refresh the favorites list
+      loadFavorites();
 
-      if (response.ok) {
-        // Refresh the favorites list
-        loadFavorites();
-      } else {
-        console.error("Failed to update favorite status:", data.detail);
-        openModal("ERROR", {
-          message: data.detail || "Failed to update favorite status",
-        });
-      }
     } catch (err) {
       console.error("Error updating favorite status:", err);
+      const errorMessage = err.response?.data?.detail || "Failed to connect to the server";
       openModal("ERROR", {
-        message: "Failed to connect to the server",
+        message: errorMessage,
       });
     }
   };
