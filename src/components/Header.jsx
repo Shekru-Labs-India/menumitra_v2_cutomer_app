@@ -88,7 +88,7 @@ function Header() {
               </div>
               <div className="mid-content" />
               <div className="right-content">
-                {!isProfileRoute() && (
+                {!isProfileRoute() && userName && (
                   <Link to="/profile" className="text-decoration-none" style={{ color: 'inherit' }}>
                     <div className="d-flex align-items-center">
                       <div className="user-icon me-2">
