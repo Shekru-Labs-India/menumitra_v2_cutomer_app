@@ -3,11 +3,11 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useCart } from "../contexts/CartContext";
 import axios from "axios";
-import { API_CONFIG } from "../constants/config";
+import { API_CONFIG, getApiUrl } from "../constants/config";
 import { useNavigate } from "react-router-dom";
 import { useOutlet } from "../contexts/OutletContext";
 import OrderExistsModal from "../components/Modal/variants/OrderExistsModal";
-import toast, { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
 import LazyImage from "../components/Shared/LazyImage";
 
@@ -102,19 +102,22 @@ function Checkout() {
         <div className="page-content">
           <div className="content-inner pt-0">
             <div className="container p-b20">
-              <div className="d-flex align-items-center justify-content-center" style={{ minHeight: 'calc(100vh - 300px)' }}>
+              <div
+                className="d-flex align-items-center justify-content-center"
+                style={{ minHeight: "calc(100vh - 300px)" }}
+              >
                 <div className="text-center">
                   <div className="mb-4">
-                    <svg 
-                      width="80" 
-                      height="80" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="1.5" 
-                      strokeLinecap="round" 
+                    <svg
+                      width="80"
+                      height="80"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
                       strokeLinejoin="round"
-                      style={{ opacity: '0.5' }}
+                      style={{ opacity: "0.5" }}
                       className="text-muted"
                     >
                       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -122,8 +125,10 @@ function Checkout() {
                     </svg>
                   </div>
                   <h5 className="mb-3">Please Login to Checkout</h5>
-                  <p className="text-muted mb-4">Login to your account to complete your order</p>
-                  <button 
+                  <p className="text-muted mb-4">
+                    Login to your account to complete your order
+                  </p>
+                  <button
                     className="btn btn-primary px-4 py-3"
                     style={{ borderRadius: 12, fontWeight: 500 }}
                     onClick={handleLogin}
@@ -148,27 +153,32 @@ function Checkout() {
         <div className="page-content">
           <div className="content-inner pt-0">
             <div className="container p-b20">
-              <div className="d-flex align-items-center justify-content-center" style={{ minHeight: 'calc(100vh - 300px)' }}>
+              <div
+                className="d-flex align-items-center justify-content-center"
+                style={{ minHeight: "calc(100vh - 300px)" }}
+              >
                 <div className="text-center">
                   <div className="mb-4">
-                    <svg 
-                      width="80" 
-                      height="80" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="1.5" 
-                      strokeLinecap="round" 
+                    <svg
+                      width="80"
+                      height="80"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
                       strokeLinejoin="round"
-                      style={{ opacity: '0.5' }}
+                      style={{ opacity: "0.5" }}
                       className="text-muted"
                     >
                       <path d="M7 18a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7.16 15l.94-2h7.45a2 2 0 0 0 1.92-1.45l2.13-7.11A1 1 0 0 0 18.64 3H6.21l-.94-2H1v2h2l3.6 7.59-1.35 2.44A2 2 0 0 0 5 17h12v-2H7.42a.25.25 0 0 1-.26-.19z" />
                     </svg>
                   </div>
                   <h5 className="mb-3">Your cart is empty</h5>
-                  <p className="text-muted mb-4">Add some items to your cart to get started</p>
-                  <button 
+                  <p className="text-muted mb-4">
+                    Add some items to your cart to get started
+                  </p>
+                  <button
                     className="btn btn-primary px-4 py-3"
                     style={{ borderRadius: 12, fontWeight: 500 }}
                     onClick={() => navigate("/")}
@@ -223,7 +233,7 @@ function Checkout() {
       }));
 
       const response = await axios.post(
-        "https://men4u.xyz/v2/user/get_checkout_detail",
+        getApiUrl("get_checkout_detail"),
         {
           outlet_id: 1,
           order_items: orderItems,
@@ -281,7 +291,7 @@ function Checkout() {
       const accessToken = auth?.accessToken;
 
       const response = await axios.post(
-        "https://men4u.xyz/v2/user/check_order_exist",
+        getApiUrl("check_order_exist"),
         {
           user_id: userId,
           outlet_id: outletId,
@@ -320,21 +330,105 @@ function Checkout() {
         return;
       }
 
-      // First check for existing order
-      const existingOrder = await checkExistingOrder(userId, outletId);
-
-      if (existingOrder) {
-        setExistingOrderModal({
-          isOpen: true,
-          orderDetails: {
-            ...existingOrder,
-            order_id: existingOrder.order_id // Ensure order_id is set correctly
-          }
-        });
-        return;
+      // Step 1: Check for existing order for the USER
+      try {
+        const existingOrderForUser = await checkExistingOrder(userId, outletId);
+        if (existingOrderForUser) {
+          console.log(
+            "User existing order found. Details:",
+            existingOrderForUser
+          );
+          setExistingOrderModal({
+            isOpen: true,
+            orderDetails: {
+              ...existingOrderForUser,
+              order_id: existingOrderForUser.order_id,
+              // Ensure order_status is explicitly set from the response, with a fallback if needed
+              order_status: existingOrderForUser.order_status || "unknown",
+            },
+          });
+          return; // Stop here, wait for user interaction with the modal
+        }
+      } catch (error) {
+        if (error.response?.status === 404) {
+          console.log(
+            "No existing order found for user. Proceeding to check table status."
+          );
+          // Continue to check table status or create new order
+        } else {
+          console.error("Error checking existing user order:", error);
+          toast.error(
+            "Unable to verify existing user orders. Please try again later."
+          );
+          return;
+        }
       }
 
-      // Proceed with creating new order
+      // Step 2: If no existing user order, then for DINE-IN orders, check table availability
+      if (outletDetails && outletDetails.orderType === "dine-in") {
+        // Get table_id from outletDetails or localStorage
+        const tableId =
+          outletDetails?.tableId || localStorage.getItem("tableId");
+        if (tableId) {
+          try {
+            const tableOrderResponse = await axios.post(
+              getApiUrl("get_table_order"),
+              {
+                table_id: tableId,
+                outlet_id: outletId,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                  "Content-Type": "application/json",
+                  Accept: "application/json",
+                },
+              }
+            );
+
+            if (tableOrderResponse.data?.order_id) {
+              console.log(
+                "Table existing order found. Details:",
+                tableOrderResponse.data
+              );
+              // Found an existing order on the occupied table, show modal to add to it
+              setExistingOrderModal({
+                isOpen: true,
+                orderDetails: {
+                  ...tableOrderResponse.data,
+                  order_id: tableOrderResponse.data.order_id,
+                  // Ensure order_status is explicitly set from the response, with a fallback if needed
+                  order_status:
+                    tableOrderResponse.data.order_status || "unknown",
+                },
+              });
+              return; // Stop here, wait for user interaction with the modal
+            }
+          } catch (tableOrderError) {
+            if (tableOrderError.response?.status === 404) {
+              // Table is occupied, but no existing order found to add to it.
+              console.log(
+                "This table is currently occupied and no active order found to add items. Please select another table."
+              );
+              toast.error(
+                "This table is currently occupied and no active order found to add items. Please select another table."
+              );
+              return;
+            } else {
+              console.error(
+                "Error checking existing table order (after availability check):",
+                tableOrderError
+              );
+              toast.error(
+                "Unable to verify table order status. Please try again."
+              );
+              return;
+            }
+          }
+        }
+      }
+
+      // Step 3: If no existing user order and no existing table order (or not dine-in), create a new order
       await createOrder();
       toast.success("Order placed successfully!");
     } catch (err) {
@@ -362,8 +456,10 @@ function Checkout() {
     }));
 
     // Get order settings from localStorage
-    const orderSettings = localStorage.getItem('orderSettings');
-    const orderType = orderSettings ? JSON.parse(orderSettings).order_type : null;
+    const orderSettings = localStorage.getItem("orderSettings");
+    const orderType = orderSettings
+      ? JSON.parse(orderSettings).order_type
+      : null;
 
     // Base payload
     const payload = {
@@ -378,23 +474,19 @@ function Checkout() {
     // Add table_id only for dine-in orders
     if (orderType === "dine-in") {
       // Get table_id from outletDetails or localStorage
-      const tableId = outletDetails?.tableId || localStorage.getItem('tableId');
+      const tableId = outletDetails?.tableId || localStorage.getItem("tableId");
       if (tableId) {
         payload.table_id = String(tableId);
       }
     }
 
-    const response = await axios.post(
-      `https://men4u.xyz/v2/common/create_order`,
-      payload,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      }
-    );
+    const response = await axios.post(getApiUrl("create_order"), payload, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
 
     if (response.data?.order_id) {
       clearCart();
@@ -430,18 +522,34 @@ function Checkout() {
         comment: item.comment || "",
       }));
 
+      // Get order settings from localStorage to determine the type of the new order
+      const orderSettings = localStorage.getItem("orderSettings");
+      const newOrderType = orderSettings
+        ? JSON.parse(orderSettings).order_type
+        : null;
+
+      const payload = {
+        order_id: existingOrderModal.orderDetails.order_id.toString(),
+        user_id: userId,
+        order_status: "cancelled",
+        outlet_id: outletId.toString(),
+        section_id: sectionId.toString(),
+        order_type:
+          newOrderType ||
+          existingOrderModal.orderDetails.order_type ||
+          "dine-in", // Ensure new order gets the correct type
+        order_items: orderItems,
+      };
+
+      console.log(
+        "handleCancelExisting payload order_type:",
+        payload.order_type
+      );
+
       // Use order_id instead of order_number
       const response = await axios.post(
-        "https://men4u.xyz/v2/user/complete_or_cancel_existing_order_create_new_order",
-        {
-          order_id: existingOrderModal.orderDetails.order_id.toString(),
-          user_id: userId,
-          order_status: "cancelled",
-          outlet_id: outletId.toString(),
-          section_id: sectionId.toString(),
-          order_type: "parcel",
-          order_items: orderItems,
-        },
+        getApiUrl("complete_or_cancel_existing_order_create_new_order"),
+        payload,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -486,7 +594,7 @@ function Checkout() {
       }));
 
       const response = await axios.post(
-        "https://men4u.xyz/v2/user/add_to_existing_order",
+        getApiUrl("add_to_existing_order"),
         {
           order_id: existingOrderModal.orderDetails.order_id.toString(),
           user_id: userId.toString(),
@@ -531,24 +639,24 @@ function Checkout() {
         toastOptions={{
           duration: 4000,
           style: {
-            background: '#333',
-            color: '#fff',
-            marginBottom: '6rem',
-            padding: '1rem',
-            borderRadius: '8px',
+            background: "#333",
+            color: "#fff",
+            marginBottom: "6rem",
+            padding: "1rem",
+            borderRadius: "8px",
           },
           success: {
             duration: 3000,
             iconTheme: {
-              primary: '#4aed88',
-              secondary: '#fff',
+              primary: "#4aed88",
+              secondary: "#fff",
             },
           },
           error: {
             duration: 5000,
             iconTheme: {
-              primary: '#ff4b4b',
-              secondary: '#fff',
+              primary: "#ff4b4b",
+              secondary: "#fff",
             },
           },
         }}
@@ -612,7 +720,7 @@ function Checkout() {
                             width: "100%",
                             height: "100%",
                             objectFit: "cover",
-                            borderRadius: "12px"
+                            borderRadius: "12px",
                           }}
                         />
                       </div>
@@ -629,6 +737,12 @@ function Checkout() {
                               {item.comment && (
                                 <small className="d-block">
                                   {item.comment}
+                                </small>
+                              )}
+                              {item.offer && (
+                                <small className="d-block text-success fw-bold">
+                                  <i className="bi bi-tag-fill me-1"></i>
+                                  {item.offer}
                                 </small>
                               )}
                             </div>
@@ -743,6 +857,7 @@ function Checkout() {
         onCancelExisting={handleCancelExisting}
         onAddToExisting={handleAddToExisting}
         isLoading={loading}
+        orderStatus={existingOrderModal.orderDetails?.order_status}
       />
 
       <Footer />

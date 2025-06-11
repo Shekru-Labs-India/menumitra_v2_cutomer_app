@@ -1,14 +1,17 @@
-import React from 'react';
-import BaseModal from '../BaseModal';
+import React from "react";
+import BaseModal from "../BaseModal";
 
-function OrderExistsModal({ 
-  isOpen, 
-  onClose, 
+function OrderExistsModal({
+  isOpen,
+  onClose,
   orderNumber,
-  onCancelExisting, 
+  onCancelExisting,
   onAddToExisting,
-  isLoading
+  isLoading,
+  orderStatus,
 }) {
+  const isCooking = orderStatus === "cooking";
+
   return (
     <BaseModal
       isOpen={isOpen}
@@ -18,39 +21,52 @@ function OrderExistsModal({
     >
       <div className="text-center px-4">
         <p className="mb-4">
-          You have an ongoing order (#{orderNumber}). Would you like to cancel this order and create a new one?
+          You have an ongoing order (#{orderNumber}). Would you like to{" "}
+          {isCooking
+            ? "add items to this order?"
+            : "cancel this order and create a new one, or add items to this order?"}
         </p>
 
         <div className="d-grid gap-2">
-          <button 
+          {!isCooking && (
+            <button
+              className="btn text-white"
+              style={{
+                backgroundColor: "#FF3B30",
+              }}
+              onClick={onCancelExisting}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <span
+                    className="spinner-border spinner-border-sm me-2"
+                    role="status"
+                    aria-hidden="true"
+                  ></span>
+                  Processing...
+                </>
+              ) : (
+                "Cancel Existing & Create New Order"
+              )}
+            </button>
+          )}
+
+          <button
             className="btn text-white"
             style={{
-              backgroundColor: '#FF3B30',
-            }}
-            onClick={onCancelExisting}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                Processing...
-              </>
-            ) : (
-              'Cancel Existing & Create New Order'
-            )}
-          </button>
-          
-          <button 
-            className="btn text-white"
-            style={{
-              backgroundColor: '#007AFF',
+              backgroundColor: "#007AFF",
             }}
             onClick={onAddToExisting}
             disabled={isLoading}
           >
             {isLoading ? (
               <>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                <span
+                  className="spinner-border spinner-border-sm me-2"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
                 Processing...
               </>
             ) : (
@@ -58,7 +74,7 @@ function OrderExistsModal({
             )}
           </button>
 
-          <button 
+          <button
             className="btn btn-light text-black"
             onClick={onClose}
             disabled={isLoading}

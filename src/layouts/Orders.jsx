@@ -184,6 +184,7 @@ function Orders() {
           transformedOrders.completed.push({
             id: order.order_number,
             orderId: order.order_id,
+            // orderNumber: order.order_number,
             itemCount: order.menu_count,
             status: "Completed",
             iconColor: "#00B67A",
