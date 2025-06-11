@@ -3,7 +3,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useCart } from "../contexts/CartContext";
 import axios from "axios";
-import { API_CONFIG, getApiUrl } from "../constants/config";
+import { API_CONFIG } from "../constants/config";
 import { useNavigate } from "react-router-dom";
 import { useOutlet } from "../contexts/OutletContext";
 import OrderExistsModal from "../components/Modal/variants/OrderExistsModal";
@@ -233,7 +233,7 @@ function Checkout() {
       }));
 
       const response = await axios.post(
-        getApiUrl("get_checkout_detail"),
+        "https://men4u.xyz/v2/user/get_checkout_detail",
         {
           outlet_id: 1,
           order_items: orderItems,
@@ -246,6 +246,32 @@ function Checkout() {
           },
         }
       );
+
+      // Update cart items with offer information from API
+      if (response.data?.detail?.order_items) {
+        const updatedCartItems = cartItems.map((cartItem) => {
+          const apiItem = response.data.detail.order_items.find(
+            (item) =>
+              item.menu_id === cartItem.menuId &&
+              item.portion_id === cartItem.portionId
+          );
+          return {
+            ...cartItem,
+            offer: apiItem?.offer || null,
+          };
+        });
+        // Update cart with offer information
+        updatedCartItems.forEach((item) => {
+          if (item.offer) {
+            updateQuantity(
+              item.menuId,
+              item.portionId,
+              item.quantity,
+              item.offer
+            );
+          }
+        });
+      }
 
       setCheckoutDetails((prev) => ({
         ...prev,
@@ -291,7 +317,7 @@ function Checkout() {
       const accessToken = auth?.accessToken;
 
       const response = await axios.post(
-        getApiUrl("check_order_exist"),
+        "https://men4u.xyz/v2/user/check_order_exist",
         {
           user_id: userId,
           outlet_id: outletId,
@@ -330,105 +356,21 @@ function Checkout() {
         return;
       }
 
-      // Step 1: Check for existing order for the USER
-      try {
-        const existingOrderForUser = await checkExistingOrder(userId, outletId);
-        if (existingOrderForUser) {
-          console.log(
-            "User existing order found. Details:",
-            existingOrderForUser
-          );
-          setExistingOrderModal({
-            isOpen: true,
-            orderDetails: {
-              ...existingOrderForUser,
-              order_id: existingOrderForUser.order_id,
-              // Ensure order_status is explicitly set from the response, with a fallback if needed
-              order_status: existingOrderForUser.order_status || "unknown",
-            },
-          });
-          return; // Stop here, wait for user interaction with the modal
-        }
-      } catch (error) {
-        if (error.response?.status === 404) {
-          console.log(
-            "No existing order found for user. Proceeding to check table status."
-          );
-          // Continue to check table status or create new order
-        } else {
-          console.error("Error checking existing user order:", error);
-          toast.error(
-            "Unable to verify existing user orders. Please try again later."
-          );
-          return;
-        }
+      // First check for existing order
+      const existingOrder = await checkExistingOrder(userId, outletId);
+
+      if (existingOrder) {
+        setExistingOrderModal({
+          isOpen: true,
+          orderDetails: {
+            ...existingOrder,
+            order_id: existingOrder.order_id, // Ensure order_id is set correctly
+          },
+        });
+        return;
       }
 
-      // Step 2: If no existing user order, then for DINE-IN orders, check table availability
-      if (outletDetails && outletDetails.orderType === "dine-in") {
-        // Get table_id from outletDetails or localStorage
-        const tableId =
-          outletDetails?.tableId || localStorage.getItem("tableId");
-        if (tableId) {
-          try {
-            const tableOrderResponse = await axios.post(
-              getApiUrl("get_table_order"),
-              {
-                table_id: tableId,
-                outlet_id: outletId,
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${accessToken}`,
-                  "Content-Type": "application/json",
-                  Accept: "application/json",
-                },
-              }
-            );
-
-            if (tableOrderResponse.data?.order_id) {
-              console.log(
-                "Table existing order found. Details:",
-                tableOrderResponse.data
-              );
-              // Found an existing order on the occupied table, show modal to add to it
-              setExistingOrderModal({
-                isOpen: true,
-                orderDetails: {
-                  ...tableOrderResponse.data,
-                  order_id: tableOrderResponse.data.order_id,
-                  // Ensure order_status is explicitly set from the response, with a fallback if needed
-                  order_status:
-                    tableOrderResponse.data.order_status || "unknown",
-                },
-              });
-              return; // Stop here, wait for user interaction with the modal
-            }
-          } catch (tableOrderError) {
-            if (tableOrderError.response?.status === 404) {
-              // Table is occupied, but no existing order found to add to it.
-              console.log(
-                "This table is currently occupied and no active order found to add items. Please select another table."
-              );
-              toast.error(
-                "This table is currently occupied and no active order found to add items. Please select another table."
-              );
-              return;
-            } else {
-              console.error(
-                "Error checking existing table order (after availability check):",
-                tableOrderError
-              );
-              toast.error(
-                "Unable to verify table order status. Please try again."
-              );
-              return;
-            }
-          }
-        }
-      }
-
-      // Step 3: If no existing user order and no existing table order (or not dine-in), create a new order
+      // Proceed with creating new order
       await createOrder();
       toast.success("Order placed successfully!");
     } catch (err) {
@@ -476,17 +418,21 @@ function Checkout() {
       // Get table_id from outletDetails or localStorage
       const tableId = outletDetails?.tableId || localStorage.getItem("tableId");
       if (tableId) {
-        payload.table_id = String(tableId);
+        payload.table_id = parseInt(tableId); // Convert to integer
       }
     }
 
-    const response = await axios.post(getApiUrl("create_order"), payload, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
+    const response = await axios.post(
+      `https://men4u.xyz/v2/common/create_order`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      }
+    );
 
     if (response.data?.order_id) {
       clearCart();
@@ -522,34 +468,25 @@ function Checkout() {
         comment: item.comment || "",
       }));
 
-      // Get order settings from localStorage to determine the type of the new order
+      // Get order settings from localStorage
       const orderSettings = localStorage.getItem("orderSettings");
-      const newOrderType = orderSettings
+      const orderType = orderSettings
         ? JSON.parse(orderSettings).order_type
-        : null;
+        : "dine-in";
 
-      const payload = {
-        order_id: existingOrderModal.orderDetails.order_id.toString(),
-        user_id: userId,
-        order_status: "cancelled",
-        outlet_id: outletId.toString(),
-        section_id: sectionId.toString(),
-        order_type:
-          newOrderType ||
-          existingOrderModal.orderDetails.order_type ||
-          "dine-in", // Ensure new order gets the correct type
-        order_items: orderItems,
-      };
-
-      console.log(
-        "handleCancelExisting payload order_type:",
-        payload.order_type
-      );
-
-      // Use order_id instead of order_number
       const response = await axios.post(
-        getApiUrl("complete_or_cancel_existing_order_create_new_order"),
-        payload,
+        "https://men4u.xyz/v2/user/complete_or_cancel_existing_order_create_new_order",
+        {
+          order_id: existingOrderModal.orderDetails.order_id.toString(),
+          user_id: userId,
+
+          order_status: "cancelled",
+          outlet_id: outletId.toString(),
+          section_id: sectionId.toString(),
+          order_type: orderType, // Use the order type from settings or default to dine-in
+          table_id: tableId ? parseInt(tableId) : null, // Add table_id here
+          order_items: orderItems,
+        },
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -594,7 +531,7 @@ function Checkout() {
       }));
 
       const response = await axios.post(
-        getApiUrl("add_to_existing_order"),
+        "https://men4u.xyz/v2/user/add_to_existing_order",
         {
           order_id: existingOrderModal.orderDetails.order_id.toString(),
           user_id: userId.toString(),
@@ -858,6 +795,9 @@ function Checkout() {
         onAddToExisting={handleAddToExisting}
         isLoading={loading}
         orderStatus={existingOrderModal.orderDetails?.order_status}
+        showAddToExisting={
+          existingOrderModal.orderDetails?.order_status === "cooking"
+        }
       />
 
       <Footer />
