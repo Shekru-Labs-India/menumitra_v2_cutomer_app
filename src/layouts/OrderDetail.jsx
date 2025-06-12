@@ -366,9 +366,15 @@ function OrderDetail() {
             <div className="card-body pt-3">
               <ul className="list-group list-group-flush">
                 <li className="list-group-item d-flex justify-content-between px-0">
-                  <span>Bill Amount</span>
+                  <span>Total</span>
                   <strong>₹{orderDetails.order_details.total_bill_amount}</strong>
                 </li>
+                {orderDetails.order_details.discount_amount > 0 && (
+                  <li className="list-group-item d-flex justify-content-between px-0 text-success">
+                    <span>Discount ({orderDetails.order_details.discount_percent}%)</span>
+                    <strong>-₹{orderDetails.order_details.discount_amount}</strong>
+                  </li>
+                )}
                 {orderDetails.order_details.service_charges_amount > 0 && (
                   <li className="list-group-item d-flex justify-content-between px-0">
                     <span>Service Charge ({orderDetails.order_details.service_charges_percent}%)</span>
@@ -399,19 +405,14 @@ function OrderDetail() {
                     <strong>-₹{orderDetails.order_details.special_discount}</strong>
                   </li>
                 )}
-                {orderDetails.order_details.discount_amount > 0 && (
-                  <li className="list-group-item d-flex justify-content-between px-0 text-success">
-                    <span>Discount ({orderDetails.order_details.discount_percent}%)</span>
-                    <strong>-₹{orderDetails.order_details.discount_amount}</strong>
-                  </li>
-                )}
+{/*                
                 <li className="list-group-item d-flex justify-content-between px-0">
                   <h6 className="mb-0">Grand Total</h6>
                   <h6 className="mb-0">₹{orderDetails.order_details.grand_total}</h6>
-                </li>
+                </li> */}
                 {orderDetails.order_details.final_grand_total !== orderDetails.order_details.grand_total && (
                   <li className="list-group-item d-flex justify-content-between px-0 border-0">
-                    <h6 className="mb-0">Final Amount</h6>
+                    <h6 className="mb-0">Final Grand Total</h6>
                     <h6 className="mb-0 text-primary">₹{orderDetails.order_details.final_grand_total}</h6>
                   </li>
                 )}

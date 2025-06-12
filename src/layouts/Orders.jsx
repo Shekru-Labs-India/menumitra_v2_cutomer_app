@@ -14,19 +14,22 @@ const NoOrders = ({ message }) => {
   const navigate = useNavigate();
 
   return (
-    <div className="d-flex align-items-center justify-content-center" style={{ minHeight: 'calc(100vh - 400px)' }}>
+    <div
+      className="d-flex align-items-center justify-content-center"
+      style={{ minHeight: "calc(100vh - 400px)" }}
+    >
       <div className="text-center">
         <div className="mb-4">
-          <svg 
-            width="80" 
-            height="80" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="1.5" 
-            strokeLinecap="round" 
+          <svg
+            width="80"
+            height="80"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
             strokeLinejoin="round"
-            style={{ opacity: '0.5' }}
+            style={{ opacity: "0.5" }}
             className="text-muted"
           >
             <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
@@ -35,11 +38,13 @@ const NoOrders = ({ message }) => {
           </svg>
         </div>
         <h5 className="mb-3">{message}</h5>
-        <p className="text-muted mb-4">Check back later for your order history</p>
-        <button 
+        <p className="text-muted mb-4">
+          Check back later for your order history
+        </p>
+        <button
           className="btn btn-primary px-4 py-3"
           style={{ borderRadius: 12, fontWeight: 500 }}
-          onClick={() => navigate('/')}
+          onClick={() => navigate("/")}
         >
           Browse Menu
         </button>
@@ -53,6 +58,7 @@ function Orders() {
   const { user, setShowAuthOffcanvas } = useAuth();
   const [ordersData, setOrdersData] = useState({
     paid: {},
+    complimentary_paid: {},
     cancelled: {},
   });
   const [ongoingOrders, setOngoingOrders] = useState([]);
@@ -67,11 +73,59 @@ function Orders() {
   const [cancelOrderStatus, setCancelOrderStatus] = useState(true);
   const navigate = useNavigate();
 
+  // State for managing expansion of date accordions
+  const [expandedCompletedDates, setExpandedCompletedDates] = useState({});
+  const [expandedCancelledDates, setExpandedCancelledDates] = useState({});
+
   useEffect(() => {
     // Call both APIs independently
     fetchOngoingOrders();
     fetchCompletedOrders();
   }, []);
+
+  // Handler for expanding/collapsing individual date accordions for completed orders
+  const toggleCompletedDateExpansion = (date) => {
+    setExpandedCompletedDates((prev) => ({
+      ...prev,
+      [date]: !prev[date],
+    }));
+  };
+
+  // Handler for expanding all completed date accordions
+  const handleExpandAllCompleted = () => {
+    const newExpandedState = {};
+    Object.keys(transformedOrders.completedByDate).forEach((date) => {
+      newExpandedState[date] = true;
+    });
+    setExpandedCompletedDates(newExpandedState);
+  };
+
+  // Handler for collapsing all completed date accordions
+  const handleCollapseAllCompleted = () => {
+    setExpandedCompletedDates({});
+  };
+
+  // Handler for expanding/collapsing individual date accordions for cancelled orders
+  const toggleCancelledDateExpansion = (date) => {
+    setExpandedCancelledDates((prev) => ({
+      ...prev,
+      [date]: !prev[date],
+    }));
+  };
+
+  // Handler for expanding all cancelled date accordions
+  const handleExpandAllCancelled = () => {
+    const newExpandedState = {};
+    Object.keys(transformedOrders.cancelledByDate).forEach((date) => {
+      newExpandedState[date] = true;
+    });
+    setExpandedCancelledDates(newExpandedState);
+  };
+
+  // Handler for collapsing all cancelled date accordions
+  const handleCollapseAllCancelled = () => {
+    setExpandedCancelledDates({});
+  };
 
   const fetchCompletedOrders = async () => {
     try {
@@ -105,7 +159,14 @@ function Orders() {
       const data = await response.json();
 
       if (data.detail && data.detail.lists) {
-        setOrdersData(data.detail.lists);
+        // Transform the data to include all order types
+        const transformedData = {
+          paid: data.detail.lists.paid || {},
+          complimentary_paid: data.detail.lists.complimentary_paid || {},
+          cancelled: data.detail.lists.cancelled || {},
+          // Add any other order types here
+        };
+        setOrdersData(transformedData);
       }
     } catch (err) {
       console.error("Error fetching order history:", err);
@@ -136,8 +197,6 @@ function Orders() {
 
       if (data.detail?.orders) {
         const transformedOngoingOrders = data.detail.orders.map((order) => {
-          console.log('Raw order data:', order);
-          
           return {
             id: order.order_number,
             orderId: order.order_id,
@@ -173,44 +232,129 @@ function Orders() {
   // Transform API data for OrderAccordionItem
   const transformOrderData = (orders) => {
     const transformedOrders = {
-      completed: [],
-      cancelled: [],
+      completedByDate: {},
+      cancelledByDate: {},
     };
 
-    // Handle paid/completed orders
-    if (orders.paid) {
-      Object.entries(orders.paid).forEach(([, orderList]) => {
-        orderList.forEach((order) => {
-          transformedOrders.completed.push({
-            id: order.order_number,
-            orderId: order.order_id,
-            // orderNumber: order.order_number,
-            itemCount: order.menu_count,
+    // Helper function to format date from 'YYYY-MM-DD' to 'DD Mon YYYY'
+    const formatDate = (dateString) => {
+      if (!dateString) return "";
+      try {
+        const date = new Date(dateString);
+        const options = { day: "numeric", month: "short", year: "numeric" };
+        return date.toLocaleDateString("en-US", options);
+      } catch (e) {
+        console.error("Invalid date string:", dateString, e);
+        return dateString; // Fallback
+      }
+    };
+
+    // Helper function to get order status and styling
+    const getOrderStatus = (order) => {
+      switch (order.order_status) {
+        case "complimentary_paid":
+          return {
+            status: "Complimentary",
+            iconColor: "#6c5ce7",
+            iconBgClass: "bg-info",
+          };
+        case "paid":
+          return {
             status: "Completed",
             iconColor: "#00B67A",
             iconBgClass: "bg-success",
-            isExpanded: false,
-            parentId: "accordionExample3",
-          });
-        });
-      });
-    }
-
-    // Handle cancelled orders
-    if (orders.cancelled) {
-      Object.entries(orders.cancelled).forEach(([, orderList]) => {
-        orderList.forEach((order) => {
-          transformedOrders.cancelled.push({
-            id: order.order_number,
-            orderId: order.order_id,
-            itemCount: order.menu_count,
+          };
+        case "cancelled":
+          return {
             status: "Cancelled",
             iconColor: "#E74C3C",
             iconBgClass: "bg-danger",
-            isExpanded: false,
-            parentId: "accordionExample2",
-          });
-        });
+          };
+        default:
+          return {
+            status: order.order_status || "Completed",
+            iconColor: "#00B67A",
+            iconBgClass: "bg-success",
+          };
+      }
+    };
+
+    // Process all order types
+    const processOrders = (orderList, dateKey, isCancelled = false) => {
+      const formattedDate = formatDate(dateKey);
+      const orders = orderList.map((order) => {
+        const { status, iconColor, iconBgClass } = getOrderStatus(order);
+        return {
+          id: order.order_number,
+          orderId: order.order_id,
+          orderNumber: order.order_number,
+          itemCount: order.menu_count,
+          status,
+          iconColor,
+          iconBgClass,
+          isExpanded: true,
+          parentId: isCancelled ? "accordionExample2" : "accordionExample3",
+          outletName: order.outlet_name,
+          orderType: order.order_type,
+          totalAmount: order.final_grand_total,
+          paymentStatus:
+            order.order_status === "complimentary_paid"
+              ? "Complimentary"
+              : order.order_status === "paid"
+              ? "Paid"
+              : order.order_status === "cancelled"
+              ? "Cancelled"
+              : order.payment_status,
+          orderTime: order.time,
+          tableNumber: order.table_number,
+          sectionName: order.section_name,
+        };
+      });
+
+      if (isCancelled) {
+        transformedOrders.cancelledByDate[formattedDate] = {
+          date: formattedDate,
+          orderCount: orders.length,
+          orders,
+        };
+      } else {
+        if (transformedOrders.completedByDate[formattedDate]) {
+          transformedOrders.completedByDate[formattedDate].orders = [
+            ...transformedOrders.completedByDate[formattedDate].orders,
+            ...orders,
+          ];
+          transformedOrders.completedByDate[formattedDate].orderCount +=
+            orders.length;
+        } else {
+          transformedOrders.completedByDate[formattedDate] = {
+            date: formattedDate,
+            orderCount: orders.length,
+            orders,
+          };
+        }
+      }
+    };
+
+    // Process paid orders
+    if (orders.paid) {
+      Object.entries(orders.paid).forEach(([dateKey, orderList]) => {
+        processOrders(orderList, dateKey);
+      });
+    }
+
+    // Process complimentary paid orders
+    if (orders.complimentary_paid) {
+      Object.entries(orders.complimentary_paid).forEach(
+        ([dateKey, orderList]) => {
+          processOrders(orderList, dateKey);
+        }
+      );
+    }
+
+    // Process cancelled orders
+    if (orders.cancelled) {
+      Object.entries(orders.cancelled).forEach(([dateKey, orderList]) => {
+        processOrders(orderList, dateKey, true);
       });
     }
 
@@ -246,18 +390,15 @@ function Orders() {
       );
 
       setCancelOrderStatus(true);
-      console.log("[Orders] Cancel order status:", true);
       await fetchOngoingOrders();
       handleCloseCancelModal();
     } catch (err) {
       setCancelOrderStatus(false);
-      console.log("[Orders] Cancel order status:", false);
       console.error("Error cancelling order:", err);
     }
   };
 
   const handleCloseCancelModal = () => {
-    console.log("[Orders] handleCloseCancelModal called, closing modal.");
     setShowCancelModal(false);
     setSelectedOrderId(null);
     setSelectedOrderNumber(null);
@@ -275,19 +416,22 @@ function Orders() {
         <div className="page-content">
           <div className="content-inner pt-0">
             <div className="container p-b20">
-              <div className="d-flex align-items-center justify-content-center" style={{ minHeight: 'calc(100vh - 300px)' }}>
+              <div
+                className="d-flex align-items-center justify-content-center"
+                style={{ minHeight: "calc(100vh - 300px)" }}
+              >
                 <div className="text-center">
                   <div className="mb-4">
-                    <svg 
-                      width="80" 
-                      height="80" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="1.5" 
-                      strokeLinecap="round" 
+                    <svg
+                      width="80"
+                      height="80"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
                       strokeLinejoin="round"
-                      style={{ opacity: '0.5' }}
+                      style={{ opacity: "0.5" }}
                       className="text-muted"
                     >
                       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -295,8 +439,10 @@ function Orders() {
                     </svg>
                   </div>
                   <h5 className="mb-3">Please Login to View Orders</h5>
-                  <p className="text-muted mb-4">Login to your account to see your order history</p>
-                  <button 
+                  <p className="text-muted mb-4">
+                    Login to your account to see your order history
+                  </p>
+                  <button
                     className="btn btn-primary px-4 py-3"
                     style={{ borderRadius: 12, fontWeight: 500 }}
                     onClick={handleLogin}
@@ -324,17 +470,14 @@ function Orders() {
               <h6 className="mb-3">Ongoing Orders</h6>
               <div className="orders-list">
                 {ongoingOrders.map((order) => {
-                  console.log('Order status:', order.status, 'Order time:', order.time);
                   return (
-                    <div 
-                      key={order.id} 
+                    <div
+                      key={order.id}
                       className="order-item mb-3"
                       onClick={() => navigate(`/order-detail/${order.orderId}`)}
-                      style={{ cursor: 'pointer' }}
+                      style={{ cursor: "pointer" }}
                     >
-                      <div
-                        className="border border-warning shadow-sm p-3 rounded"
-                      >
+                      <div className="border border-warning shadow-sm p-3 rounded">
                         <div className="d-flex align-items-center justify-content-between w-100">
                           {/* Left side with icon and order details */}
                           <div className="d-flex align-items-center">
@@ -346,7 +489,9 @@ function Orders() {
                               </span>
                             )}
                             <div className="ms-3">
-                              <h6 className="mb-0">Order #{order.orderNumber}</h6>
+                              <h6 className="mb-0">
+                                Order #{order.orderNumber}
+                              </h6>
                               <span className="text-soft">
                                 {order.itemCount} Items {order.status}
                               </span>
@@ -355,13 +500,18 @@ function Orders() {
 
                           {/* Right side with dine-in status and cancel button */}
                           <div className="d-flex flex-column align-items-end">
-                            <span className="text-soft mb-2">{order.orderType}</span>
+                            <span className="text-soft mb-2">
+                              {order.orderType}
+                            </span>
                             {order.status === "placed" && (
                               <button
                                 className="btn btn-sm text-white"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleCancelOrder(order.orderId, order.orderNumber);
+                                  handleCancelOrder(
+                                    order.orderId,
+                                    order.orderNumber
+                                  );
                                 }}
                                 style={{
                                   backgroundColor: "#FF0000",
@@ -465,19 +615,126 @@ function Orders() {
                     <div className="accordion style-3" id="accordionExample3">
                       {error.history ? (
                         <NoOrders message="No completed orders" />
-                      ) : transformedOrders.completed.length > 0 ? (
-                        transformedOrders.completed.map((order) => (
-                          <OrderAccordionItem
-                            key={order.id}
-                            orderId={order.orderId}
-                            itemCount={order.itemCount}
-                            status={order.status}
-                            iconColor={order.iconColor}
-                            iconBgClass={order.iconBgClass}
-                            isExpanded={order.isExpanded}
-                            parentId={order.parentId}
-                          />
-                        ))
+                      ) : Object.keys(transformedOrders.completedByDate)
+                          .length > 0 ? (
+                        <>
+                          {/* Expand/Collapse All for Completed Orders */}
+                          <div className="d-flex justify-content-end align-items-center mb-3">
+                            <button
+                              className="btn btn-sm btn-link text-dark p-0"
+                              onClick={
+                                Object.values(expandedCompletedDates).some(
+                                  (e) => e
+                                )
+                                  ? handleCollapseAllCompleted
+                                  : handleExpandAllCompleted
+                              }
+                              aria-expanded={Object.values(
+                                expandedCompletedDates
+                              ).some((e) => e)}
+                            >
+                              <span>
+                                {Object.values(expandedCompletedDates).some(
+                                  (e) => e
+                                )
+                                  ? "Collapse All"
+                                  : "Expand All"}
+                              </span>
+                              <i
+                                className={`ms-2 fas ${
+                                  Object.values(expandedCompletedDates).some(
+                                    (e) => e
+                                  )
+                                    ? "fa-chevron-up"
+                                    : "fa-chevron-down"
+                                }`}
+                              ></i>
+                            </button>
+                          </div>
+                          {Object.entries(
+                            transformedOrders.completedByDate
+                          ).map(([dateKey, dailyOrderData]) => (
+                            <div className="accordion-item" key={dateKey}>
+                              <h2
+                                className="accordion-header"
+                                id={"heading" + dateKey.replace(/\s/g, "")}
+                              >
+                                <button
+                                  className={
+                                    "btn btn-link w-100 d-flex justify-content-between align-items-center p-0 " +
+                                    (!expandedCompletedDates[dateKey]
+                                      ? "collapsed"
+                                      : "")
+                                  }
+                                  type="button"
+                                  data-bs-toggle="collapse"
+                                  data-bs-target={
+                                    "#collapse" + dateKey.replace(/\s/g, "")
+                                  }
+                                  aria-expanded={
+                                    expandedCompletedDates[dateKey] || false
+                                  }
+                                  aria-controls={
+                                    "collapse" + dateKey.replace(/\s/g, "")
+                                  }
+                                  onClick={() =>
+                                    toggleCompletedDateExpansion(dateKey)
+                                  }
+                                >
+                                  <span className="flex-grow-1 text-start">
+                                    {dailyOrderData.date}
+                                  </span>
+                                  <span className="me-2">
+                                    {dailyOrderData.orderCount}
+                                  </span>
+                                  <i
+                                    className={`ms-2 fas ${
+                                      expandedCompletedDates[dateKey]
+                                        ? "fa-chevron-up"
+                                        : "fa-chevron-down"
+                                    }`}
+                                  ></i>
+                                </button>
+                              </h2>
+                              <div
+                                id={"collapse" + dateKey.replace(/\s/g, "")}
+                                className={
+                                  "accordion-collapse collapse " +
+                                  (expandedCompletedDates[dateKey]
+                                    ? "show"
+                                    : "")
+                                }
+                                aria-labelledby={
+                                  "heading" + dateKey.replace(/\s/g, "")
+                                }
+                                data-bs-parent="#accordionExample3"
+                              >
+                                <div className="accordion-body">
+                                  {dailyOrderData.orders.map((order) => (
+                                    <OrderAccordionItem
+                                      key={order.id}
+                                      orderId={order.orderId}
+                                      orderNumber={order.orderNumber}
+                                      itemCount={order.itemCount}
+                                      status={order.status}
+                                      iconColor={order.iconColor}
+                                      iconBgClass={order.iconBgClass}
+                                      isExpanded={order.isExpanded}
+                                      parentId={order.parentId}
+                                      outletName={order.outletName}
+                                      orderType={order.orderType}
+                                      totalAmount={order.totalAmount}
+                                      paymentStatus={order.paymentStatus}
+                                      orderTime={order.orderTime}
+                                      tableNumber={order.tableNumber}
+                                      sectionName={order.sectionName}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </>
                       ) : (
                         <NoOrders message="No completed orders" />
                       )}
@@ -493,21 +750,129 @@ function Orders() {
                     tabIndex={0}
                   >
                     <div className="accordion style-3" id="accordionExample2">
-                      {error.history ? (
+                      {isLoadingHistory ? (
+                        <div className="text-center py-4">
+                          Loading order history...
+                        </div>
+                      ) : error.history ? (
                         <NoOrders message="No cancelled orders" />
-                      ) : transformedOrders.cancelled.length > 0 ? (
-                        transformedOrders.cancelled.map((order) => (
-                          <OrderAccordionItem
-                            key={order.id}
-                            orderId={order.orderId}
-                            itemCount={order.itemCount}
-                            status={order.status}
-                            iconColor={order.iconColor}
-                            iconBgClass={order.iconBgClass}
-                            isExpanded={order.isExpanded}
-                            parentId={order.parentId}
-                          />
-                        ))
+                      ) : Object.keys(transformedOrders.cancelledByDate)
+                          .length > 0 ? (
+                        <>
+                          {/* Expand/Collapse All for Cancelled Orders */}
+                          <div className="d-flex justify-content-end align-items-center mb-3">
+                            <button
+                              className="btn btn-sm btn-link text-dark p-0"
+                              onClick={
+                                Object.values(expandedCancelledDates).some(
+                                  (e) => e
+                                )
+                                  ? handleCollapseAllCancelled
+                                  : handleExpandAllCancelled
+                              }
+                              aria-expanded={Object.values(
+                                expandedCancelledDates
+                              ).some((e) => e)}
+                            >
+                              <span>
+                                {Object.values(expandedCancelledDates).some(
+                                  (e) => e
+                                )
+                                  ? "Collapse All"
+                                  : "Expand All"}
+                              </span>
+                              <i
+                                className={`ms-2 fas ${
+                                  Object.values(expandedCancelledDates).some(
+                                    (e) => e
+                                  )
+                                    ? "fa-chevron-up"
+                                    : "fa-chevron-down"
+                                }`}
+                              ></i>
+                            </button>
+                          </div>
+                          {Object.entries(
+                            transformedOrders.cancelledByDate
+                          ).map(([dateKey, dailyOrderData]) => (
+                            <div className="accordion-item" key={dateKey}>
+                              <h2
+                                className="accordion-header"
+                                id={
+                                  "headingCancelled" +
+                                  dateKey.replace(/\s/g, "")
+                                }
+                              >
+                                <button
+                                  className={
+                                    "btn btn-link w-100 d-flex justify-content-between align-items-center p-0 " +
+                                    (!expandedCancelledDates[dateKey]
+                                      ? "collapsed"
+                                      : "")
+                                  }
+                                  type="button"
+                                  onClick={() =>
+                                    toggleCancelledDateExpansion(dateKey)
+                                  }
+                                >
+                                  <span className="flex-grow-1 text-start">
+                                    {dailyOrderData.date}
+                                  </span>
+                                  <span className="me-2">
+                                    {dailyOrderData.orderCount}
+                                  </span>
+                                  <i
+                                    className={`ms-2 fas ${
+                                      expandedCancelledDates[dateKey]
+                                        ? "fa-chevron-up"
+                                        : "fa-chevron-down"
+                                    }`}
+                                  ></i>
+                                </button>
+                              </h2>
+                              <div
+                                id={
+                                  "collapseCancelled" +
+                                  dateKey.replace(/\s/g, "")
+                                }
+                                className={
+                                  "accordion-collapse collapse " +
+                                  (expandedCancelledDates[dateKey]
+                                    ? "show"
+                                    : "")
+                                }
+                                aria-labelledby={
+                                  "headingCancelled" +
+                                  dateKey.replace(/\s/g, "")
+                                }
+                                data-bs-parent="#accordionExample2"
+                              >
+                                <div className="accordion-body">
+                                  {dailyOrderData.orders.map((order) => (
+                                    <OrderAccordionItem
+                                      key={order.id}
+                                      orderId={order.orderId}
+                                      orderNumber={order.orderNumber}
+                                      itemCount={order.itemCount}
+                                      status={order.status}
+                                      iconColor={order.iconColor}
+                                      iconBgClass={order.iconBgClass}
+                                      isExpanded={order.isExpanded}
+                                      parentId={order.parentId}
+                                      outletName={order.outletName}
+                                      orderType={order.orderType}
+                                      totalAmount={order.totalAmount}
+                                      paymentStatus={order.paymentStatus}
+                                      orderTime={order.orderTime}
+                                      tableNumber={order.tableNumber}
+                                      sectionName={order.sectionName}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </>
                       ) : (
                         <NoOrders message="No cancelled orders" />
                       )}

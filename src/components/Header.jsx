@@ -39,9 +39,9 @@ function Header() {
   // Modify the useEffect to get first name
   useEffect(() => {
     const fullName = getUserName();
-    const firstName = fullName?.split(' ')[0];
+    const firstName = fullName?.split(" ")[0];
     setUserName(firstName);
-  }, []); 
+  }, []);
 
   // Keep scroll handler in separate useEffect
   useEffect(() => {
@@ -88,16 +88,9 @@ function Header() {
               </div>
               <div className="mid-content" />
               <div className="right-content">
-                {!isProfileRoute() && userName && (
-                  <Link to="/profile" className="text-decoration-none" style={{ color: 'inherit' }}>
-                    <div className="d-flex align-items-center">
-                      <div className="user-icon me-2">
-                        <i className="fas fa-user"></i>
-                      </div>
-                      <span>{userName}</span>
-                    </div>
-                  </Link>
-                )}
+                <Link to="/search" className="header-icon">
+                  <i className="fas fa-search"></i>
+                </Link>
               </div>
             </div>
           </div>

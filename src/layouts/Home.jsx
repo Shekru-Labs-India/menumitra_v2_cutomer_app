@@ -16,7 +16,7 @@ import { OrderTypeModal } from "../components/Modal/variants/OrderTypeModal";
 import { useModal } from "../contexts/ModalContext";
 import OutletInfoBanner from "../components/OutletInfoBanner";
 import SearchBar from "../components/SearchBar";
-import axios from 'axios';
+import axios from "axios";
 
 const API_BASE_URL = "https://men4u.xyz/v2";
 
@@ -24,9 +24,9 @@ const API_BASE_URL = "https://men4u.xyz/v2";
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-  }
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  },
 });
 
 // Helper function to get auth data
@@ -76,6 +76,7 @@ function Home() {
 
   const [filteredMenuItems, setFilteredMenuItems] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
 
   const [categoriesData, setCategoriesData] = useState({
     categories: [],
@@ -83,8 +84,7 @@ function Home() {
   });
 
   const handleCategoryClick = (category) => {
-    // Navigate to category-menu with the category ID
-    navigate(`/category-menu/${category.menuCatId}`);
+    setSelectedCategoryId(category.menuCatId);
   };
 
   const getGreeting = () => {
@@ -153,7 +153,7 @@ function Home() {
         return;
       }
 
-      const { data } = await api.post('/user/get_special_menu_list', {
+      const { data } = await api.post("/user/get_special_menu_list", {
         user_id: userId,
         outlet_id: outletId,
       });
@@ -166,7 +166,10 @@ function Home() {
         setSpecialMenuItems(data.detail.special_menu_list);
       }
     } catch (error) {
-      console.error("❌ Error fetching special menu items:", error.response?.data || error.message);
+      console.error(
+        "❌ Error fetching special menu items:",
+        error.response?.data || error.message
+      );
     }
   };
 
@@ -224,7 +227,7 @@ function Home() {
   // Refactored fetchMenuListByCategory using axios
   const fetchMenuListByCategory = async () => {
     try {
-      const { data } = await api.post('/user/get_all_menu_list_by_category', {
+      const { data } = await api.post("/user/get_all_menu_list_by_category", {
         outlet_id: outletId,
       });
 
@@ -267,7 +270,10 @@ function Home() {
         });
       }
     } catch (error) {
-      console.error("Error fetching menu list by category:", error.response?.data || error.message);
+      console.error(
+        "Error fetching menu list by category:",
+        error.response?.data || error.message
+      );
     }
   };
 
@@ -278,6 +284,17 @@ function Home() {
     }
   }, [outletId]);
 
+  // New useEffect to filter menus based on selected category
+  useEffect(() => {
+    if (!selectedCategoryId) {
+      setFilteredMenuItems(menuItems); // Show all if no category selected
+    } else {
+      // Use menus directly from the categoriesData.menusByCategory map
+      const filtered = categoriesData.menusByCategory[selectedCategoryId] || [];
+      setFilteredMenuItems(filtered);
+    }
+  }, [selectedCategoryId, menuItems, categoriesData.menusByCategory]);
+
   return (
     <>
       <div className="page-wraper">
@@ -287,7 +304,11 @@ function Home() {
             <div className="container p-b40 p-t0">
               <SearchBar onSearch={handleSearch} menuItems={menuItems || []} />
 
-              <div className="title-bar d-flex justify-content-between align-items-center" onClick={() => navigate('/categories')} style={{cursor: 'pointer'}}>
+              <div
+                className="title-bar d-flex justify-content-between align-items-center"
+                onClick={() => navigate("/categories")}
+                style={{ cursor: "pointer" }}
+              >
                 <span className="title mb-0 font-18">
                   {isSearching ? "Search Results" : "Categories"}
                 </span>
@@ -407,7 +428,11 @@ function Home() {
                       <div className="col-6" key={menuItem.menuId}>
                         <VerticalMenuCard
                           image={
-                            menuItem.image ? menuItem.image : <i className="fa-solid fa-utensils font-55"></i>
+                            menuItem.image ? (
+                              menuItem.image
+                            ) : (
+                              <i className="fa-solid fa-utensils font-55"></i>
+                            )
                           }
                           title={menuItem.menuName}
                           currentPrice={menuItem.portions?.[0]?.price ?? 0}
@@ -432,11 +457,15 @@ function Home() {
                     </div>
                   )
                 ) : (
-                  menuItems.map((menuItem) => (
+                  filteredMenuItems.map((menuItem) => (
                     <div className="col-6" key={menuItem.menuId}>
                       <VerticalMenuCard
                         image={
-                          menuItem.image ? menuItem.image : <i className="fa-solid fa-utensils font-55 opacity-50 text-muted"></i>
+                          menuItem.image ? (
+                            menuItem.image
+                          ) : (
+                            <i className="fa-solid fa-utensils font-55 opacity-50 text-muted"></i>
+                          )
                         }
                         title={menuItem.menuName}
                         currentPrice={menuItem.portions?.[0]?.price ?? 0}

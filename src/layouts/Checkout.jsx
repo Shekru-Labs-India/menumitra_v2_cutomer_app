@@ -247,32 +247,6 @@ function Checkout() {
         }
       );
 
-      // Update cart items with offer information from API
-      if (response.data?.detail?.order_items) {
-        const updatedCartItems = cartItems.map((cartItem) => {
-          const apiItem = response.data.detail.order_items.find(
-            (item) =>
-              item.menu_id === cartItem.menuId &&
-              item.portion_id === cartItem.portionId
-          );
-          return {
-            ...cartItem,
-            offer: apiItem?.offer || null,
-          };
-        });
-        // Update cart with offer information
-        updatedCartItems.forEach((item) => {
-          if (item.offer) {
-            updateQuantity(
-              item.menuId,
-              item.portionId,
-              item.quantity,
-              item.offer
-            );
-          }
-        });
-      }
-
       setCheckoutDetails((prev) => ({
         ...prev,
         ...response.data.detail,
@@ -418,7 +392,7 @@ function Checkout() {
       // Get table_id from outletDetails or localStorage
       const tableId = outletDetails?.tableId || localStorage.getItem("tableId");
       if (tableId) {
-        payload.table_id = parseInt(tableId); // Convert to integer
+        payload.table_id = String(tableId);
       }
     }
 
@@ -468,23 +442,17 @@ function Checkout() {
         comment: item.comment || "",
       }));
 
-      // Get order settings from localStorage
-      const orderSettings = localStorage.getItem("orderSettings");
-      const orderType = orderSettings
-        ? JSON.parse(orderSettings).order_type
-        : "dine-in";
-
+      // Use order_id instead of order_number
       const response = await axios.post(
         "https://men4u.xyz/v2/user/complete_or_cancel_existing_order_create_new_order",
         {
           order_id: existingOrderModal.orderDetails.order_id.toString(),
           user_id: userId,
-
           order_status: "cancelled",
           outlet_id: outletId.toString(),
           section_id: sectionId.toString(),
-          order_type: orderType, // Use the order type from settings or default to dine-in
-          table_id: tableId ? parseInt(tableId) : null, // Add table_id here
+          table_id:  tableId.toString(),
+          order_type: "dine-in",
           order_items: orderItems,
         },
         {
@@ -676,12 +644,6 @@ function Checkout() {
                                   {item.comment}
                                 </small>
                               )}
-                              {item.offer && (
-                                <small className="d-block text-success fw-bold">
-                                  <i className="bi bi-tag-fill me-1"></i>
-                                  {item.offer}
-                                </small>
-                              )}
                             </div>
                           </div>
                           <button
@@ -794,10 +756,6 @@ function Checkout() {
         onCancelExisting={handleCancelExisting}
         onAddToExisting={handleAddToExisting}
         isLoading={loading}
-        orderStatus={existingOrderModal.orderDetails?.order_status}
-        showAddToExisting={
-          existingOrderModal.orderDetails?.order_status === "cooking"
-        }
       />
 
       <Footer />

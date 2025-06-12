@@ -1,14 +1,20 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useAuth } from './AuthContext';
-import { clearAppData } from '../utils/clearAppData';
-import { useOutlet } from './OutletContext';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+import { useAuth } from "./AuthContext";
+import { clearAppData } from "../utils/clearAppData";
+import { useOutlet } from "./OutletContext";
 
 const CartContext = createContext();
 
 export const useCart = () => {
   const context = useContext(CartContext);
   if (!context) {
-    throw new Error('useCart must be used within a CartProvider');
+    throw new Error("useCart must be used within a CartProvider");
   }
   return context;
 };
@@ -19,7 +25,7 @@ export const CartProvider = ({ children, onLogout }) => {
 
   // Initialize cart items from localStorage
   const [cartItems, setCartItems] = useState(() => {
-    const savedCart = localStorage.getItem('cart');
+    const savedCart = localStorage.getItem("cart");
     return savedCart ? JSON.parse(savedCart) : [];
   });
 
@@ -29,17 +35,24 @@ export const CartProvider = ({ children, onLogout }) => {
   }, [cartItems]);
 
   // Add item to cart with comment
-  const addToCart = (menuItem, portionId, quantity, comment, immediate = false) => {
+  const addToCart = (
+    menuItem,
+    portionId,
+    quantity,
+    comment,
+    immediate = false
+  ) => {
     // Check if user is authenticated
-    const authData = localStorage.getItem('auth');
+    const authData = localStorage.getItem("auth");
     if (!authData || !user) {
       setShowAuthOffcanvas(true);
       return;
     }
 
-    setCartItems(prevItems => {
+    setCartItems((prevItems) => {
       const existingItemIndex = prevItems.findIndex(
-        item => item.menuId === menuItem.menuId && item.portionId === portionId
+        (item) =>
+          item.menuId === menuItem.menuId && item.portionId === portionId
       );
 
       if (existingItemIndex !== -1) {
@@ -53,21 +66,27 @@ export const CartProvider = ({ children, onLogout }) => {
           updatedItems[existingItemIndex] = {
             ...updatedItems[existingItemIndex],
             quantity: quantity,
-            comment: comment // Store comment for this specific portion
+            comment: comment, // Store comment for this specific portion
           };
         }
         return updatedItems;
       } else if (quantity > 0) {
         // Add new item with portion-specific comment
-        return [...prevItems, {
-          menuId: menuItem.menuId,
-          menuName: menuItem.menuName,
-          portionId: portionId,
-          portionName: menuItem.portions.find(p => p.portion_id === portionId)?.portion_name,
-          price: menuItem.portions.find(p => p.portion_id === portionId)?.price,
-          quantity: quantity,
-          comment: comment
-        }];
+        return [
+          ...prevItems,
+          {
+            menuId: menuItem.menuId,
+            menuName: menuItem.menuName,
+            portionId: portionId,
+            portionName: menuItem.portions.find(
+              (p) => p.portion_id === portionId
+            )?.portion_name,
+            price: menuItem.portions.find((p) => p.portion_id === portionId)
+              ?.price,
+            quantity: quantity,
+            comment: comment,
+          },
+        ];
       }
       return prevItems;
     });
@@ -80,13 +99,13 @@ export const CartProvider = ({ children, onLogout }) => {
       user_id: userId,
       section_id: orderSettings.section_id,
       order_type: orderSettings.order_type,
-      order_items: cartItems.map(item => ({
+      order_items: cartItems.map((item) => ({
         menu_id: item.menuId,
         quantity: item.quantity,
         portion_name: item.portionName.toLowerCase(),
-        comment: item.comment || ""
+        comment: item.comment || "",
       })),
-      action: orderSettings.action
+      action: orderSettings.action,
     };
 
     // Only add coupon if it exists
@@ -99,15 +118,17 @@ export const CartProvider = ({ children, onLogout }) => {
 
   // Remove item from cart
   const removeFromCart = (menuId, portionId) => {
-    setCartItems(prevItems => 
-      prevItems.filter(item => !(item.menuId === menuId && item.portionId === portionId))
+    setCartItems((prevItems) =>
+      prevItems.filter(
+        (item) => !(item.menuId === menuId && item.portionId === portionId)
+      )
     );
   };
 
   // Update item quantity
   const updateQuantity = (menuId, portionId, quantity) => {
     // Check if user is authenticated
-    const authData = localStorage.getItem('auth');
+    const authData = localStorage.getItem("auth");
     if (!authData || !user) {
       setShowAuthOffcanvas(true);
       return;
@@ -118,8 +139,8 @@ export const CartProvider = ({ children, onLogout }) => {
       return;
     }
 
-    setCartItems(prevItems =>
-      prevItems.map(item =>
+    setCartItems((prevItems) =>
+      prevItems.map((item) =>
         item.menuId === menuId && item.portionId === portionId
           ? { ...item, quantity }
           : item
@@ -130,8 +151,8 @@ export const CartProvider = ({ children, onLogout }) => {
   // Update the clearCart method to be more comprehensive
   const clearCart = useCallback(() => {
     setCartItems([]);
-    localStorage.removeItem('cart');
-    
+    localStorage.removeItem("cart");
+
     // Call onLogout callback if provided
     if (onLogout) {
       onLogout();
@@ -140,7 +161,10 @@ export const CartProvider = ({ children, onLogout }) => {
 
   // Get cart total
   const getCartTotal = () => {
-    return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+    return cartItems.reduce(
+      (total, item) => total + item.price * item.quantity,
+      0
+    );
   };
 
   // Get cart items count (unique items, not quantities)
@@ -150,8 +174,8 @@ export const CartProvider = ({ children, onLogout }) => {
 
   // Update comment for an item
   const updateComment = (menuId, portionId, comment) => {
-    setCartItems(prevItems =>
-      prevItems.map(item =>
+    setCartItems((prevItems) =>
+      prevItems.map((item) =>
         item.menuId === menuId && item.portionId === portionId
           ? { ...item, comment }
           : item
@@ -161,10 +185,10 @@ export const CartProvider = ({ children, onLogout }) => {
 
   // Update getCartItemComment to be portion-specific
   const getCartItemComment = (menuId, portionId) => {
-    const cartItem = cartItems.find(item => 
-      item.menuId === menuId && item.portionId === portionId
+    const cartItem = cartItems.find(
+      (item) => item.menuId === menuId && item.portionId === portionId
     );
-    return cartItem?.comment || '';
+    return cartItem?.comment || "";
   };
 
   const value = {
@@ -177,7 +201,7 @@ export const CartProvider = ({ children, onLogout }) => {
     getCartCount,
     getFormattedOrderData,
     updateComment,
-    getCartItemComment
+    getCartItemComment,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
