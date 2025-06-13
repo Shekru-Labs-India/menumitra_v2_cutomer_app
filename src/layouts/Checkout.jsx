@@ -451,8 +451,9 @@ function Checkout() {
           order_status: "cancelled",
           outlet_id: outletId.toString(),
           section_id: sectionId.toString(),
-          table_id:  tableId.toString(),
           order_type: "dine-in",
+          table_id: localStorage.getItem("tableId").toString(), // Add this line
+
           order_items: orderItems,
         },
         {
