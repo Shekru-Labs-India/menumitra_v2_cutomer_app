@@ -123,8 +123,49 @@ function Search() {
   // Modified handleSearch to handle the specific API response format
   const handleSearch = async (searchTerm) => {
     if (!searchTerm || searchTerm.trim().length === 0) {
-      setSearchResults([]);
-      setOriginalSearchResults([]);
+      // Fetch all menus when search term is empty
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const payload = {
+          outlet_id: outletId,
+        };
+
+        if (userId) {
+          payload.user_id = userId;
+        }
+
+        const response = await axios({
+          method: "POST",
+          url: "https://men4u.xyz/v2/user/search_menu",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          data: payload,
+        });
+
+        if (
+          response.data &&
+          response.data.detail &&
+          Array.isArray(response.data.detail.menu_list)
+        ) {
+          const menuList = response.data.detail.menu_list;
+          setOriginalSearchResults(menuList);
+          setSearchResults(menuList);
+        } else {
+          setOriginalSearchResults([]);
+          setSearchResults([]);
+          setError("No menu items available at the moment.");
+        }
+      } catch (err) {
+        console.error("Search error:", err);
+        setError("Unable to fetch menu items. Please try again.");
+        setOriginalSearchResults([]);
+        setSearchResults([]);
+      } finally {
+        setIsLoading(false);
+      }
       return;
     }
 
@@ -399,6 +440,11 @@ function Search() {
     setSearchResults(filtered);
   };
 
+  // Add useEffect to load all menus on component mount
+  useEffect(() => {
+    handleSearch(""); // This will fetch all menus
+  }, [outletId]); // Re-fetch when outletId changes
+
   return (
     <>
       <Header />
@@ -432,7 +478,7 @@ function Search() {
               </div>
             </div>
             <QuickFilters onFilterChange={handleQuickFilterChange} />
-            {recentSearches.length > 0 && (
+            {recentSearches.length > 0 && searchInputValue.trim() !== "" && (
               <>
                 <div className="title-bar mt-0">
                   <span className="title mb-0 font-18">Recent Search</span>
@@ -499,7 +545,10 @@ function Search() {
                 <div className="saprater" />
                 <div className="title-bar">
                   <span className="title mb-0 font-18">
-                    Search Results ({searchResults.length})
+                    {searchInputValue.trim() !== ""
+                      ? "Search Results"
+                      : "All Menu Items"}{" "}
+                    ({searchResults.length})
                   </span>
                 </div>
                 <ul>
@@ -576,9 +625,7 @@ function Search() {
                       marginBottom: "1rem",
                     }}
                   ></i>
-                  <p className="mt-3 text-muted">
-                    Type something to search for delicious menu items
-                  </p>
+                  <p className="mt-3 text-muted">Loading menu items...</p>
                 </div>
               </div>
             )}

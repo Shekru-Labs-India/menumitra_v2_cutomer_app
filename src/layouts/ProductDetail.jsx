@@ -15,6 +15,119 @@ import LazyImage from "../components/Shared/LazyImage";
 import "swiper/css";
 import "swiper/css/pagination";
 
+// FoodTypeIcon component
+const FoodTypeIcon = ({ foodType }) => {
+  const getIcon = () => {
+    switch (foodType?.toLowerCase()) {
+      case "veg":
+        return (
+          <div
+            style={{
+              width: "14px",
+              height: "14px",
+              borderRadius: "3px",
+              border: "1px solid #4CAF50",
+              backgroundColor: "white",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              verticalAlign: "middle",
+            }}
+          >
+            <div
+              style={{
+                width: "6px",
+                height: "6px",
+                borderRadius: "50%",
+                backgroundColor: "#4CAF50",
+              }}
+            ></div>
+          </div>
+        );
+      case "nonveg":
+        return (
+          <div
+            style={{
+              width: "14px",
+              height: "14px",
+              borderRadius: "3px",
+              border: "1px solid #F44336",
+              backgroundColor: "white",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              verticalAlign: "middle",
+            }}
+          >
+            <div
+              style={{
+                width: 0,
+                height: 0,
+                borderLeft: "3px solid transparent",
+                borderRight: "3px solid transparent",
+                borderBottom: "5px solid #F44336",
+              }}
+            ></div>
+          </div>
+        );
+      case "vegan":
+        return (
+          <div
+            style={{
+              width: "14px",
+              height: "14px",
+              borderRadius: "3px",
+              border: "1px solid #4CAF50",
+              backgroundColor: "white",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              verticalAlign: "middle",
+            }}
+          >
+            <i
+              className="fa-solid fa-leaf"
+              style={{
+                color: "#4CAF50",
+                fontSize: "10px",
+                lineHeight: 1,
+              }}
+            ></i>
+          </div>
+        );
+      case "egg":
+        return (
+          <div
+            style={{
+              width: "14px",
+              height: "14px",
+              borderRadius: "3px",
+              border: "1px solid #e0e0e0",
+              backgroundColor: "white",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              verticalAlign: "middle",
+            }}
+          >
+            <i
+              className="fa-solid fa-egg"
+              style={{
+                color: "#B0BEC5",
+                fontSize: "10px",
+                transform: "rotate(-15deg)",
+              }}
+            ></i>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return getIcon();
+};
+
 function ProductDetail() {
   const { menuId, menuCatId } = useParams();
   const [menuDetails, setMenuDetails] = useState(null);
@@ -150,13 +263,18 @@ function ProductDetail() {
               <div className="company-detail">
                 <div className="detail-content">
                   <div className="flex-1">
-                    <h6 className="text-secondary sub-title">
-                      {menuDetails.category_name?.toUpperCase()}
-                    </h6>
-                    <h4>{menuDetails.menu_name}</h4>
+                    <h3 className="text-secondary sub-title small d-flex align-items-center">
+                      <FoodTypeIcon foodType={menuDetails.menu_food_type} />
+                      <span className="ms-2">
+                        {menuDetails.category_name?.toUpperCase()}
+                      </span>
+                    </h3>
+                    <h4 className="d-flex justify-content-between align-items-center">
+                      {menuDetails.menu_name}
+                    </h4>
                   </div>
                 </div>
-                <ul className="item-inner">
+                {/* <ul className="item-inner">
                   <li>
                     <div className="reviews-info">
                       <h6 className="reviews">
@@ -165,18 +283,31 @@ function ProductDetail() {
                       </h6>
                     </div>
                   </li>
-                </ul>
+                </ul> */}
               </div>
 
               <div className="item-list-2">
                 <div className="price">
                   <span className="text-style text-soft">Price</span>
-                  <h3 className="sub-title">
-                    ₹{menuDetails.portions[0]?.price}
-                    {menuDetails.portions[1] && (
-                      <del>₹{menuDetails.portions[1].price}</del>
+                  <div className="d-flex justify-content-between align-items-center">
+                    <h3 className="sub-title mb-0">
+                      ₹{menuDetails.portions[0]?.price}
+                      {menuDetails.offer > 0 && (
+                        <del className="ms-2 text-muted">
+                          ₹
+                          {Math.round(
+                            menuDetails.portions[0]?.price /
+                              (1 - menuDetails.offer / 100)
+                          )}
+                        </del>
+                      )}
+                    </h3>
+                    {menuDetails.offer > 0 && (
+                      <span className="text-success small fw-bold ms-3">
+                        {menuDetails.offer}% Off
+                      </span>
                     )}
-                  </h3>
+                  </div>
                 </div>
                 {cartItem && (
                   <div className="dz-stepper border-1 rounded-stepper">
@@ -233,14 +364,6 @@ function ProductDetail() {
                 )}
               </div>
 
-              {menuDetails.offer > 0 && (
-                <div className="d-flex align-items-center justify-content-between mb-3">
-                  <div className="badge bg-accent badge-lg badge-warning font-w400 px-3">
-                    {menuDetails.offer}% OFF DISCOUNT
-                  </div>
-                </div>
-              )}
-
               {menuDetails.ingredients && (
                 <div className="mb-3">
                   <h6 className="text-style text-soft mb-2">Ingredients</h6>
@@ -248,10 +371,12 @@ function ProductDetail() {
                 </div>
               )}
 
-              <div className="mb-3">
-                <h6 className="text-style text-soft mb-2">Description</h6>
-                <p>{menuDetails.description || "No description available"}</p>
-              </div>
+              {menuDetails.description && (
+                <div className="mb-3">
+                  <h6 className="text-style text-soft mb-2">Description</h6>
+                  <p>{menuDetails.description}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -275,12 +400,12 @@ function ProductDetail() {
                 >
                   ADD MORE MENUS
                 </button>
-                <button
+                {/* <button
                   onClick={() => (window.location.href = "/checkout")}
                   className="btn btn-primary flex-1"
                 >
                   CHECKOUT
-                </button>
+                </button> */}
               </div>
             )}
           </div>

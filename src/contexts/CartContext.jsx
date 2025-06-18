@@ -31,7 +31,7 @@ export const CartProvider = ({ children, onLogout }) => {
 
   // Save cart items to localStorage when updated
   useEffect(() => {
-    // localStorage.setItem('cart', JSON.stringify(cartItems));
+    localStorage.setItem("cart", JSON.stringify(cartItems));
   }, [cartItems]);
 
   // Add item to cart with comment

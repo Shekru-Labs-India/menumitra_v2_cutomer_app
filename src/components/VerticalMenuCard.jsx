@@ -7,6 +7,119 @@ import { useCart } from "../contexts/CartContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useOutlet } from "../contexts/OutletContext";
 
+// Food type icons component
+const FoodTypeIcon = ({ foodType }) => {
+  const getIcon = () => {
+    switch (foodType?.toLowerCase()) {
+      case "veg":
+        return (
+          <div
+            style={{
+              width: "24px",
+              height: "24px",
+              borderRadius: "6px", // Rounded corners for the square
+              border: "2px solid #4CAF50", // Outer green border
+              backgroundColor: "white", // Background of this layer forms the white ring
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              verticalAlign: "middle",
+            }}
+          >
+            <div
+              style={{
+                width: "12px", // Size of the inner solid green circle
+                height: "12px",
+                borderRadius: "50%",
+                backgroundColor: "#4CAF50", // Solid green inner circle
+              }}
+            ></div>
+          </div>
+        );
+      case "nonveg":
+        return (
+          <div
+            style={{
+              width: "24px",
+              height: "24px",
+              borderRadius: "6px", // Rounded corners for the square
+              border: "2px solid #F44336", // Red border
+              backgroundColor: "white", // White background
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              verticalAlign: "middle",
+            }}
+          >
+            <div
+              style={{
+                width: 0,
+                height: 0,
+                borderLeft: "6px solid transparent",
+                borderRight: "6px solid transparent",
+                borderBottom: "10px solid #F44336", // Red triangle pointing up
+              }}
+            ></div>
+          </div>
+        );
+      case "vegan":
+        return (
+          <div
+            style={{
+              width: "24px",
+              height: "24px",
+              borderRadius: "6px", // Rounded corners for the square
+              border: "2px solid #4CAF50", // Green border
+              backgroundColor: "white", // White background
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              verticalAlign: "middle",
+            }}
+          >
+            <i
+              className="fa-solid fa-leaf"
+              style={{
+                color: "#4CAF50", // Green color for the leaf icon
+                fontSize: "16px",
+                lineHeight: 1, // Ensure the icon is vertically centered
+              }}
+            ></i>
+          </div>
+        );
+      case "egg":
+        return (
+          <div
+            style={{
+              width: "24px",
+              height: "24px",
+              borderRadius: "6px",
+              border: "2px solid #e0e0e0", // Grey border
+              backgroundColor: "white", // White background
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              verticalAlign: "middle",
+            }}
+          >
+            <i
+              className="fa-solid fa-egg"
+              style={{
+                color: "#B0BEC5", // Light grey color for the icon
+                fontSize: "16px", // Keeping original font size for the icon
+                transform: "rotate(-15deg)", // Slight tilt for the icon
+              }}
+            ></i>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return getIcon();
+};
+
 const VerticalMenuCard = ({
   image,
   title,
@@ -141,7 +254,7 @@ const VerticalMenuCard = ({
     <div className="card-item style-1">
       <div className="dz-media">
         <Link to={detailPageUrl}>
-          {typeof image === 'string' ? (
+          {typeof image === "string" ? (
             <LazyImage
               src={image}
               alt={title}
@@ -153,35 +266,38 @@ const VerticalMenuCard = ({
               }}
             />
           ) : (
-            <div 
+            <div
               className="d-flex justify-content-center align-items-center"
               style={{
                 borderRadius: "12px",
                 width: "100%",
                 aspectRatio: "4/3",
-                backgroundColor: "#f8f9fa"
+                backgroundColor: "#f8f9fa",
               }}
             >
               {image}
             </div>
           )}
         </Link>
-        <a
-          href="javascript:void(0);"
-          className={`r-btn ${isLoading ? "disabled" : ""}`}
-          onClick={handleFavoriteToggle}
-          style={{
-            pointerEvents: isLoading ? "none" : "auto",
-            cursor: "pointer",
-          }}
-        >
-          <div
-            className="d-flex justify-content-center align-items-center"
+        {discount && <div className="label">{discount} OFF</div>}
+      </div>
+      <div className="dz-content">
+        {/* Category name and food type icon */}
+        <div className="d-flex align-items-center justify-content-between mb-2">
+          <div className="d-flex align-items-center gap-2">
+            <FoodTypeIcon foodType={menuItem?.menuFoodType} />
+            <span className="text-muted small" style={{ fontSize: "12px" }}>
+              {menuItem?.categoryName || "Category"}
+            </span>
+          </div>
+          <a
+            href="javascript:void(0);"
+            className={`${isLoading ? "disabled" : ""}`}
+            onClick={handleFavoriteToggle}
             style={{
-              width: "25px",
-              height: "25px",
-              borderRadius: "50%",
-              backgroundColor: "rgba(255, 255, 255, 0.75)",
+              pointerEvents: isLoading ? "none" : "auto",
+              cursor: "pointer",
+              textDecoration: "none",
             }}
           >
             <div className={`like-button ${initialIsFavorite ? "active" : ""}`}>
@@ -191,28 +307,60 @@ const VerticalMenuCard = ({
                 } fa-heart`}
                 style={{
                   fontSize: "16px",
-                  color: initialIsFavorite ? "#dc3545" : "inherit",
+                  color: initialIsFavorite ? "#dc3545" : "#6c757d",
                   lineHeight: 1,
                 }}
               />
             </div>
-          </div>
-        </a>
-        {discount && <div className="label">{discount} OFF</div>}
-      </div>
-      <div className="dz-content">
-        <h6 className="title mb-3">
+          </a>
+        </div>
+
+        <h6 className="title mb-3" style={{ textAlign: "left" }}>
           <Link to={detailPageUrl}>{title}</Link>
         </h6>
+
         <div className="dz-meta mb-3">
-          <ul>
-            <li className="price text-accent">₹{currentPrice}</li>
-            {reviewCount && (
-              <li className="review">
-                <span className="text-accent">{reviewCount}</span>
-                {/* <i className="fa fa-star"></i> */}
+          <ul
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            {/* Spicy index with icon */}
+            {menuItem?.spicyIndex && menuItem.spicyIndex > 0 && (
+              <li
+                className="spicy-index"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                {[...Array(3)].map((_, index) => (
+                  <i
+                    key={index}
+                    className="fa-solid fa-pepper-hot"
+                    style={{
+                      color:
+                        index < menuItem.spicyIndex ? "#4CAF50" : "#E0E0E0", // Green for active, light grey for inactive
+                      fontSize: "14px",
+                      marginRight: index < 2 ? "2px" : "0", // Space between icons
+                    }}
+                  ></i>
+                ))}
               </li>
             )}
+            <li
+              className="price"
+              style={{
+                color: "#007AFF",
+                fontWeight: "bold",
+                fontSize: "15px",
+                marginLeft: "auto",
+              }}
+            >
+              ₹{currentPrice}
+            </li>
           </ul>
         </div>
         <div className="mt-2" style={{ minHeight: "38px" }}>

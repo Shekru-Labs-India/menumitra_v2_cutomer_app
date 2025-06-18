@@ -191,7 +191,7 @@ function Categories() {
         >
           <i className="fas fa-th-large"></i>
         </button>
-        <button
+        {/* <button
           type="button"
           className={`btn btn-sm rounded-pill px-3 py-2 ${
             viewMode === 'list' 
@@ -208,7 +208,7 @@ function Categories() {
           }}
         >
           <i className="fas fa-bars"></i>
-        </button>
+        </button> */}
       </div>
       <style>
         {`
@@ -229,10 +229,10 @@ function Categories() {
   // Category Card Component
   const CategoryCard = ({ category, index, isList }) => {
     const gradients = {
-      0: 'linear-gradient(135deg, #FF7043 0%, #F4511E 100%)', // Warm Orange
-      1: 'linear-gradient(135deg, #26A69A 0%, #00796B 100%)', // Teal
-      2: 'linear-gradient(135deg, #5C6BC0 0%, #3949AB 100%)', // Indigo
-      3: 'linear-gradient(135deg, #7E57C2 0%, #512DA8 100%)', // Deep Purple
+      0: 'linear-gradient(135deg, rgba(255, 112, 67, 0.65) 0%, rgba(244, 81, 30, 0.65) 100%)', // Warm Orange
+      1: 'linear-gradient(135deg, rgba(38, 166, 154, 0.65) 0%, rgba(0, 121, 107, 0.65) 100%)', // Teal
+      2: 'linear-gradient(135deg, rgba(92, 107, 192, 0.65) 0%, rgba(57, 73, 171, 0.65) 100%)', // Indigo
+      3: 'linear-gradient(135deg, rgba(126, 87, 194, 0.65) 0%, rgba(81, 45, 168, 0.65) 100%)', // Deep Purple
     };
 
     const icons = {

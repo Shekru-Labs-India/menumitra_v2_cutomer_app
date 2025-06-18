@@ -1,17 +1,17 @@
 import React from "react";
-import { useModal } from '../contexts/ModalContext';
-import { useOutlet } from '../contexts/OutletContext';
-import { useNavigate } from 'react-router-dom';
+import { useModal } from "../contexts/ModalContext";
+import { useOutlet } from "../contexts/OutletContext";
+import { useNavigate } from "react-router-dom";
 
 function OutletInfoBanner() {
   const { openModal } = useModal();
-  const { 
+  const {
     outletName,
     address,
     outletCode,
     fetchOutletDetailsByCode,
     isOutletOnlyUrl,
-    tableId,
+    tableNumber,
     sectionName,
     orderSettings,
   } = useOutlet();
@@ -19,26 +19,26 @@ function OutletInfoBanner() {
 
   // Map of order types to their icons
   const orderTypeIcons = {
-    'counter': '🏪',
-    'drive-through': '🚗',
-    'delivery': '🛵',
-    'parcel': '📦'
+    counter: "🏪",
+    "drive-through": "🚗",
+    delivery: "🛵",
+    parcel: "📦",
   };
 
   // Map of order types to their display names
   const orderTypeNames = {
-    'counter': 'Counter',
-    'drive-through': 'Drive Through',
-    'delivery': 'Delivery',
-    'parcel': 'Parcel'
+    counter: "Counter",
+    "drive-through": "Drive Through",
+    delivery: "Delivery",
+    parcel: "Parcel",
   };
 
   const handleOrderTypeClick = () => {
-    openModal('orderType');
+    openModal("orderType");
   };
 
   const handleOutletClick = () => {
-    navigate('/outlet-details');
+    navigate("/outlet-details");
   };
 
   // If we have an outlet code but no outlet details, fetch them
@@ -54,18 +54,15 @@ function OutletInfoBanner() {
         {/* Left side - Store Icon and Name */}
         <div className="d-flex align-items-center flex-grow-1">
           <div className="me-2 text-primary">
-          <i class="fa-solid fa-store"></i>
+            <i class="fa-solid fa-store"></i>
           </div>
-          <div 
+          <div
             onClick={handleOutletClick}
-            style={{ cursor: 'pointer' }}
+            style={{ cursor: "pointer" }}
             role="button"
             className="outlet-info"
           >
-            <h6 className="mb-0 text-dark fw-semibold">
-              {outletName || '-'}
-            </h6>
-           
+            <h6 className="mb-0 text-dark fw-semibold">{outletName || "-"}</h6>
           </div>
         </div>
 
@@ -75,11 +72,11 @@ function OutletInfoBanner() {
             <button
               className="btn btn-link p-0 d-flex align-items-center"
               onClick={handleOrderTypeClick}
-              style={{ textDecoration: 'none' }}
+              style={{ textDecoration: "none" }}
             >
               <div className="text-primary">
                 {orderSettings.order_type ? (
-                  <span style={{ fontSize: '24px' }}>
+                  <span style={{ fontSize: "24px" }}>
                     {orderTypeIcons[orderSettings.order_type]}
                   </span>
                 ) : (
@@ -97,27 +94,27 @@ function OutletInfoBanner() {
               </div>
               <div className="d-flex flex-column align-items-start ms-2">
                 <span className="fw-bold text-dark">
-                  {orderSettings.order_type 
+                  {orderSettings.order_type
                     ? orderTypeNames[orderSettings.order_type]
-                    : 'Select Order Type'
-                  }
+                    : "Select Order Type"}
                 </span>
                 <small className="text-muted">
-                  {orderSettings.order_type 
-                    ? 'Tap to change'
-                    : 'Click to select'
-                  }
+                  {orderSettings.order_type
+                    ? "Tap to change"
+                    : "Click to select"}
                 </small>
               </div>
             </button>
           ) : (
             <div className="d-flex align-items-center">
-              <span className="fw-normal text-light me-2">
-                {sectionName ? sectionName : 'SectionName'}
-              </span> 
-              <small className="fw-normal text-light">
-             - {tableId ? tableId : 'N/A'}
-              </small>
+              <span className="fw-normal text-light">
+                {sectionName ? sectionName : "SectionName"}-
+                {tableNumber &&
+                Array.isArray(tableNumber) &&
+                tableNumber.length > 0
+                  ? tableNumber.join(", ")
+                  : tableNumber || "N/A"}
+              </span>
             </div>
           )}
         </div>

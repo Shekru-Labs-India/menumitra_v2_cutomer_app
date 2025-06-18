@@ -21,14 +21,16 @@ function OrderExistsModal({
     >
       <div className="text-center px-4">
         <p className="mb-4">
-          You have an ongoing order (#{orderNumber}). Would you like to{" "}
           {isCooking
-            ? "add items to this order?"
-            : "cancel this order and create a new one, or add items to this order?"}
+            ? "Your order is currently being prepared. You can add more items to this order."
+            : "You have an ongoing order (#" +
+              orderNumber +
+              "). Would you like to cancel this order and create a new one, or add items to this order?"}
         </p>
 
         <div className="d-grid gap-2">
-          {!isCooking && (
+          {/* Only show cancel button if order is not in cooking state */}
+          {orderStatus?.toLowerCase().trim() !== "cooking" && (
             <button
               className="btn text-white"
               style={{

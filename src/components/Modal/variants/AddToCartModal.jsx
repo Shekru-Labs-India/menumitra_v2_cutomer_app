@@ -129,37 +129,38 @@ export const AddToCartModal = () => {
 
   // Update comment handler to work with selected portion
   const handleCommentChange = (newComment) => {
-    if (newComment.length <= 30) {
-      setComments((prev) => ({
-        ...prev,
-        [selectedPortion]: newComment,
-      }));
-    }
+    setComments((prev) => ({
+      ...prev,
+      [selectedPortion]: newComment,
+    }));
   };
 
   // Update suggestion handler
   const handleSuggestionClick = (suggestionText) => {
-    const currentComment = comments[selectedPortion];
-    const isSelected = currentComment.includes(suggestionText);
+    const currentComment = comments[selectedPortion] || "";
+    const currentSuggestions = currentComment
+      ? currentComment.split(", ").filter(Boolean)
+      : [];
+    const isSelected = currentSuggestions.includes(suggestionText);
 
     if (isSelected) {
       // Remove the suggestion
-      const suggestions = currentComment.split(", ");
-      const filteredSuggestions = suggestions.filter(
+      const filteredSuggestions = currentSuggestions.filter(
         (s) => s !== suggestionText
       );
       const newComment = filteredSuggestions.join(", ");
-      if (newComment.length <= 30) {
-        handleCommentChange(newComment);
-      }
+      handleCommentChange(newComment);
     } else {
-      // Add the suggestion if within limits
+      // Check if we've reached the maximum number of suggestions (4)
+      if (currentSuggestions.length >= 4) {
+        return; // Don't add more suggestions if we've reached the limit
+      }
+
+      // Add the suggestion
       const newComment = currentComment
         ? `${currentComment}, ${suggestionText}`
         : suggestionText;
-      if (newComment.length <= 30) {
-        handleCommentChange(newComment);
-      }
+      handleCommentChange(newComment);
     }
   };
 
@@ -429,14 +430,12 @@ export const AddToCartModal = () => {
           <small
             style={{
               color:
-                (comments[selectedPortion]?.length || 0) > 30
+                (comments[selectedPortion]?.length || 0) > 50
                   ? "#dc3545"
                   : "#6c757d",
               fontSize: "12px",
             }}
-          >
-            {comments[selectedPortion]?.length || 0}/30
-          </small>
+          ></small>
         </label>
 
         {/* Quick Suggestions */}
@@ -451,39 +450,41 @@ export const AddToCartModal = () => {
             { icon: "🥚", text: "No egg" },
             { icon: "🥜", text: "No nuts" },
           ].map((suggestion, index) => {
-            const isSelected = comments[selectedPortion]?.includes(
-              suggestion.text
-            );
+            const commentText = comments[selectedPortion] || "";
+            const suggestionList = commentText
+              ? commentText.split(", ").filter(Boolean)
+              : [];
+            const suggestionSelected = suggestionList.includes(suggestion.text);
+            const suggestionDisabled =
+              suggestionList.length >= 4 && !suggestionSelected;
 
             return (
               <div
                 key={index}
-                onClick={() => handleSuggestionClick(suggestion.text)}
+                onClick={() =>
+                  !suggestionDisabled && handleSuggestionClick(suggestion.text)
+                }
                 style={{
-                  backgroundColor: isSelected ? "#e8f5e9" : "#f8f9fa",
-                  border: `1px solid ${isSelected ? "#28a745" : "#e9ecef"}`,
+                  backgroundColor: suggestionSelected ? "#e8f5e9" : "#f8f9fa",
+                  border: `1px solid ${
+                    suggestionSelected ? "#28a745" : "#e9ecef"
+                  }`,
                   borderRadius: "20px",
                   padding: "8px 12px",
                   fontSize: "13px",
-                  color: isSelected ? "#28a745" : "#6c757d",
-                  cursor:
-                    comments[selectedPortion]?.length > 30 && !isSelected
-                      ? "not-allowed"
-                      : "pointer",
+                  color: suggestionSelected ? "#28a745" : "#6c757d",
+                  cursor: suggestionDisabled ? "not-allowed" : "pointer",
                   transition: "all 0.2s ease",
                   display: "flex",
                   alignItems: "center",
                   gap: "4px",
                   userSelect: "none",
-                  opacity:
-                    comments[selectedPortion]?.length > 30 && !isSelected
-                      ? 0.5
-                      : 1,
+                  opacity: suggestionDisabled ? 0.5 : 1,
                 }}
               >
                 <span>{suggestion.icon}</span>
                 <span>{suggestion.text}</span>
-                {isSelected && (
+                {suggestionSelected && (
                   <span style={{ marginLeft: "4px", fontSize: "10px" }}>✓</span>
                 )}
               </div>
@@ -493,6 +494,11 @@ export const AddToCartModal = () => {
 
         {/* Comment textarea */}
         <div className="position-relative">
+          <div className="d-flex justify-content-end mb-1">
+            <span className="text-muted small">
+              {comments[selectedPortion]?.length || 0}/50
+            </span>
+          </div>
           <textarea
             className="form-control"
             value={comments[selectedPortion] || ""}
@@ -507,7 +513,7 @@ export const AddToCartModal = () => {
                 comments[selectedPortion]?.length < 5 &&
                 comments[selectedPortion]?.length > 0
                   ? "#dc3545"
-                  : comments[selectedPortion]?.length > 30
+                  : comments[selectedPortion]?.length > 50
                   ? "#dc3545"
                   : "#e9ecef"
               }`,
@@ -522,14 +528,14 @@ export const AddToCartModal = () => {
               transition: "all 0.2s ease",
             }}
             onFocus={(e) => {
-              if (comments[selectedPortion]?.length <= 30) {
+              if (comments[selectedPortion]?.length <= 50) {
                 e.target.style.border = "1.5px solid #28a745";
               }
             }}
             onBlur={(e) => {
               e.target.style.border =
                 comments[selectedPortion]?.length < 5 ||
-                comments[selectedPortion]?.length > 30
+                comments[selectedPortion]?.length > 50
                   ? "1.5px solid #dc3545"
                   : "1.5px solid #e9ecef";
             }}
@@ -571,8 +577,8 @@ export const AddToCartModal = () => {
           >
             {comments[selectedPortion]?.length < 5
               ? "Instructions must be at least 5 characters"
-              : comments[selectedPortion]?.length > 30
-              ? "Instructions cannot exceed 30 characters"
+              : comments[selectedPortion]?.length > 50
+              ? "Instructions cannot exceed 50 characters"
               : ""}
           </small>
         )}

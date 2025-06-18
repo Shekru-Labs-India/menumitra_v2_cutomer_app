@@ -10,35 +10,40 @@ function Footer() {
   const { user, setShowAuthOffcanvas } = useAuth();
   const isOrderRoute = () => {
     const pathname = location.pathname;
-    return pathname === '/orders' || 
-           pathname.startsWith('/orders/') || 
-           pathname.startsWith('/order-detail/');
+    return (
+      pathname === "/orders" ||
+      pathname.startsWith("/orders/") ||
+      pathname.startsWith("/order-detail/")
+    );
   };
 
   const isProfileRoute = () => {
     const pathname = location.pathname;
-    return pathname === '/profile' || 
-           pathname.startsWith('/profile/') || 
-           pathname === '/edit-profile';
+    return (
+      pathname === "/profile" ||
+      pathname.startsWith("/profile/") ||
+      pathname === "/edit-profile"
+    );
   };
 
   return (
     <div>
-      <div className="menubar-area style-2 footer-fixed border-top"
-      style={{boxShadow: '0 -4px 6px -1px rgba(0,0,0,0.2)'}}
+      <div
+        className="menubar-area style-2 footer-fixed border-top"
+        style={{ boxShadow: "0 -4px 6px -1px rgba(0,0,0,0.2)" }}
       >
         <div className="toolbar-inner menubar-nav">
           <NavLink
             to="/"
             className={({ isActive }) =>
-              `nav-link ${isActive ? 'active text-primary' : ''}`
+              `nav-link ${isActive ? "active text-primary" : ""}`
             }
             end
           >
             <i className="fa-solid fa-house"></i>
           </NavLink>
           <NavLink
-          onClick={() => {
+            onClick={() => {
               if (!user) {
                 setShowAuthOffcanvas(true);
                 return;
@@ -46,7 +51,7 @@ function Footer() {
             }}
             to="/favourites"
             className={({ isActive }) =>
-              `nav-link ${isActive ? 'active text-primary' : ''}`
+              `nav-link ${isActive ? "active text-primary" : ""}`
             }
           >
             <i className="fa-solid fa-heart"></i>
@@ -60,11 +65,13 @@ function Footer() {
             }}
             to="/checkout"
             className={({ isActive }) =>
-              `nav-link position-relative d-flex align-items-center justify-content-center ${isActive ? 'active text-primary' : ''}`
+              `nav-link position-relative d-flex align-items-center justify-content-center ${
+                isActive ? "active text-primary" : ""
+              }`
             }
           >
             <span style={{ position: "relative", display: "inline-block" }}>
-            <i className="fa-solid fa-cart-shopping"></i>
+              <i className="fa-solid fa-cart-shopping"></i>
               {cartCount > 0 && (
                 <span
                   className="position-absolute badge rounded-pill"
@@ -72,26 +79,26 @@ function Footer() {
                     bottom: "14px",
                     left: "15px",
                     fontSize: "0.6rem",
-                    minWidth: 18,
-                    height: 18,
-                    backgroundColor: "#dc3545",
+                    minWidth: 13,
+                    height: 13,
+                    backgroundColor: "#F44336",
                     color: "white",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     padding: "0 4px",
                     zIndex: 2,
-                    border: '1px solid white'
+                    border: "1px solid white",
                   }}
                 >
-                  {cartCount}
+                  {/* {cartCount} */}
                 </span>
               )}
             </span>
           </NavLink>
 
           <NavLink
-          onClick={() => {
+            onClick={() => {
               if (!user) {
                 setShowAuthOffcanvas(true);
                 return;
@@ -99,18 +106,18 @@ function Footer() {
             }}
             to="/orders"
             className={({ isActive }) =>
-              `nav-link ${isOrderRoute() ? 'active text-primary' : ''}`
+              `nav-link ${isOrderRoute() ? "active text-primary" : ""}`
             }
           >
-           <i className="fa-solid fa-clock-rotate-left"></i>
+            <i className="fa-solid fa-clock-rotate-left"></i>
           </NavLink>
           <NavLink
             to="/profile"
             className={({ isActive }) =>
-              `nav-link ${isProfileRoute() ? 'active text-primary' : ''}`
+              `nav-link ${isProfileRoute() ? "active text-primary" : ""}`
             }
           >
-           <i className="fa-solid fa-user"></i>
+            <i className="fa-solid fa-user"></i>
           </NavLink>
         </div>
       </div>

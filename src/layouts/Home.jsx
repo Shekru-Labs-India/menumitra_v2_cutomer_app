@@ -83,6 +83,8 @@ function Home() {
     menusByCategory: {},
   });
 
+  const [activeMenuFilter, setActiveMenuFilter] = useState("all"); // "all", "special", "offer"
+
   const handleCategoryClick = (category) => {
     setSelectedCategoryId(category.menuCatId);
   };
@@ -234,6 +236,8 @@ function Home() {
       if (data.detail) {
         // Transform the data into a more usable format
         const menusByCategory = {};
+        let totalMenuCount = 0; // Initialize total menu count
+
         if (data.detail.menus) {
           data.detail.menus.forEach((menu) => {
             if (!menusByCategory[menu.menu_cat_id]) {
@@ -254,6 +258,7 @@ function Home() {
               isActive: menu.is_active,
               image: menu.image,
             });
+            totalMenuCount++; // Increment total count for each menu item
           });
         }
 
@@ -264,14 +269,25 @@ function Home() {
           menuCount: cat.menu_count,
         }));
 
+        // Add "All" category at the beginning
+        const allCategory = {
+          menuCatId: "all",
+          categoryName: "All",
+          menuCount: totalMenuCount,
+        };
+        categories.unshift(allCategory);
+
         setCategoriesData({
-          categories,
-          menusByCategory,
+          categories: categories,
+          menusByCategory: menusByCategory,
         });
+
+        // Set initial filtered menu items to all menus from all categories
+        setFilteredMenuItems(data.detail.menus || []);
       }
     } catch (error) {
       console.error(
-        "Error fetching menu list by category:",
+        "❌ Error fetching menu list by category:",
         error.response?.data || error.message
       );
     }
@@ -284,16 +300,41 @@ function Home() {
     }
   }, [outletId]);
 
-  // New useEffect to filter menus based on selected category
+  // Filter menu items based on selected category
   useEffect(() => {
-    if (!selectedCategoryId) {
-      setFilteredMenuItems(menuItems); // Show all if no category selected
-    } else {
-      // Use menus directly from the categoriesData.menusByCategory map
-      const filtered = categoriesData.menusByCategory[selectedCategoryId] || [];
-      setFilteredMenuItems(filtered);
+    if (selectedCategoryId === "all") {
+      // Display all menus if "All" is selected
+      const allMenus = Object.values(categoriesData.menusByCategory).flat();
+      setFilteredMenuItems(allMenus);
+    } else if (selectedCategoryId) {
+      // Display menus for the selected category
+      setFilteredMenuItems(
+        categoriesData.menusByCategory[selectedCategoryId] || []
+      );
+    } else if (
+      categoriesData.categories.length > 0 &&
+      selectedCategoryId === null
+    ) {
+      // If no category is selected initially, default to "All" (first category)
+      setSelectedCategoryId("all");
     }
-  }, [selectedCategoryId, menuItems, categoriesData.menusByCategory]);
+  }, [
+    selectedCategoryId,
+    categoriesData.menusByCategory,
+    categoriesData.categories,
+  ]);
+
+  const getFilteredMenus = () => {
+    if (activeMenuFilter === "special") {
+      return filteredMenuItems.filter(
+        (item) => item.isSpecial === true || item.isSpecial === 1
+      );
+    }
+    if (activeMenuFilter === "offer") {
+      return filteredMenuItems.filter((item) => Number(item.offer) > 0);
+    }
+    return filteredMenuItems;
+  };
 
   return (
     <>

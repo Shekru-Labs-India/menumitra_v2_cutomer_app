@@ -1,23 +1,26 @@
-import React, { useState } from 'react';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import PropTypes from 'prop-types';
-import Skeleton from 'react-loading-skeleton';
-import 'react-loading-skeleton/dist/skeleton.css';
+import React, { useState } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import PropTypes from "prop-types";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 // Import Swiper styles
-import 'swiper/css';
-import 'swiper/css/navigation';
+import "swiper/css";
+import "swiper/css/navigation";
 
-const categories = [/* ... same categories array ... */];
+const categories = [
+  /* ... same categories array ... */
+];
 
-const DEFAULT_IMAGE = 'https://as2.ftcdn.net/jpg/02/79/12/03/1000_F_279120368_WzIoR2LV2Cgy33oxy6eEKQYSkaWr8AFU.jpg';
+const DEFAULT_IMAGE =
+  "https://as2.ftcdn.net/jpg/02/79/12/03/1000_F_279120368_WzIoR2LV2Cgy33oxy6eEKQYSkaWr8AFU.jpg";
 
-const CategorySwiper = ({ 
+const CategorySwiper = ({
   onCategoryClick,
   containerClassName,
   containerStyle,
   categories: customCategories = categories,
-  isLoading = false
+  isLoading = false,
 }) => {
   const handleClick = (category) => {
     if (onCategoryClick) {
@@ -27,7 +30,7 @@ const CategorySwiper = ({
 
   if (isLoading) {
     return (
-      <div className={`categories-box p-0 m-0 ${containerClassName || ''}`}>
+      <div className={`categories-box p-0 m-0 ${containerClassName || ""}`}>
         <div className="swiper-btn-center-lr">
           <Swiper
             spaceBetween={2}
@@ -43,18 +46,15 @@ const CategorySwiper = ({
             resistanceRatio={0.85}
           >
             {[1, 2, 3, 4, 5, 6].map((item) => (
-              <SwiperSlide 
-                key={item}
-                className="swiper-slide-auto"
-              >
-                <div 
+              <SwiperSlide key={item} className="swiper-slide-auto">
+                <div
                   className="category-pill cursor-pointer d-inline-flex align-items-center rounded-pill border"
-                  style={{ 
+                  style={{
                     backgroundColor: "#f8f9fa",
                     boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.05)",
                     borderColor: "#dee2e6",
                     padding: "6px 12px",
-                    height: "32px"
+                    height: "32px",
                   }}
                 >
                   <div className="d-flex align-items-center">
@@ -64,7 +64,7 @@ const CategorySwiper = ({
                       baseColor="#E9ECEF"
                       highlightColor="#F8F9FA"
                       style={{
-                        borderRadius: "12px"
+                        borderRadius: "12px",
                       }}
                     />
                     <Skeleton
@@ -74,7 +74,7 @@ const CategorySwiper = ({
                       highlightColor="#F8F9FA"
                       style={{
                         borderRadius: "12px",
-                        marginLeft: "6px"
+                        marginLeft: "6px",
                       }}
                     />
                   </div>
@@ -88,7 +88,7 @@ const CategorySwiper = ({
   }
 
   return (
-    <div className={`categories-box p-0 m-0 ${containerClassName || ''}`}>
+    <div className={`categories-box p-0 m-0 ${containerClassName || ""}`}>
       <div className="swiper-btn-center-lr">
         <Swiper
           spaceBetween={2}
@@ -104,11 +104,8 @@ const CategorySwiper = ({
           resistanceRatio={0.85}
         >
           {customCategories.map((category) => (
-            <SwiperSlide 
-              key={category.menuCatId} 
-              className="swiper-slide-auto"
-            >
-              <div 
+            <SwiperSlide key={category.menuCatId} className="swiper-slide-auto">
+              <div
                 onClick={() => handleClick(category)}
                 className={`
                   category-pill 
@@ -117,14 +114,12 @@ const CategorySwiper = ({
                   align-items-center 
                   rounded-pill 
                   border 
-                  ${category.menuCatId === 'all' ? 'active' : ''}
+                  ${category.menuCatId === "all" ? "active" : ""}
                 `}
               >
                 <span className="category-text">
                   {category.categoryName}
-                  <span className="count">
-                    ({category.menuCount || 0})
-                  </span>
+                  <span className="count">({category.menuCount || 0})</span>
                 </span>
               </div>
             </SwiperSlide>
@@ -203,7 +198,7 @@ CategorySwiper.propTypes = {
   containerClassName: PropTypes.string,
   containerStyle: PropTypes.object,
   categories: PropTypes.array,
-  isLoading: PropTypes.bool
+  isLoading: PropTypes.bool,
 };
 
 export default CategorySwiper;

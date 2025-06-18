@@ -62,6 +62,19 @@ function Header() {
     };
   }, []); // Empty dependency array since it doesn't depend on any props or state
 
+  const getHeaderTitle = () => {
+    const path = location.pathname;
+    if (path === "/") return "MenuMitra";
+    if (path.startsWith("/checkout")) return "Checkout";
+    if (path.startsWith("/profile")) return "Profile";
+    if (path.startsWith("/orders")) return "Orders";
+    if (path.startsWith("/favourites")) return "Favourite";
+    if (path.startsWith("/order-detail")) return "Order Details";
+    if (path.startsWith("/product/") || path.startsWith("/product-detail"))
+      return "Product Details";
+    return "";
+  };
+
   return (
     <>
       <TestEnvironmentBanner />
@@ -77,6 +90,12 @@ function Header() {
           <div className="container">
             <div className="header-content">
               <div className="left-content">
+                {getHeaderTitle() && (
+                  <h5 className="title mb-0 text-nowrap">{getHeaderTitle()}</h5>
+                )}
+              </div>
+              <div className="mid-content" />
+              <div className="right-content">
                 <a
                   href="#"
                   className="menu-toggler me-2"
@@ -84,10 +103,6 @@ function Header() {
                 >
                   <i className="fas fa-bars"></i>
                 </a>
-                <h5 className="title mb-0 text-nowrap">MenuMitra</h5>
-              </div>
-              <div className="mid-content" />
-              <div className="right-content">
                 <Link to="/search" className="header-icon">
                   <i className="fas fa-search"></i>
                 </Link>
@@ -96,6 +111,7 @@ function Header() {
           </div>
         </div>
       </header>
+      <Sidebar isOpen={isOpen} onClose={closeSidebar} />
       {!shouldHideBanner() && <OutletInfoBanner />}
     </>
   );

@@ -24,22 +24,17 @@ const FooterSummary = React.memo(function FooterSummary({ checkoutDetails }) {
     gst_amount: "0.00",
     final_grand_total: "0.00",
   };
+
+  const totalBill = parseFloat(details.total_bill_amount || 0);
+  const discount = parseFloat(details.discount_amount || 0);
+  const subtotal = totalBill - discount;
+
   return (
     <div className="view-title mb-2">
       <ul>
         <li className="py-0">
           <h5>Total</h5>
-          <h5>₹{details.grand_total}</h5>
-        </li>
-        <li>
-          <span className="text-soft">
-            Discount ({details.discount_percent}%)
-          </span>
-          <span className="text-soft">₹{details.discount_amount}</span>
-        </li>
-        <li>
-          <span className="text-soft">Subtotal</span>
-          <span className="text-soft">₹{details.total_bill_amount}</span>
+          <h5>₹{details.total_bill_amount}</h5>
         </li>
         {Number(details.discount_amount) > 0 && (
           <li>
@@ -52,14 +47,19 @@ const FooterSummary = React.memo(function FooterSummary({ checkoutDetails }) {
           </li>
         )}
         <li>
+          <span className="text-soft">Subtotal</span>
+          <span className="text-soft">₹{subtotal.toFixed(2)}</span>
+        </li>
+
+        <li>
           <span className="text-soft">
             Service Charge ({details.service_charges_percent}%)
           </span>
-          <span className="text-soft">₹{details.service_charges_amount}</span>
+          <span className="text-soft">+₹{details.service_charges_amount}</span>
         </li>
         <li>
           <span className="text-soft">GST ({details.gst_percent}%)</span>
-          <span className="text-soft">₹{details.gst_amount}</span>
+          <span className="text-soft">+₹{details.gst_amount}</span>
         </li>
         <li>
           <h5>Grand Total</h5>
@@ -84,7 +84,6 @@ function Checkout() {
   const [checkoutDetails, setCheckoutDetails] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const MAX_QUANTITY = 20;
   const [existingOrderModal, setExistingOrderModal] = useState({
     isOpen: false,
     orderDetails: null,
@@ -208,7 +207,7 @@ function Checkout() {
   const handleQuantityChange = (menuId, portionId, newQuantity) => {
     if (newQuantity === 0) {
       removeFromCart(menuId, portionId);
-    } else if (newQuantity <= MAX_QUANTITY) {
+    } else {
       updateQuantity(menuId, portionId, newQuantity);
     }
   };
@@ -669,7 +668,22 @@ function Checkout() {
                         </div>
                         <div className="item-footer">
                           <div className="d-flex align-items-center">
-                            <h6 className="me-2">₹ {item.price}</h6>
+                            <h6 className="me-2 mb-0 d-flex align-items-center">
+                              ₹{item.price}
+                              {item.offer > 0 && (
+                                <>
+                                  <del className="ms-2 text-muted">
+                                    ₹
+                                    {Math.round(
+                                      item.price / (1 - item.offer / 100)
+                                    )}
+                                  </del>
+                                  <span className="ms-2 text-success small fw-bold">
+                                    {item.offer}% Off
+                                  </span>
+                                </>
+                              )}
+                            </h6>
                           </div>
                           <div className="d-flex align-items-center">
                             <div className="dz-stepper stepper-fill small-stepper border-2">
@@ -706,21 +720,11 @@ function Checkout() {
                                         item.quantity + 1
                                       )
                                     }
-                                    disabled={item.quantity >= MAX_QUANTITY}
-                                    style={{
-                                      opacity:
-                                        item.quantity >= MAX_QUANTITY ? 0.5 : 1,
-                                    }}
                                   >
                                     +
                                   </button>
                                 </span>
                               </div>
-                              {item.quantity >= MAX_QUANTITY && (
-                                <small className="text-danger d-block text-center mt-1">
-                                  Max quantity reached
-                                </small>
-                              )}
                             </div>
                           </div>
                         </div>

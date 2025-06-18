@@ -96,7 +96,7 @@ function OutletDetails() {
     if (isProcessingPhonePe) return;
     try {
       setIsProcessingPhonePe(true);
-      const phonePeUrl = `phonepe://pay?pa=${
+      const phonePeUrl = `phonepe://upi/pay?pa=${
         restaurantDetails?.outlet_details?.upi_id
       }&pn=${encodeURIComponent(
         restaurantDetails?.outlet_details?.name
