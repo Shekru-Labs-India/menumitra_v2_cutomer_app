@@ -3,10 +3,11 @@ import Sidebar from "./Sidebar";
 import { useSidebar } from "../contexts/SidebarContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import TestEnvironmentBanner from "./TestEnvironmentBanner";
 import OutletInfoBanner from "./OutletInfoBanner";
 import { useLocation } from "react-router-dom";
+import logo from "../assets/logo.png";
 
 function Header() {
   const mainBarRef = useRef(null);
@@ -16,6 +17,7 @@ function Header() {
   const { isDarkMode, toggleTheme } = useTheme();
   const location = useLocation();
   const [userName, setUserName] = useState("");
+  const navigate = useNavigate();
 
   // Function to check if current route is profile related
   const isProfileRoute = () => {
@@ -88,25 +90,61 @@ function Header() {
       <header className="header">
         <div className="main-bar" ref={mainBarRef}>
           <div className="container">
-            <div className="header-content">
-              <div className="left-content">
+            <div className="header-content position-relative">
+              <div className="left-content d-flex align-items-center gap-2">
+                {/* Logo removed as per user request */}
+                {location.pathname !== "/" && (
+                  <button
+                    className="btn btn-link p-0 me-2"
+                    style={{ fontSize: 22, color: "#222" }}
+                    onClick={() => navigate(-1)}
+                  >
+                    <i className="fas fa-arrow-left"></i>
+                  </button>
+                )}
+              </div>
+              <div className="mid-content" />
+              <div className="right-content d-flex align-items-center gap-2">
+                <Link to="/search" className="header-icon">
+                  <i className="fas fa-search"></i>
+                </Link>
                 <a
                   href="#"
-                  className="menu-toggler me-2"
+                  className="menu-toggler ms-2"
                   onClick={toggleSidebar}
                 >
                   <i className="fas fa-bars"></i>
                 </a>
-                {getHeaderTitle() && (
-                  <h5 className="title mb-0 text-nowrap">{getHeaderTitle()}</h5>
-                )}
               </div>
-              <div className="mid-content" />
-              <div className="right-content">
-                <Link to="/search" className="header-icon">
-                  <i className="fas fa-search"></i>
-                </Link>
-              </div>
+              {/* Header title: left on home, center on others */}
+              {getHeaderTitle() &&
+                (location.pathname === "/" ? (
+                  <h5
+                    className="title mb-0 text-nowrap"
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      zIndex: 1,
+                    }}
+                  >
+                    {getHeaderTitle()}
+                  </h5>
+                ) : (
+                  <h5
+                    className="title mb-0 text-nowrap position-absolute w-100 text-center"
+                    style={{
+                      left: 0,
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      pointerEvents: "none",
+                      zIndex: 1,
+                    }}
+                  >
+                    {getHeaderTitle()}
+                  </h5>
+                ))}
             </div>
           </div>
         </div>

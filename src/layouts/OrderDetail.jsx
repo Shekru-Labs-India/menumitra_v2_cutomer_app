@@ -274,10 +274,9 @@ function OrderDetail() {
 
     const content = document.createElement("div");
     content.innerHTML = `
-      <div style="padding: 20px; max-width: 90%; margin: auto; font-family: Arial, sans-serif;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom:10px">
+<div style="padding: 10px; width: 100%; max-width: 420px; margin: auto; font-family: Arial, sans-serif; box-sizing: border-box;">        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom:10px">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <img src="/src/assets/logo.png" alt="MenuMitra Logo" style="width: 50px; height: 50px; margin-top: 10px;" />
+            <img src="/src/assets/logo.png"  alt="MenuMitra Logo" style="width: 50px; height: 50px; margin-top: 10px;" />
             <span style="font-size: 20px; font-weight: bold;">MenuMitra</span>
           </div>
           <h2 style="font-size: 20px; font-weight: bold; color: #d9534f;">Invoice</h2>
@@ -350,21 +349,9 @@ function OrderDetail() {
         
           ${
             order_details.charges && order_details.charges > 0
-              ? `
-              <p><strong>
-                  ${
-                    order_details.order_type === "dine-in"
-                      ? "Extra Charges"
-                      : order_details.order_type === "drive-through"
-                      ? "Extra Charges"
-                      : order_details.order_type === "counter"
-                      ? "Extra Charges"
-                      : order_details.order_type === "parcel"
-                      ? "Extra Charges"
-                      : order_details.order_type === "delivery"
-                      ? "Extra Charges"
-                      : "Extra Charges"
-                  }:</p>`
+              ? `<p><strong>Extra Charges:</strong> <span style="color: #222;">+₹${parseFloat(
+                  order_details.charges
+                ).toFixed(2)}</span></p>`
               : ""
           }
             ${
@@ -717,7 +704,17 @@ function OrderDetail() {
                 )}
                 <li className="list-group-item d-flex justify-content-between px-0">
                   <span>Subtotal</span>
-                  <strong>₹{orderDetails.order_details.subtotal || ""}</strong>
+                  <strong>
+                    ₹
+                    {(
+                      Number(
+                        orderDetails.order_details.total_bill_amount || 0
+                      ) -
+                      Number(orderDetails.order_details.discount_amount || 0) -
+                      Number(orderDetails.order_details.special_discount || 0) +
+                      Number(orderDetails.order_details.charges || 0)
+                    ).toFixed(2)}
+                  </strong>
                 </li>
                 {orderDetails.order_details.service_charges_amount > 0 && (
                   <li className="list-group-item d-flex justify-content-between px-0">
@@ -763,30 +760,34 @@ function OrderDetail() {
             </div>
           </div>
           {/* Invoice Button */}
-          <div className="d-flex justify-content-end mt-3">
-            <button
-              className="d-flex align-items-center"
-              style={{
-                background: "#F5F5F5",
-                border: "1px solid #E0E0E0",
-                borderRadius: "24px",
-                color: "#222",
-                fontWeight: 500,
-                fontSize: "13px",
-                padding: "3px 12px",
-                boxShadow: "none",
-                outline: "none",
-                transition: "background 0.2s",
-              }}
-              onClick={handleDownloadInvoice}
-            >
-              <i
-                className="fa-solid fa-download me-2"
-                style={{ fontSize: 16 }}
-              ></i>
-              Invoice
-            </button>
-          </div>
+          {orderDetails.order_details.order_status &&
+            orderDetails.order_details.order_status.toLowerCase() ===
+              "paid" && (
+              <div className="d-flex justify-content-end mt-3">
+                <button
+                  className="d-flex align-items-center"
+                  style={{
+                    background: "#F5F5F5",
+                    border: "1px solid #E0E0E0",
+                    borderRadius: "24px",
+                    color: "#222",
+                    fontWeight: 500,
+                    fontSize: "13px",
+                    padding: "3px 12px",
+                    boxShadow: "none",
+                    outline: "none",
+                    transition: "background 0.2s",
+                  }}
+                  onClick={handleDownloadInvoice}
+                >
+                  <i
+                    className="fa-solid fa-download me-2"
+                    style={{ fontSize: 16 }}
+                  ></i>
+                  Invoice
+                </button>
+              </div>
+            )}
 
           {/* Table Information */}
           {/* {orderDetails.order_details.table_number && 

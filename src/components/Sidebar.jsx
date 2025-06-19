@@ -54,7 +54,7 @@ function Sidebar() {
   };
 
   return (
-    <div className={`sidebar style-2${isOpen ? " show" : ""}`}>
+    <div className={`sidebar style-2 right${isOpen ? " show" : ""}`}>
       {isAuthenticated && (
         <div className="user-info p-3 border-bottom">
           <div className="d-flex align-items-center mb-2">
@@ -100,14 +100,28 @@ function Sidebar() {
             onClick={handleLinkClick}
             end
           >
-            {({ isActive }) => (
-              <>
-                <span className="dz-icon">
-                  <i className="fa-solid fa-house"></i>
-                </span>
-                <span>Home</span>
-              </>
-            )}
+            <span className="dz-icon">
+              <i className="fa-solid fa-utensils"></i>
+            </span>
+            <span>Menu</span>
+          </NavLink>
+        </li>
+        <li>
+          <NavLink
+            to="/categories"
+            className={({ isActive }) =>
+              `nav-link ${
+                isActive
+                  ? "active bg-success text-white fw-bold px-2 rounded-5"
+                  : ""
+              }`
+            }
+            onClick={handleLinkClick}
+          >
+            <span className="dz-icon">
+              <i className="fa-solid fa-list"></i>
+            </span>
+            <span>Category</span>
           </NavLink>
         </li>
         <li>
@@ -161,7 +175,7 @@ function Sidebar() {
             <span className="dz-icon">
               <i class="fa-solid fa-cart-shopping"></i>
             </span>
-            <span>Cart</span>
+            <span>Checkout</span>
             {cartCount > 0 && (
               <span
                 className="position-absolute badge rounded-pill"

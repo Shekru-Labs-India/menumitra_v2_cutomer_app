@@ -582,7 +582,7 @@ function Home() {
                             portions: menuItem.portions,
                             image: menuItem.image,
                             offer: menuItem.offer,
-                            rating: menuItem.rating,
+                            // rating: menuItem.rating,
                             description: menuItem.description,
                           }}
                           onFavoriteClick={() =>

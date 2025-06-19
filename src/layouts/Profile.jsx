@@ -112,6 +112,42 @@ function Profile() {
                 </Link>
               </div>
               <div className="col-6">
+                <Link
+                  to="/menu"
+                  className="btn btn-light w-100 d-flex align-items-center justify-content-center py-3"
+                >
+                  <i className="fa-solid fa-utensils me-2 text-dark" />
+                  Menu
+                </Link>
+              </div>
+              <div className="col-6">
+                <Link
+                  to="/categories"
+                  className="btn btn-light w-100 d-flex align-items-center justify-content-center py-3"
+                >
+                  <i className="fa-solid fa-list me-2 text-dark" />
+                  Category
+                </Link>
+              </div>
+              <div className="col-6">
+                <Link
+                  to="/favourites"
+                  className="btn btn-light w-100 d-flex align-items-center justify-content-center py-3"
+                >
+                  <i className="fa-solid fa-heart me-2 text-dark" />
+                  Favourites
+                </Link>
+              </div>
+              <div className="col-6">
+                <Link
+                  to="/checkout"
+                  className="btn btn-light w-100 d-flex align-items-center justify-content-center py-3"
+                >
+                  <i className="fa-solid fa-shopping-cart me-2 text-dark" />
+                  Checkout
+                </Link>
+              </div>
+              <div className="col-6">
                 {isAuthenticated ? (
                   <button
                     onClick={onLogoutClick}

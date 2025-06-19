@@ -353,7 +353,7 @@ const VerticalMenuCard = ({
             <li
               className="price"
               style={{
-                color: "#007AFF",
+                color: "#339DFF",
                 fontWeight: "bold",
                 fontSize: "15px",
                 marginLeft: "auto",
