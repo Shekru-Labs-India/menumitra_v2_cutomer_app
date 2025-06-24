@@ -4,6 +4,7 @@ import Timer from "./Timer";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import axios from "axios";
+import logo from "../assets/logo.png"; // adjust path as needed
 
 const OrderAccordionItem = ({
   orderId,
@@ -47,37 +48,32 @@ const OrderAccordionItem = ({
 
     const content = document.createElement("div");
     content.innerHTML = `
-      <div style="padding: 20px; max-width: 90%; margin: auto; font-family: Arial, sans-serif;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom:10px">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <img src="/src/assets/logo.png" alt="MenuMitra Logo" style="width: 50px; height: 50px; margin-top: 10px;" />
-            <span style="font-size: 20px; font-weight: bold;">MenuMitra</span>
+      <div style="background: #fff; max-width: 700px; margin: 32px auto; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 32px 24px 24px 24px; font-family: 'Segoe UI', Arial, sans-serif; color: #222;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <img src='/logo.png' alt='MenuMitra Logo' style='width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid #eee;'/>
+            <span style="font-size: 22px; font-weight: 600; letter-spacing: 0.5px;">MenuMitra</span>
           </div>
-          <h2 style="font-size: 20px; font-weight: bold; color: #d9534f;">Invoice</h2>
+          <div style="text-align: right;">
+            <div style="font-size: 22px; font-weight: 600; color: #e74c3c; margin-bottom: 2px;">Invoice</div>
+            <div style="font-size: 15px; color: #888;">Bill no: <b>${
+              order_details.order_number
+            }</b></div>
+            <div style="font-size: 14px; color: #888;">${invoiceDateTime}</div>
+          </div>
         </div>
-  
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-  <div style="text-align: left; width: 50%;">
-    ${
-      order_details.user_name
-        ? `<p><strong>Hello, ${order_details.user_name}</strong> <br />`
-        : `<p><strong>Hello,</strong> <br />`
-    }
-    Thank you for shopping from our store and for your order.</p>
-  </div>
-  <div style="text-align: right; width: 50%;">
-    <p><strong>Bill no: ${order_details.order_number}</strong> <br />
-    ${invoiceDateTime}</p>
-  </div>
-</div>
-
-  
-        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+        <div style="margin-bottom: 18px;">
+          <div style="font-size: 16px; font-weight: 500; margin-bottom: 2px;">Hello, <b>${
+            order_details.user_name || "Customer"
+          }</b></div>
+          <div style="font-size: 14px; color: #444;">Thank you for shopping from our store and for your order.</div>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; margin: 18px 0 10px 0;">
           <thead>
             <tr>
-              <th style="border-bottom: 2px solid #ddd; padding: 8px; text-align: left;">Item</th>
-              <th style="border-bottom: 2px solid #ddd; padding: 8px; text-align: center;">Quantity</th>
-              <th style="border-bottom: 2px solid #ddd; padding: 8px; text-align: right;">Price</th>
+              <th style="text-align: left; font-size: 15px; font-weight: 600; padding: 8px 0;">Item</th>
+              <th style="text-align: center; font-size: 15px; font-weight: 600; padding: 8px 0;">Quantity</th>
+              <th style="text-align: right; font-size: 15px; font-weight: 600; padding: 8px 0;">Price</th>
             </tr>
           </thead>
           <tbody>
@@ -85,11 +81,13 @@ const OrderAccordionItem = ({
               .map(
                 (item) => `
               <tr>
-                <td style="color: #d9534f; padding: 8px;">${item.menu_name}</td>
-                <td style="text-align: center; padding: 8px;">${
+                <td style="color: #e74c3c; font-size: 15px; padding: 6px 0;">${
+                  item.menu_name
+                }</td>
+                <td style="text-align: center; font-size: 15px; padding: 6px 0;">${
                   item.quantity
                 }</td>
-                <td style="text-align: right; padding: 8px;">₹${parseFloat(
+                <td style="text-align: right; font-size: 15px; padding: 6px 0;">₹${parseFloat(
                   item.price
                 ).toFixed(2)}</td>
               </tr>
@@ -98,128 +96,87 @@ const OrderAccordionItem = ({
               .join("")}
           </tbody>
         </table>
-  
-        <div style="text-align: right; margin-top: 20px; border-top: 2px solid #ddd; padding-top: 10px;">
-          <p><strong>Total:</strong> ₹${parseFloat(
+        <hr style="border: none; border-top: 1.5px solid #eee; margin: 10px 0 18px 0;" />
+        <div style="max-width: 320px; margin-left: auto; font-size: 15px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 2px;"><span>Total:</span><span>₹${parseFloat(
             order_details.total_bill_amount || 0
-          ).toFixed(2)}</p>
-          ${
-            order_details.discount_amount && order_details.discount_amount > 0
-              ? `<p><strong>Discount (${
-                  order_details.discount_percent
-                }%):</strong> <span style="color: #ef4444;">-₹${parseFloat(
-                  order_details.discount_amount
-                ).toFixed(2)}</span></p>`
-              : ""
-          }
-        
+          ).toFixed(2)}</span></div>
           ${
             order_details.special_discount && order_details.special_discount > 0
-              ? `<p><strong>Special Discount:</strong> <span style="color: #ef4444;">-₹${parseFloat(
+              ? `<div style="display: flex; justify-content: space-between; color: #e74c3c;"><span>Special Discount:</span><span>-₹${parseFloat(
                   order_details.special_discount
-                ).toFixed(2)}</span></p>`
+                ).toFixed(2)}</span></div>`
               : ""
           }
-        
           ${
             order_details.charges && order_details.charges > 0
-              ? `
-              <p><strong>
-                  ${
-                    order_details.order_type === "dine-in"
-                      ? "Extra Charges"
-                      : order_details.order_type === "drive-through"
-                      ? "Extra Charges"
-                      : order_details.order_type === "counter"
-                      ? "Extra Charges"
-                      : order_details.order_type === "parcel"
-                      ? "Extra Charges"
-                      : order_details.order_type === "delivery"
-                      ? "Extra Charges"
-                      : "Extra Charges"
-                  }:</p>`
+              ? `<div style="display: flex; justify-content: space-between; color: #27ae60;"><span>Extra Charges:</span><span>+₹${parseFloat(
+                  order_details.charges
+                ).toFixed(2)}</span></div>`
               : ""
           }
-            ${
-              order_details.total_bill_with_discount &&
-              order_details.total_bill_with_discount > 0
-                ? `<p><strong>Subtotal:</strong> <span style="color: black;">₹${parseFloat(
-                    order_details.total_bill_with_discount
-                  ).toFixed(2)}</span></p>`
-                : ""
-            }
+          ${
+            order_details.total_bill_with_discount &&
+            order_details.total_bill_with_discount > 0
+              ? `<div style="display: flex; justify-content: space-between;"><span>Subtotal:</span><span>₹${parseFloat(
+                  order_details.total_bill_with_discount
+                ).toFixed(2)}</span></div>`
+              : ""
+          }
           ${
             order_details.service_charges_amount &&
             order_details.service_charges_amount > 0
-              ? `<p><strong>Service Charges (${parseFloat(
+              ? `<div style="display: flex; justify-content: space-between; color: #27ae60;"><span>Service Charges (${parseFloat(
                   order_details.service_charges_percent || 0
-                ).toFixed(
-                  0
-                )}%):</strong><span style="color: #22c55e;"> +₹${parseFloat(
+                ).toFixed(0)}%):</span><span>+₹${parseFloat(
                   order_details.service_charges_amount
-                ).toFixed(2)}</span></p>`
+                ).toFixed(2)}</span></div>`
               : ""
           }
           ${
             order_details.gst_amount && order_details.gst_amount > 0
-              ? `<p><strong>GST (${parseFloat(
+              ? `<div style="display: flex; justify-content: space-between; color: #27ae60;"><span>GST (${parseFloat(
                   order_details.gst_percent || 0
-                ).toFixed(
-                  0
-                )}%):</strong><span style="color: #22c55e;"> +₹${parseFloat(
+                ).toFixed(0)}%):</span><span>+₹${parseFloat(
                   order_details.gst_amount
-                ).toFixed(2)}</span></p>`
+                ).toFixed(2)}</span></div>`
               : ""
           }
-           
           ${
             order_details.tip && order_details.tip > 0
-              ? `<p><strong>Tip:</strong><span style="color: #22c55e;"> +₹${parseFloat(
+              ? `<div style="display: flex; justify-content: space-between; color: #27ae60;"><span>Tip:</span><span>+₹${parseFloat(
                   order_details.tip
-                ).toFixed(2)}</span></p>`
+                ).toFixed(2)}</span></div>`
               : ""
           }
-          <p><strong>Grand Total: ₹${parseFloat(
+          <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 16px; margin-top: 6px;"><span>Grand Total:</span><span>₹${parseFloat(
             order_details.final_grand_total || 0
-          ).toFixed(2)} </strong></p>
+          ).toFixed(2)}</span></div>
         </div>
-  
-        <div style="display: flex; justify-content: space-between; margin-top: 30px;">
-          <div>
-            <h4><strong>Billing Information</strong></h4>
-            <p>➤ ${order_details.user_name || outlet_name}</p>
-            <p>➤ ${order_details.outlet_address || outlet_address}</p>
-            <p>➤ ${order_details.user_mobile || outlet_mobile}</p>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 32px;">
+          <div style="font-size: 15px;">
+            <div style="font-weight: 600; margin-bottom: 6px;">Billing Information</div>
+            <div>▶ ${order_details.user_name || outlet_name}</div>
+            <div>▶ ${order_details.outlet_address || outlet_address}</div>
+            <div>▶ ${order_details.user_mobile || outlet_mobile}</div>
           </div>
-          ${
-            order_details.is_paid === "paid"
-              ? `<div>
-                   <h4>Payment Method</h4>
-                   <p style="text-transform:uppercase;"><strong>${
-                     order_details.payment_method || "CASH"
-                   }</strong></p>
-                 </div>`
-              : order_details.is_paid === "complementary"
-              ? `<div>
-                   <h4>Order Type</h4>
-                   <p style="text-transform:uppercase;"><strong>COMPLEMENTARY</strong></p>
-                 </div>`
-              : ""
-          }
+          <div style="font-size: 15px; text-align: right;">
+            <div style="font-weight: 600; margin-bottom: 6px;">Payment Method</div>
+            <div style="text-transform: uppercase;">${
+              order_details.payment_method || "CASH"
+            }</div>
+          </div>
         </div>
-
-<div style="text-align: center; margin-top: 20px;">
-  <p style="font-style: italic;">Have a nice day.</p>
-  <div style="margin-top: 10px ; margin-bottom: 10px;">
-    <div style="display: inline-flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-      <img src="/src/assets/logo.png" alt="MenuMitra Logo" style="width: 30px; margin-top:10px; height: 30px; object-fit: contain;" />
-      <span style="font-size: 18px; font-weight: bold; color:black">MenuMitra</span>
-    </div>
-  </div>
-  <p style=" font-size: 14px; color: #666;">info@menumitra.com</p>
-  <p style="margin: 5px 0; font-size: 14px; color: #666;">+91 9172530151</p>
-  <p style="margin: 5px 0; font-size: 14px; color: #666;">${website_url}</p>
-</div>
+        <div style="text-align: center; margin-top: 36px;">
+          <div style="font-style: italic; color: #444; margin-bottom: 12px;">Have a nice day.</div>
+          <div style="display: inline-flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+            <img src="/logo.png" alt="MenuMitra Logo" style="width: 28px; height: 28px; object-fit: contain; border-radius: 50%; border: 1px solid #eee;" />
+            <span style="font-size: 17px; font-weight: bold; color: #222;">MenuMitra</span>
+          </div>
+          <div style="font-size: 14px; color: #888; margin-top: 6px;">info@menumitra.com</div>
+          <div style="font-size: 14px; color: #888;">+91 9172530151</div>
+          <div style="font-size: 14px; color: #888;">${website_url}</div>
+        </div>
       </div>
     `;
 

@@ -203,9 +203,15 @@ const VerticalMenuCard = ({
         onFavoriteUpdate(menuItem.menuId, !initialIsFavorite);
       } else {
         console.error("Failed to update favorite status:", data.detail);
-        openModal("ERROR", {
-          message: data.detail || "Failed to update favorite status",
-        });
+        if (data.detail === "Menu already in favorites") {
+          // Force UI update to show as favorite
+          onFavoriteUpdate(menuItem.menuId, true);
+          window.alert("Menu is already in your favorites.");
+        } else {
+          openModal("ERROR", {
+            message: data.detail || "Failed to update favorite status",
+          });
+        }
       }
     } catch (error) {
       console.error("Error updating favorite status:", error);

@@ -85,6 +85,23 @@ function Home() {
 
   const [activeMenuFilter, setActiveMenuFilter] = useState("all"); // "all", "special", "offer"
 
+  // Add state for lazy loading
+  const [visibleMenuCount, setVisibleMenuCount] = useState(10);
+
+  // Reset visibleMenuCount when filters/search/category changes
+  useEffect(() => {
+    setVisibleMenuCount(10);
+  }, [filteredMenuItems, isSearching, selectedCategoryId, activeMenuFilter]);
+
+  // Helper for lazy loading
+  const getVisibleMenus = () => {
+    return getFilteredMenus().slice(0, visibleMenuCount);
+  };
+
+  const handleLoadMoreMenus = () => {
+    setVisibleMenuCount((prev) => prev + 10);
+  };
+
   const handleCategoryClick = (category) => {
     setSelectedCategoryId(category.menuCatId);
   };
@@ -465,7 +482,7 @@ function Home() {
                   ))
                 ) : isSearching ? (
                   filteredMenuItems.length > 0 ? (
-                    filteredMenuItems.map((menuItem) => (
+                    getVisibleMenus().map((menuItem) => (
                       <div className="col-6" key={menuItem.menuId}>
                         <VerticalMenuCard
                           image={
@@ -498,7 +515,7 @@ function Home() {
                     </div>
                   )
                 ) : (
-                  filteredMenuItems.map((menuItem) => (
+                  getVisibleMenus().map((menuItem) => (
                     <div className="col-6" key={menuItem.menuId}>
                       <VerticalMenuCard
                         image={
@@ -527,6 +544,17 @@ function Home() {
                   ))
                 )}
               </div>
+              {/* Lazy Load Button */}
+              {getFilteredMenus().length > visibleMenuCount && (
+                <div className="text-center mb-4">
+                  <button
+                    className="btn btn-outline-primary px-4 py-2"
+                    onClick={handleLoadMoreMenus}
+                  >
+                    Load More
+                  </button>
+                </div>
+              )}
 
               {/* Show loading skeleton only when no cached data is available */}
               {isLoading && menuItems.length === 0 && (

@@ -77,6 +77,10 @@ function Orders() {
   const [expandedCompletedDates, setExpandedCompletedDates] = useState({});
   const [expandedCancelledDates, setExpandedCancelledDates] = useState({});
 
+  const [udhariPaidOrders, setUdhariPaidOrders] = useState([]);
+
+  const [expandedUdhariPaidDates, setExpandedUdhariPaidDates] = useState({});
+
   useEffect(() => {
     // Call both APIs independently
     fetchOngoingOrders();
@@ -127,6 +131,30 @@ function Orders() {
     setExpandedCancelledDates({});
   };
 
+  // Helper to group udhari_paid orders by date
+  const groupUdhariPaidByDate = (orders) => {
+    const grouped = {};
+    orders.forEach((order) => {
+      // Try to get date from order.datetime or fallback to order.time (if needed)
+      let dateStr = order.datetime
+        ? order.datetime.split(" ").slice(0, 3).join(" ")
+        : order.time;
+      if (!dateStr) dateStr = "Unknown Date";
+      if (!grouped[dateStr]) grouped[dateStr] = [];
+      grouped[dateStr].push(order);
+    });
+    return grouped;
+  };
+
+  const udhariPaidGrouped = groupUdhariPaidByDate(udhariPaidOrders);
+
+  const toggleUdhariPaidDateExpansion = (date) => {
+    setExpandedUdhariPaidDates((prev) => ({
+      ...prev,
+      [date]: !prev[date],
+    }));
+  };
+
   const fetchCompletedOrders = async () => {
     try {
       const auth = JSON.parse(localStorage.getItem("auth")) || {};
@@ -167,6 +195,28 @@ function Orders() {
           // Add any other order types here
         };
         setOrdersData(transformedData);
+
+        // Extract udhari_paid orders and flatten them into a single array
+        const udhariPaidRaw = data.detail.lists.udhari_paid || {};
+        const udhariPaidList = Object.values(udhariPaidRaw).flat();
+        // Map to match ongoingOrders structure
+        const mappedUdhariPaid = udhariPaidList.map((order) => ({
+          id: order.order_number,
+          orderId: order.order_id,
+          orderNumber: order.order_number,
+          itemCount: order.menu_count,
+          status: order.order_status,
+          iconColor: "#FFA902",
+          iconBgClass: "bg-warning",
+          isExpanded: false,
+          parentId: "accordionExample1",
+          orderType: order.order_type,
+          outletName: order.outlet_name,
+          totalAmount: order.final_grand_total,
+          paymentMethod: order.payment_method || "Not selected",
+          time: order.time,
+        }));
+        setUdhariPaidOrders(mappedUdhariPaid);
       }
     } catch (err) {
       console.error("Error fetching order history:", err);
@@ -536,38 +586,43 @@ function Orders() {
               id="myTab3"
               role="tablist"
             >
-              <li className="nav-item flex-shrink-0 w-50" role="presentation">
+              <li className="nav-item flex-shrink-0 w-33" role="presentation">
                 <button
                   className="nav-link active w-100"
+                  id="pending-tab"
+                  data-bs-toggle="tab"
+                  data-bs-target="#pending-tab-pane"
+                  type="button"
+                  role="tab"
+                  aria-controls="pending-tab-pane"
+                  aria-selected="true"
+                >
+                  <i
+                    className="fa-solid fa-clock me-2"
+                    style={{ color: "black" }}
+                  ></i>
+                  Pend
+                </button>
+              </li>
+              <li className="nav-item flex-shrink-0 w-33" role="presentation">
+                <button
+                  className="nav-link w-100"
                   id="completed-tab"
                   data-bs-toggle="tab"
                   data-bs-target="#completed-tab-pane"
                   type="button"
                   role="tab"
                   aria-controls="completed-tab-pane"
-                  aria-selected="true"
+                  aria-selected="false"
                 >
-                  <svg
-                    className="me-2"
-                    width={16}
-                    height={16}
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <circle
-                      cx={8}
-                      cy={8}
-                      r={7}
-                      fill="#027335"
-                      stroke="var(--bg-white)"
-                      strokeWidth={2}
-                    />
-                  </svg>
-                  Completed
+                  <i
+                    className="fa-solid fa-circle-check me-2"
+                    style={{ color: "#27ae60" }}
+                  ></i>
+                  Complete
                 </button>
               </li>
-              <li className="nav-item flex-shrink-0 w-50" role="presentation">
+              <li className="nav-item flex-shrink-0 w-33" role="presentation">
                 <button
                   className="nav-link d-flex align-items-center justify-content-center w-100"
                   id="cancelled-tab"
@@ -578,308 +633,375 @@ function Orders() {
                   aria-controls="cancelled-tab-pane"
                   aria-selected="false"
                 >
-                  <svg
-                    className="me-2"
-                    width={16}
-                    height={16}
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <circle
-                      cx={8}
-                      cy={8}
-                      r={7}
-                      fill="#FF0000"
-                      stroke="var(--bg-white)"
-                      strokeWidth={2}
-                    />
-                  </svg>
-                  Cancelled
+                  <i
+                    className="fa-solid fa-ban me-2"
+                    style={{ color: "#e74c3c" }}
+                  ></i>
+                  Cancel
                 </button>
               </li>
             </ul>
             <div className="tab-content" id="myTabContent3">
-              {isLoadingHistory ? (
-                <div className="text-center py-4">Loading order history...</div>
-              ) : (
-                <>
-                  {/* Completed Orders Tab */}
-                  <div
-                    className="tab-pane fade show active"
-                    id="completed-tab-pane"
-                    role="tabpanel"
-                    aria-labelledby="completed-tab"
-                    tabIndex={0}
-                  >
-                    <div className="accordion style-3" id="accordionExample3">
-                      {error.history ? (
-                        <NoOrders message="No completed orders" />
-                      ) : Object.keys(transformedOrders.completedByDate)
-                          .length > 0 ? (
-                        <>
-                          {/* Expand/Collapse All for Completed Orders */}
-                          <div className="d-flex justify-content-end align-items-center mb-3">
-                            <button
-                              className="btn btn-sm btn-link text-dark p-0"
-                              onClick={
-                                Object.values(expandedCompletedDates).some(
-                                  (e) => e
-                                )
-                                  ? handleCollapseAllCompleted
-                                  : handleExpandAllCompleted
-                              }
-                              aria-expanded={Object.values(
-                                expandedCompletedDates
-                              ).some((e) => e)}
+              {/* Pending Orders Tab */}
+              <div
+                className="tab-pane fade show active"
+                id="pending-tab-pane"
+                role="tabpanel"
+                aria-labelledby="pending-tab"
+                tabIndex={0}
+              >
+                <div className="accordion style-3" id="accordionExamplePending">
+                  {error.ongoing !== "404" &&
+                  Object.keys(udhariPaidGrouped).length > 0 ? (
+                    <div className="accordion" id="accordionUdhariPaid">
+                      {Object.entries(udhariPaidGrouped).map(
+                        ([dateKey, orders]) => (
+                          <div className="accordion-item" key={dateKey}>
+                            <h2
+                              className="accordion-header"
+                              id={"headingUdhari" + dateKey.replace(/\s/g, "")}
                             >
-                              <span>
-                                {Object.values(expandedCompletedDates).some(
-                                  (e) => e
-                                )
-                                  ? "Collapse All"
-                                  : "Expand All"}
-                              </span>
-                              <i
-                                className={`ms-2 fas ${
-                                  Object.values(expandedCompletedDates).some(
-                                    (e) => e
-                                  )
-                                    ? "fa-chevron-up"
-                                    : "fa-chevron-down"
-                                }`}
-                              ></i>
-                            </button>
-                          </div>
-                          {Object.entries(
-                            transformedOrders.completedByDate
-                          ).map(([dateKey, dailyOrderData]) => (
-                            <div className="accordion-item" key={dateKey}>
-                              <h2
-                                className="accordion-header"
-                                id={"heading" + dateKey.replace(/\s/g, "")}
-                              >
-                                <button
-                                  className={
-                                    "btn btn-link w-100 d-flex justify-content-between align-items-center p-0 " +
-                                    (!expandedCompletedDates[dateKey]
-                                      ? "collapsed"
-                                      : "")
-                                  }
-                                  type="button"
-                                  data-bs-toggle="collapse"
-                                  data-bs-target={
-                                    "#collapse" + dateKey.replace(/\s/g, "")
-                                  }
-                                  aria-expanded={
-                                    expandedCompletedDates[dateKey] || false
-                                  }
-                                  aria-controls={
-                                    "collapse" + dateKey.replace(/\s/g, "")
-                                  }
-                                  onClick={() =>
-                                    toggleCompletedDateExpansion(dateKey)
-                                  }
-                                >
-                                  <span className="flex-grow-1 text-start">
-                                    {dailyOrderData.date}
-                                  </span>
-                                  <span className="me-2">
-                                    {dailyOrderData.orderCount}
-                                  </span>
-                                  <i
-                                    className={`ms-2 fas ${
-                                      expandedCompletedDates[dateKey]
-                                        ? "fa-chevron-up"
-                                        : "fa-chevron-down"
-                                    }`}
-                                  ></i>
-                                </button>
-                              </h2>
-                              <div
-                                id={"collapse" + dateKey.replace(/\s/g, "")}
+                              <button
                                 className={
-                                  "accordion-collapse collapse " +
-                                  (expandedCompletedDates[dateKey]
-                                    ? "show"
+                                  "btn btn-link w-100 d-flex justify-content-between align-items-center p-0 " +
+                                  (!expandedUdhariPaidDates[dateKey]
+                                    ? "collapsed"
                                     : "")
                                 }
-                                aria-labelledby={
-                                  "heading" + dateKey.replace(/\s/g, "")
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target={
+                                  "#collapseUdhari" + dateKey.replace(/\s/g, "")
                                 }
-                                data-bs-parent="#accordionExample3"
+                                aria-expanded={
+                                  expandedUdhariPaidDates[dateKey] || false
+                                }
+                                aria-controls={
+                                  "collapseUdhari" + dateKey.replace(/\s/g, "")
+                                }
+                                onClick={() =>
+                                  toggleUdhariPaidDateExpansion(dateKey)
+                                }
                               >
-                                <div className="accordion-body">
-                                  {dailyOrderData.orders.map((order) => (
-                                    <OrderAccordionItem
-                                      key={order.id}
-                                      orderId={order.orderId}
-                                      orderNumber={order.orderNumber}
-                                      itemCount={order.itemCount}
-                                      status={order.status}
-                                      iconColor={order.iconColor}
-                                      iconBgClass={order.iconBgClass}
-                                      isExpanded={order.isExpanded}
-                                      parentId={order.parentId}
-                                      outletName={order.outletName}
-                                      orderType={order.orderType}
-                                      totalAmount={order.totalAmount}
-                                      paymentStatus={order.paymentStatus}
-                                      orderTime={order.orderTime}
-                                      tableNumber={order.tableNumber}
-                                      sectionName={order.sectionName}
-                                    />
-                                  ))}
-                                </div>
+                                <span className="flex-grow-1 text-start">
+                                  {dateKey}
+                                </span>
+                                <span className="me-2">{orders.length}</span>
+                                <i
+                                  className={`ms-2 fas ${
+                                    expandedUdhariPaidDates[dateKey]
+                                      ? "fa-chevron-up"
+                                      : "fa-chevron-down"
+                                  }`}
+                                ></i>
+                              </button>
+                            </h2>
+                            <div
+                              id={"collapseUdhari" + dateKey.replace(/\s/g, "")}
+                              className={
+                                "accordion-collapse collapse " +
+                                (expandedUdhariPaidDates[dateKey] ? "show" : "")
+                              }
+                              aria-labelledby={
+                                "headingUdhari" + dateKey.replace(/\s/g, "")
+                              }
+                              data-bs-parent="#accordionUdhariPaid"
+                            >
+                              <div className="accordion-body">
+                                {orders.map((order) => (
+                                  <OrderAccordionItem
+                                    key={order.id + "-" + order.status}
+                                    orderId={order.orderId}
+                                    orderNumber={order.orderNumber}
+                                    itemCount={order.itemCount}
+                                    status={order.status}
+                                    iconColor={order.iconColor}
+                                    iconBgClass={order.iconBgClass}
+                                    isExpanded={order.isExpanded}
+                                    parentId={order.parentId}
+                                    outletName={order.outletName}
+                                    orderType={order.orderType}
+                                    totalAmount={order.totalAmount}
+                                    paymentStatus={order.paymentStatus}
+                                    orderTime={order.time}
+                                    tableNumber={order.tableNumber}
+                                    sectionName={order.sectionName}
+                                  />
+                                ))}
                               </div>
                             </div>
-                          ))}
-                        </>
-                      ) : (
-                        <NoOrders message="No completed orders" />
+                          </div>
+                        )
                       )}
                     </div>
-                  </div>
+                  ) : (
+                    <NoOrders message="No pending orders" />
+                  )}
+                </div>
+              </div>
+              {/* Completed Orders Tab */}
+              <div
+                className="tab-pane fade"
+                id="completed-tab-pane"
+                role="tabpanel"
+                aria-labelledby="completed-tab"
+                tabIndex={0}
+              >
+                <div className="accordion style-3" id="accordionExample3">
+                  {error.history ? (
+                    <NoOrders message="No completed orders" />
+                  ) : Object.keys(transformedOrders.completedByDate).length >
+                    0 ? (
+                    <>
+                      {/* Expand/Collapse All for Completed Orders */}
+                      <div className="d-flex justify-content-end align-items-center mb-3">
+                        <button
+                          className="btn btn-sm btn-link text-dark p-0"
+                          onClick={
+                            Object.values(expandedCompletedDates).some((e) => e)
+                              ? handleCollapseAllCompleted
+                              : handleExpandAllCompleted
+                          }
+                          aria-expanded={Object.values(
+                            expandedCompletedDates
+                          ).some((e) => e)}
+                        >
+                          <span>
+                            {Object.values(expandedCompletedDates).some(
+                              (e) => e
+                            )
+                              ? "Collapse All"
+                              : "Expand All"}
+                          </span>
+                          <i
+                            className={`ms-2 fas ${
+                              Object.values(expandedCompletedDates).some(
+                                (e) => e
+                              )
+                                ? "fa-chevron-up"
+                                : "fa-chevron-down"
+                            }`}
+                          ></i>
+                        </button>
+                      </div>
+                      {Object.entries(transformedOrders.completedByDate).map(
+                        ([dateKey, dailyOrderData]) => (
+                          <div className="accordion-item" key={dateKey}>
+                            <h2
+                              className="accordion-header"
+                              id={"heading" + dateKey.replace(/\s/g, "")}
+                            >
+                              <button
+                                className={
+                                  "btn btn-link w-100 d-flex justify-content-between align-items-center p-0 " +
+                                  (!expandedCompletedDates[dateKey]
+                                    ? "collapsed"
+                                    : "")
+                                }
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target={
+                                  "#collapse" + dateKey.replace(/\s/g, "")
+                                }
+                                aria-expanded={
+                                  expandedCompletedDates[dateKey] || false
+                                }
+                                aria-controls={
+                                  "collapse" + dateKey.replace(/\s/g, "")
+                                }
+                                onClick={() =>
+                                  toggleCompletedDateExpansion(dateKey)
+                                }
+                              >
+                                <span className="flex-grow-1 text-start">
+                                  {dailyOrderData.date}
+                                </span>
+                                <span className="me-2">
+                                  {dailyOrderData.orderCount}
+                                </span>
+                                <i
+                                  className={`ms-2 fas ${
+                                    expandedCompletedDates[dateKey]
+                                      ? "fa-chevron-up"
+                                      : "fa-chevron-down"
+                                  }`}
+                                ></i>
+                              </button>
+                            </h2>
+                            <div
+                              id={"collapse" + dateKey.replace(/\s/g, "")}
+                              className={
+                                "accordion-collapse collapse " +
+                                (expandedCompletedDates[dateKey] ? "show" : "")
+                              }
+                              aria-labelledby={
+                                "heading" + dateKey.replace(/\s/g, "")
+                              }
+                              data-bs-parent="#accordionExample3"
+                            >
+                              <div className="accordion-body">
+                                {dailyOrderData.orders.map((order) => (
+                                  <OrderAccordionItem
+                                    key={order.id}
+                                    orderId={order.orderId}
+                                    orderNumber={order.orderNumber}
+                                    itemCount={order.itemCount}
+                                    status={order.status}
+                                    iconColor={order.iconColor}
+                                    iconBgClass={order.iconBgClass}
+                                    isExpanded={order.isExpanded}
+                                    parentId={order.parentId}
+                                    outletName={order.outletName}
+                                    orderType={order.orderType}
+                                    totalAmount={order.totalAmount}
+                                    paymentStatus={order.paymentStatus}
+                                    orderTime={order.orderTime}
+                                    tableNumber={order.tableNumber}
+                                    sectionName={order.sectionName}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      )}
+                    </>
+                  ) : (
+                    <NoOrders message="No completed orders" />
+                  )}
+                </div>
+              </div>
 
-                  {/* Cancelled Orders Tab */}
-                  <div
-                    className="tab-pane fade"
-                    id="cancelled-tab-pane"
-                    role="tabpanel"
-                    aria-labelledby="cancelled-tab"
-                    tabIndex={0}
-                  >
-                    <div className="accordion style-3" id="accordionExample2">
-                      {isLoadingHistory ? (
-                        <div className="text-center py-4">
-                          Loading order history...
-                        </div>
-                      ) : error.history ? (
-                        <NoOrders message="No cancelled orders" />
-                      ) : Object.keys(transformedOrders.cancelledByDate)
-                          .length > 0 ? (
-                        <>
-                          {/* Expand/Collapse All for Cancelled Orders */}
-                          <div className="d-flex justify-content-end align-items-center mb-3">
-                            <button
-                              className="btn btn-sm btn-link text-dark p-0"
-                              onClick={
-                                Object.values(expandedCancelledDates).some(
-                                  (e) => e
-                                )
-                                  ? handleCollapseAllCancelled
-                                  : handleExpandAllCancelled
+              {/* Cancelled Orders Tab */}
+              <div
+                className="tab-pane fade"
+                id="cancelled-tab-pane"
+                role="tabpanel"
+                aria-labelledby="cancelled-tab"
+                tabIndex={0}
+              >
+                <div className="accordion style-3" id="accordionExample2">
+                  {isLoadingHistory ? (
+                    <div className="text-center py-4">
+                      Loading order history...
+                    </div>
+                  ) : error.history ? (
+                    <NoOrders message="No cancelled orders" />
+                  ) : Object.keys(transformedOrders.cancelledByDate).length >
+                    0 ? (
+                    <>
+                      {/* Expand/Collapse All for Cancelled Orders */}
+                      <div className="d-flex justify-content-end align-items-center mb-3">
+                        <button
+                          className="btn btn-sm btn-link text-dark p-0"
+                          onClick={
+                            Object.values(expandedCancelledDates).some((e) => e)
+                              ? handleCollapseAllCancelled
+                              : handleExpandAllCancelled
+                          }
+                          aria-expanded={Object.values(
+                            expandedCancelledDates
+                          ).some((e) => e)}
+                        >
+                          <span>
+                            {Object.values(expandedCancelledDates).some(
+                              (e) => e
+                            )
+                              ? "Collapse All"
+                              : "Expand All"}
+                          </span>
+                          <i
+                            className={`ms-2 fas ${
+                              Object.values(expandedCancelledDates).some(
+                                (e) => e
+                              )
+                                ? "fa-chevron-up"
+                                : "fa-chevron-down"
+                            }`}
+                          ></i>
+                        </button>
+                      </div>
+                      {Object.entries(transformedOrders.cancelledByDate).map(
+                        ([dateKey, dailyOrderData]) => (
+                          <div className="accordion-item" key={dateKey}>
+                            <h2
+                              className="accordion-header"
+                              id={
+                                "headingCancelled" + dateKey.replace(/\s/g, "")
                               }
-                              aria-expanded={Object.values(
-                                expandedCancelledDates
-                              ).some((e) => e)}
                             >
-                              <span>
-                                {Object.values(expandedCancelledDates).some(
-                                  (e) => e
-                                )
-                                  ? "Collapse All"
-                                  : "Expand All"}
-                              </span>
-                              <i
-                                className={`ms-2 fas ${
-                                  Object.values(expandedCancelledDates).some(
-                                    (e) => e
-                                  )
-                                    ? "fa-chevron-up"
-                                    : "fa-chevron-down"
-                                }`}
-                              ></i>
-                            </button>
-                          </div>
-                          {Object.entries(
-                            transformedOrders.cancelledByDate
-                          ).map(([dateKey, dailyOrderData]) => (
-                            <div className="accordion-item" key={dateKey}>
-                              <h2
-                                className="accordion-header"
-                                id={
-                                  "headingCancelled" +
-                                  dateKey.replace(/\s/g, "")
-                                }
-                              >
-                                <button
-                                  className={
-                                    "btn btn-link w-100 d-flex justify-content-between align-items-center p-0 " +
-                                    (!expandedCancelledDates[dateKey]
-                                      ? "collapsed"
-                                      : "")
-                                  }
-                                  type="button"
-                                  onClick={() =>
-                                    toggleCancelledDateExpansion(dateKey)
-                                  }
-                                >
-                                  <span className="flex-grow-1 text-start">
-                                    {dailyOrderData.date}
-                                  </span>
-                                  <span className="me-2">
-                                    {dailyOrderData.orderCount}
-                                  </span>
-                                  <i
-                                    className={`ms-2 fas ${
-                                      expandedCancelledDates[dateKey]
-                                        ? "fa-chevron-up"
-                                        : "fa-chevron-down"
-                                    }`}
-                                  ></i>
-                                </button>
-                              </h2>
-                              <div
-                                id={
-                                  "collapseCancelled" +
-                                  dateKey.replace(/\s/g, "")
-                                }
+                              <button
                                 className={
-                                  "accordion-collapse collapse " +
-                                  (expandedCancelledDates[dateKey]
-                                    ? "show"
+                                  "btn btn-link w-100 d-flex justify-content-between align-items-center p-0 " +
+                                  (!expandedCancelledDates[dateKey]
+                                    ? "collapsed"
                                     : "")
                                 }
-                                aria-labelledby={
-                                  "headingCancelled" +
-                                  dateKey.replace(/\s/g, "")
+                                type="button"
+                                onClick={() =>
+                                  toggleCancelledDateExpansion(dateKey)
                                 }
-                                data-bs-parent="#accordionExample2"
                               >
-                                <div className="accordion-body">
-                                  {dailyOrderData.orders.map((order) => (
-                                    <OrderAccordionItem
-                                      key={order.id}
-                                      orderId={order.orderId}
-                                      orderNumber={order.orderNumber}
-                                      itemCount={order.itemCount}
-                                      status={order.status}
-                                      iconColor={order.iconColor}
-                                      iconBgClass={order.iconBgClass}
-                                      isExpanded={order.isExpanded}
-                                      parentId={order.parentId}
-                                      outletName={order.outletName}
-                                      orderType={order.orderType}
-                                      totalAmount={order.totalAmount}
-                                      paymentStatus={order.paymentStatus}
-                                      orderTime={order.orderTime}
-                                      tableNumber={order.tableNumber}
-                                      sectionName={order.sectionName}
-                                    />
-                                  ))}
-                                </div>
+                                <span className="flex-grow-1 text-start">
+                                  {dailyOrderData.date}
+                                </span>
+                                <span className="me-2">
+                                  {dailyOrderData.orderCount}
+                                </span>
+                                <i
+                                  className={`ms-2 fas ${
+                                    expandedCancelledDates[dateKey]
+                                      ? "fa-chevron-up"
+                                      : "fa-chevron-down"
+                                  }`}
+                                ></i>
+                              </button>
+                            </h2>
+                            <div
+                              id={
+                                "collapseCancelled" + dateKey.replace(/\s/g, "")
+                              }
+                              className={
+                                "accordion-collapse collapse " +
+                                (expandedCancelledDates[dateKey] ? "show" : "")
+                              }
+                              aria-labelledby={
+                                "headingCancelled" + dateKey.replace(/\s/g, "")
+                              }
+                              data-bs-parent="#accordionExample2"
+                            >
+                              <div className="accordion-body">
+                                {dailyOrderData.orders.map((order) => (
+                                  <OrderAccordionItem
+                                    key={order.id}
+                                    orderId={order.orderId}
+                                    orderNumber={order.orderNumber}
+                                    itemCount={order.itemCount}
+                                    status={order.status}
+                                    iconColor={order.iconColor}
+                                    iconBgClass={order.iconBgClass}
+                                    isExpanded={order.isExpanded}
+                                    parentId={order.parentId}
+                                    outletName={order.outletName}
+                                    orderType={order.orderType}
+                                    totalAmount={order.totalAmount}
+                                    paymentStatus={order.paymentStatus}
+                                    orderTime={order.orderTime}
+                                    tableNumber={order.tableNumber}
+                                    sectionName={order.sectionName}
+                                  />
+                                ))}
                               </div>
                             </div>
-                          ))}
-                        </>
-                      ) : (
-                        <NoOrders message="No cancelled orders" />
+                          </div>
+                        )
                       )}
-                    </div>
-                  </div>
-                </>
-              )}
+                    </>
+                  ) : (
+                    <NoOrders message="No cancelled orders" />
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
