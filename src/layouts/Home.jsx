@@ -360,7 +360,7 @@ function Home() {
         <div className="page-content">
           <div className=" pt-0">
             <div className="container p-b40 p-t0">
-              <SearchBar onSearch={handleSearch} menuItems={menuItems || []} />
+              {/* <SearchBar onSearch={handleSearch} menuItems={menuItems || []} /> */}
 
               <div
                 className="title-bar d-flex justify-content-between align-items-center"
