@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import HorizontalMenuCard from "../components/HorizontalMenuCard";
@@ -20,6 +20,9 @@ function Search() {
   const [recentSearches, setRecentSearches] = useState([]);
   const [searchInputValue, setSearchInputValue] = useState("");
   const [originalSearchResults, setOriginalSearchResults] = useState([]);
+  const [hasSearched, setHasSearched] = useState(false);
+
+  const searchInputRef = useRef(null);
 
   // Get these from context/props
   const { userId } = useAuth(); // Get user_id from auth context
@@ -122,6 +125,7 @@ function Search() {
 
   // Modified handleSearch to handle the specific API response format
   const handleSearch = async (searchTerm) => {
+    setHasSearched(true);
     if (!searchTerm || searchTerm.trim().length === 0) {
       // Fetch all menus when search term is empty
       setIsLoading(true);
@@ -160,7 +164,7 @@ function Search() {
         }
       } catch (err) {
         console.error("Search error:", err);
-        setError("Unable to fetch menu items. Please try again.");
+        setError("Menu Not Found");
         setOriginalSearchResults([]);
         setSearchResults([]);
       } finally {
@@ -445,6 +449,13 @@ function Search() {
     handleSearch(""); // This will fetch all menus
   }, [outletId]); // Re-fetch when outletId changes
 
+  // Focus the search input on mount
+  useEffect(() => {
+    if (searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, []);
+
   return (
     <>
       <Header />
@@ -463,6 +474,7 @@ function Search() {
                     </div>
                   </div>
                   <input
+                    ref={searchInputRef}
                     type="search"
                     className="form-control main-in px-0 bs-0"
                     placeholder="Search menu items..."
@@ -478,7 +490,7 @@ function Search() {
               </div>
             </div>
             <QuickFilters onFilterChange={handleQuickFilterChange} />
-            {recentSearches.length > 0 && searchInputValue.trim() !== "" && (
+            {/* {recentSearches.length > 0 && searchInputValue.trim() !== "" && (
               <>
                 <div className="title-bar mt-0">
                   <span className="title mb-0 font-18">Recent Search</span>
@@ -518,14 +530,20 @@ function Search() {
                   ))}
                 </ul>
               </>
-            )}
+            )} */}
             {isLoading ? (
               <div className="text-center py-4">
                 <div className="spinner-border text-primary" role="status">
                   <span className="visually-hidden">Loading...</span>
                 </div>
               </div>
-            ) : error ? (
+            ) : !hasSearched || searchInputValue.trim() === "" ? (
+              <div className="text-center py-4">
+                <div className="empty-search-state">
+                  <p className="mt-3 text-muted">Search the menu</p>
+                </div>
+              </div>
+            ) : searchResults && searchResults.length === 0 ? (
               <div className="text-center py-4">
                 <div className="empty-search-state">
                   <i
@@ -537,10 +555,10 @@ function Search() {
                       marginBottom: "1rem",
                     }}
                   ></i>
-                  <p className="mt-3 text-muted">{error}</p>
+                  <p className="mt-3 text-muted">No menu found</p>
                 </div>
               </div>
-            ) : searchResults && searchResults.length > 0 ? (
+            ) : (
               <div className="item-list style-2">
                 <div className="saprater" />
                 <div className="title-bar">
@@ -594,39 +612,6 @@ function Search() {
                     </li>
                   ))}
                 </ul>
-              </div>
-            ) : searchInputValue.trim() !== "" ? (
-              <div className="text-center py-4">
-                <div className="empty-search-state">
-                  <i
-                    className="fas fa-search"
-                    style={{
-                      fontSize: "64px",
-                      color: "#7D8FAB",
-                      opacity: "0.5",
-                      marginBottom: "1rem",
-                    }}
-                  ></i>
-                  <p className="mt-3 text-muted">
-                    No results found for "{searchInputValue}". Try a different
-                    search term.
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-4">
-                <div className="empty-search-state">
-                  <i
-                    className="fas fa-search"
-                    style={{
-                      fontSize: "64px",
-                      color: "#7D8FAB",
-                      opacity: "0.5",
-                      marginBottom: "1rem",
-                    }}
-                  ></i>
-                  <p className="mt-3 text-muted">Loading menu items...</p>
-                </div>
               </div>
             )}
           </div>

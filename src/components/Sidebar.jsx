@@ -163,29 +163,26 @@ function Sidebar() {
         <li>
           <NavLink
             to="/checkout"
-            className={({ isActive }) =>
-              `nav-link position-relative ${
-                isActive
-                  ? "active bg-success text-white fw-bold px-2 rounded-5"
-                  : ""
-              }`
-            }
+            className="sidebar-link d-flex align-items-center justify-content-between"
             onClick={handleLinkClick}
           >
-            <span className="dz-icon">
-              <i class="fa-solid fa-cart-shopping"></i>
+            <span>
+              <i className="fa-solid fa-shopping-cart me-2"></i>
+              Cart
             </span>
-            <span>Checkout</span>
             {cartCount > 0 && (
               <span
-                className="position-absolute badge rounded-pill"
+                className="badge rounded-circle"
                 style={{
-                  top: "0",
-                  right: "0",
-                  fontSize: "0.6rem",
                   backgroundColor: "#dc3545",
                   color: "white",
-                  padding: "0.25rem 0.5rem",
+                  minWidth: "18px",
+                  height: "18px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "0.75rem",
+                  marginLeft: 8,
                 }}
               >
                 {cartCount}

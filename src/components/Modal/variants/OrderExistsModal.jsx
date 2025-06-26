@@ -29,30 +29,33 @@ function OrderExistsModal({
         </p>
 
         <div className="d-grid gap-2">
-          {/* Only show cancel button if order is not in cooking state */}
-          {orderStatus?.toLowerCase().trim() !== "cooking" && (
-            <button
-              className="btn text-white"
-              style={{
-                backgroundColor: "#FF3B30",
-              }}
-              onClick={onCancelExisting}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <span
-                    className="spinner-border spinner-border-sm me-2"
-                    role="status"
-                    aria-hidden="true"
-                  ></span>
-                  Processing...
-                </>
-              ) : (
-                "Cancel Existing & Create New Order"
-              )}
-            </button>
-          )}
+          {/* Only show cancel button if order is not in cooking or served state */}
+          {orderStatus &&
+            !["cooking", "served"].includes(
+              orderStatus.toLowerCase().trim()
+            ) && (
+              <button
+                className="btn text-white"
+                style={{
+                  backgroundColor: "#FF3B30",
+                }}
+                onClick={onCancelExisting}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <span
+                      className="spinner-border spinner-border-sm me-2"
+                      role="status"
+                      aria-hidden="true"
+                    ></span>
+                    Processing...
+                  </>
+                ) : (
+                  "Cancel Existing & Create New Order"
+                )}
+              </button>
+            )}
 
           <button
             className="btn text-white"

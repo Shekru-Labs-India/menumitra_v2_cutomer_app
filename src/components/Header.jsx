@@ -67,7 +67,7 @@ function Header() {
   const getHeaderTitle = () => {
     const path = location.pathname;
     if (path === "/") return "MenuMitra";
-    if (path.startsWith("/checkout")) return "Checkout";
+    if (path.startsWith("/checkout")) return "Cart";
     if (path.startsWith("/profile")) return "Profile";
     if (path.startsWith("/orders")) return "Orders";
     if (path.startsWith("/favourites")) return "Favourite";
@@ -91,8 +91,8 @@ function Header() {
         <div className="main-bar" ref={mainBarRef}>
           <div className="container">
             <div className="header-content position-relative">
+              {/* Left content: back arrow for non-home pages, logo+title for home */}
               <div className="left-content d-flex align-items-center gap-2">
-                {/* Logo removed as per user request */}
                 {location.pathname !== "/" && (
                   <button
                     className="btn btn-link p-0 me-2"
@@ -101,6 +101,28 @@ function Header() {
                   >
                     <i className="fas fa-arrow-left"></i>
                   </button>
+                )}
+                {/* Page title for non-home pages */}
+                {location.pathname !== "/" && getHeaderTitle() && (
+                  <h5 className="title mb-0 text-nowrap" style={{ margin: 0 }}>
+                    {getHeaderTitle()}
+                  </h5>
+                )}
+                {/* Logo and title for home page, left-aligned */}
+                {location.pathname === "/" && (
+                  <>
+                    <img
+                      src={logo}
+                      alt="MenuMitra Logo"
+                      style={{ height: 32, width: 32, marginRight: 8 }}
+                    />
+                    <h5
+                      className="title mb-0 text-nowrap"
+                      style={{ margin: 0 }}
+                    >
+                      MenuMitra
+                    </h5>
+                  </>
                 )}
               </div>
               <div className="mid-content" />
@@ -116,35 +138,6 @@ function Header() {
                   <i className="fas fa-bars"></i>
                 </a>
               </div>
-              {/* Header title: left on home, center on others */}
-              {getHeaderTitle() &&
-                (location.pathname === "/" ? (
-                  <h5
-                    className="title mb-0 text-nowrap"
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      zIndex: 1,
-                    }}
-                  >
-                    {getHeaderTitle()}
-                  </h5>
-                ) : (
-                  <h5
-                    className="title mb-0 text-nowrap position-absolute w-100 text-center"
-                    style={{
-                      left: 0,
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      pointerEvents: "none",
-                      zIndex: 1,
-                    }}
-                  >
-                    {getHeaderTitle()}
-                  </h5>
-                ))}
             </div>
           </div>
         </div>

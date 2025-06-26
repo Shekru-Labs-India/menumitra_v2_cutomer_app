@@ -7,7 +7,7 @@ import { useCart } from "../contexts/CartContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useOutlet } from "../contexts/OutletContext";
 
-// Food type icons component
+// FoodTypeIcon component
 const FoodTypeIcon = ({ foodType }) => {
   const getIcon = () => {
     switch (foodType?.toLowerCase()) {
@@ -15,11 +15,11 @@ const FoodTypeIcon = ({ foodType }) => {
         return (
           <div
             style={{
-              width: "24px",
-              height: "24px",
-              borderRadius: "6px", // Rounded corners for the square
-              border: "2px solid #4CAF50", // Outer green border
-              backgroundColor: "white", // Background of this layer forms the white ring
+              width: "14px",
+              height: "14px",
+              borderRadius: "3px",
+              border: "1px solid #4CAF50",
+              backgroundColor: "white",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -28,10 +28,10 @@ const FoodTypeIcon = ({ foodType }) => {
           >
             <div
               style={{
-                width: "12px", // Size of the inner solid green circle
-                height: "12px",
+                width: "6px",
+                height: "6px",
                 borderRadius: "50%",
-                backgroundColor: "#4CAF50", // Solid green inner circle
+                backgroundColor: "#4CAF50",
               }}
             ></div>
           </div>
@@ -40,11 +40,11 @@ const FoodTypeIcon = ({ foodType }) => {
         return (
           <div
             style={{
-              width: "24px",
-              height: "24px",
-              borderRadius: "6px", // Rounded corners for the square
-              border: "2px solid #F44336", // Red border
-              backgroundColor: "white", // White background
+              width: "14px",
+              height: "14px",
+              borderRadius: "3px",
+              border: "1px solid #F44336",
+              backgroundColor: "white",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -55,9 +55,9 @@ const FoodTypeIcon = ({ foodType }) => {
               style={{
                 width: 0,
                 height: 0,
-                borderLeft: "6px solid transparent",
-                borderRight: "6px solid transparent",
-                borderBottom: "10px solid #F44336", // Red triangle pointing up
+                borderLeft: "3px solid transparent",
+                borderRight: "3px solid transparent",
+                borderBottom: "5px solid #F44336",
               }}
             ></div>
           </div>
@@ -66,11 +66,11 @@ const FoodTypeIcon = ({ foodType }) => {
         return (
           <div
             style={{
-              width: "24px",
-              height: "24px",
-              borderRadius: "6px", // Rounded corners for the square
-              border: "2px solid #4CAF50", // Green border
-              backgroundColor: "white", // White background
+              width: "14px",
+              height: "14px",
+              borderRadius: "3px",
+              border: "1px solid #4CAF50",
+              backgroundColor: "white",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -80,9 +80,9 @@ const FoodTypeIcon = ({ foodType }) => {
             <i
               className="fa-solid fa-leaf"
               style={{
-                color: "#4CAF50", // Green color for the leaf icon
-                fontSize: "16px",
-                lineHeight: 1, // Ensure the icon is vertically centered
+                color: "#4CAF50",
+                fontSize: "10px",
+                lineHeight: 1,
               }}
             ></i>
           </div>
@@ -91,11 +91,11 @@ const FoodTypeIcon = ({ foodType }) => {
         return (
           <div
             style={{
-              width: "24px",
-              height: "24px",
-              borderRadius: "6px",
-              border: "2px solid #e0e0e0", // Grey border
-              backgroundColor: "white", // White background
+              width: "14px",
+              height: "14px",
+              borderRadius: "3px",
+              border: "1px solid #e0e0e0",
+              backgroundColor: "white",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -105,9 +105,9 @@ const FoodTypeIcon = ({ foodType }) => {
             <i
               className="fa-solid fa-egg"
               style={{
-                color: "#B0BEC5", // Light grey color for the icon
-                fontSize: "16px", // Keeping original font size for the icon
-                transform: "rotate(-15deg)", // Slight tilt for the icon
+                color: "#B0BEC5",
+                fontSize: "10px",
+                transform: "rotate(-15deg)",
               }}
             ></i>
           </div>
@@ -131,12 +131,18 @@ const VerticalMenuCard = ({
   onFavoriteUpdate,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
   const { openModal } = useModal();
   const { cartItems, updateQuantity, removeFromCart, getCartItemComment } =
     useCart();
   const { user, setShowAuthOffcanvas } = useAuth();
   const { outletId } = useOutlet();
   const MAX_QUANTITY = 20;
+
+  // Sync local isFavorite state with prop
+  React.useEffect(() => {
+    setIsFavorite(initialIsFavorite);
+  }, [initialIsFavorite]);
 
   // Generate the product URL from menuItem data with safety checks
   const detailPageUrl =
@@ -178,7 +184,7 @@ const VerticalMenuCard = ({
       }
 
       // Choose API endpoint based on current favorite status
-      const apiUrl = initialIsFavorite
+      const apiUrl = isFavorite
         ? "https://men4u.xyz/v2/user/remove_favourite_menu"
         : "https://men4u.xyz/v2/user/save_favourite_menu";
 
@@ -199,12 +205,12 @@ const VerticalMenuCard = ({
       const data = await response.json();
 
       if (response.ok) {
-        // Update parent component's state immediately
-        onFavoriteUpdate(menuItem.menuId, !initialIsFavorite);
+        setIsFavorite(!isFavorite);
+        onFavoriteUpdate(menuItem.menuId, !isFavorite);
       } else {
         console.error("Failed to update favorite status:", data.detail);
         if (data.detail === "Menu already in favorites") {
-          // Force UI update to show as favorite
+          setIsFavorite(true); // Force UI update to show as favorite
           onFavoriteUpdate(menuItem.menuId, true);
           window.alert("Menu is already in your favorites.");
         } else {
@@ -258,7 +264,7 @@ const VerticalMenuCard = ({
 
   return (
     <div className="card-item style-1">
-      <div className="dz-media">
+      <div className="dz-media" style={{ position: "relative" }}>
         <Link to={detailPageUrl}>
           {typeof image === "string" ? (
             <LazyImage
@@ -285,7 +291,32 @@ const VerticalMenuCard = ({
             </div>
           )}
         </Link>
-        {discount && <div className="label">{discount} OFF</div>}
+        {discount && (
+          <div
+            className="rainbow-off-label"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              padding: "2px 14px 2px 10px",
+              borderTopLeftRadius: "12px",
+              borderBottomRightRadius: "16px",
+              fontSize: "15px",
+              fontWeight: 700,
+              color: "#fff",
+              background:
+                "linear-gradient(90deg, #a8e063, #f8ff00, #f7971e, #f857a6, #a8e063)",
+              backgroundSize: "400% 400%",
+              animation: "rainbow 3s ease infinite",
+              zIndex: 2,
+              minWidth: "70px",
+              textAlign: "center",
+              letterSpacing: "0.5px",
+            }}
+          >
+            {discount} Off
+          </div>
+        )}
       </div>
       <div className="dz-content">
         {/* Category name and food type icon */}
@@ -306,14 +337,12 @@ const VerticalMenuCard = ({
               textDecoration: "none",
             }}
           >
-            <div className={`like-button ${initialIsFavorite ? "active" : ""}`}>
+            <div className={`like-button ${isFavorite ? "active" : ""}`}>
               <i
-                className={`fa-${
-                  initialIsFavorite ? "solid" : "regular"
-                } fa-heart`}
+                className={`fa-${isFavorite ? "solid" : "regular"} fa-heart`}
                 style={{
                   fontSize: "16px",
-                  color: initialIsFavorite ? "#dc3545" : "#6c757d",
+                  color: isFavorite ? "#dc3545" : "#6c757d",
                   lineHeight: 1,
                 }}
               />
@@ -334,33 +363,43 @@ const VerticalMenuCard = ({
             }}
           >
             {/* Spicy index with icon */}
-            {menuItem?.spicyIndex && menuItem.spicyIndex > 0 && (
+            {menuItem?.spicyIndex && Number(menuItem.spicyIndex) > 0 && (
               <li
-                className="spicy-index"
+                className="spicy_index"
                 style={{
                   display: "flex",
                   alignItems: "center",
                 }}
               >
-                {[...Array(3)].map((_, index) => (
-                  <i
-                    key={index}
-                    className="fa-solid fa-pepper-hot"
-                    style={{
-                      color:
-                        index < menuItem.spicyIndex ? "#4CAF50" : "#E0E0E0", // Green for active, light grey for inactive
-                      fontSize: "14px",
-                      marginRight: index < 2 ? "2px" : "0", // Space between icons
-                    }}
-                  ></i>
-                ))}
+                {[...Array(3)].map((_, index) => {
+                  const spicyIndex = Number(menuItem.spicyIndex);
+                  let color = "#E0E0E0"; // default: white/grey
+                  if (spicyIndex === 1) {
+                    color = index === 0 ? "#22A45D" : "#E0E0E0"; // green, rest white
+                  } else if (spicyIndex === 2) {
+                    color = index < 2 ? "#FFA500" : "#E0E0E0"; // orange, last white
+                  } else if (spicyIndex === 3) {
+                    color = "#FF2D2D"; // all red
+                  }
+                  return (
+                    <i
+                      key={index}
+                      className="fa-solid fa-pepper-hot"
+                      style={{
+                        color,
+                        fontSize: "14px",
+                        marginRight: index < 2 ? "2px" : "0",
+                      }}
+                    ></i>
+                  );
+                })}
               </li>
             )}
             <li
               className="price"
               style={{
-                color: "#339DFF",
-                fontWeight: "bold",
+                color: "#3AB4F2",
+                // fontWeight: "bold",
                 fontSize: "15px",
                 marginLeft: "auto",
               }}
@@ -421,13 +460,13 @@ const VerticalMenuCard = ({
                           }`}
                         >
                           <div className="fw-bold">{portion.quantity}</div>
-                          <div className="text-muted small">
+                          {/* <div className="text-muted small">
                             {portion.portion_name.toLowerCase() === "full"
                               ? "F"
                               : portion.portion_name.toLowerCase() === "half"
                               ? "H"
                               : portion.portion_name.charAt(0).toUpperCase()}
-                          </div>
+                          </div> */}
                         </div>
                       ))}
                   </div>

@@ -87,8 +87,8 @@ const OrderAccordionItem = ({
             <div>
               <p style="margin: 0; font-weight: bold;">Hello, ${customerName}</p>
               <p style="margin: 5px 0 0 0; color: #333;">Thank you for shopping from our store and for your order.</p>
-            </div>
-            <div style="text-align: right;">
+          </div>
+          <div style="text-align: right;">
               <p style="margin: 0;">Bill no: ${order_details.order_number}</p>
               <p style="margin: 5px 0 0 0; color: #666;">${
                 order_details.date || ""
@@ -119,7 +119,7 @@ const OrderAccordionItem = ({
             `
               )
               .join("")}
-          </table>
+        </table>
 
           <!-- Billing Summary -->
 <div style="border-top: 2px solid #ddd; margin-top: 20px;">
@@ -169,15 +169,15 @@ const OrderAccordionItem = ({
         : ""
     }
     <!-- Service Charges -->
-    ${
-      order_details.service_charges_amount
-        ? `<span style="font-weight: bold;">Service Charges (${
-            order_details.service_charges_percent || ""
-          }%):</span> <span style="color: green;">+₹${order_details.service_charges_amount.toFixed(
-            2
-          )}</span></br>`
-        : ""
-    }
+          ${
+            order_details.service_charges_amount
+              ? `<span style="font-weight: bold;">Service Charges (${
+                  order_details.service_charges_percent || ""
+                }%):</span> <span style="color: green;">+₹${order_details.service_charges_amount.toFixed(
+                  2
+                )}</span></br>`
+              : ""
+          }
 
     <!-- GST -->
     ${
@@ -190,13 +190,13 @@ const OrderAccordionItem = ({
         : ""
     }
 <!-- Tip -->
-${
-  order_details.tip && order_details.tip > 0
-    ? `<span style="font-weight: bold;">Tip:</span><span style="color: green;">+₹${order_details.tip.toFixed(
-        2
-      )}</span></br>`
-    : ""
-}
+          ${
+            order_details.tip && order_details.tip > 0
+              ? `<span style="font-weight: bold;">Tip:</span><span style="color: green;">+₹${order_details.tip.toFixed(
+                  2
+                )}</span></br>`
+              : ""
+          }
 
 
     <!-- Grand Total -->
@@ -220,7 +220,7 @@ ${
               <p style="margin: 5px 0; text-transform: uppercase;">${
                 order_details.payment_method || ""
               }</p>
-            </div>
+        </div>
           </div>
 
           <div style="text-align: center; margin-top: 40px;">
@@ -229,14 +229,14 @@ ${
               <div style="display: inline-flex; align-items: center; justify-content: center; margin-bottom: 10px;">
                 <img src="${MenuMitra}" alt="MenuMitra Logo" style="width: 25px; height: 25px;" />
                 <span style="font-size: 16px; font-weight: bold; margin-left: 8px;">MenuMitra</span>
-              </div>
-            </div>
+          </div>
+        </div>
             <p style="margin: 3px 0; color: #666; font-size: 13px;">info@menumitra.com</p>
             <p style="margin: 3px 0; color: #666; font-size: 13px;">+91 9172530151</p>
             <p style="margin: 3px 0; color: #666; font-size: 13px;">${website_url}</p>
-          </div>
-        </div>
-      `;
+</div>
+      </div>
+    `;
 
       try {
         // Wait for all images to load
@@ -414,7 +414,7 @@ ${
               <h6 className="mb-2" style={{ color: "var(--dz-theme-color)" }}>
                 ₹{totalAmount}
               </h6>
-              {status !== "Cancelled" && (
+              {/* {status !== "Cancelled" && (
                 <button
                   className="btn btn-sm btn-outline-secondary"
                   onClick={handleDownloadInvoice}
@@ -422,7 +422,7 @@ ${
                 >
                   <i className="bi bi-download me-1"></i> Invoice
                 </button>
-              )}
+              )} */}
             </div>
           </div>
         </div>

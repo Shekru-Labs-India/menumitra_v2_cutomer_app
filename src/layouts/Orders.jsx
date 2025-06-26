@@ -596,12 +596,20 @@ function Orders() {
                   role="tab"
                   aria-controls="pending-tab-pane"
                   aria-selected="true"
+                  style={{
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
                 >
                   <i
                     className="fa-solid fa-clock me-2"
-                    style={{ color: "black" }}
+                    style={{ color: "black", fontSize: "16px" }}
                   ></i>
-                  Pend
+                  <span style={{ fontSize: "12px", fontWeight: 500 }}>
+                    Pending
+                  </span>
                 </button>
               </li>
               <li className="nav-item flex-shrink-0 w-33" role="presentation">
@@ -614,12 +622,20 @@ function Orders() {
                   role="tab"
                   aria-controls="completed-tab-pane"
                   aria-selected="false"
+                  style={{
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
                 >
                   <i
                     className="fa-solid fa-circle-check me-2"
-                    style={{ color: "#27ae60" }}
+                    style={{ color: "#27ae60", fontSize: "16px" }}
                   ></i>
-                  Complete
+                  <span style={{ fontSize: "12px", fontWeight: 500 }}>
+                    Completed
+                  </span>
                 </button>
               </li>
               <li className="nav-item flex-shrink-0 w-33" role="presentation">
@@ -632,12 +648,20 @@ function Orders() {
                   role="tab"
                   aria-controls="cancelled-tab-pane"
                   aria-selected="false"
+                  style={{
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
                 >
                   <i
                     className="fa-solid fa-ban me-2"
-                    style={{ color: "#e74c3c" }}
+                    style={{ color: "#e74c3c", fontSize: "16px" }}
                   ></i>
-                  Cancel
+                  <span style={{ fontSize: "12px", fontWeight: 500 }}>
+                    Cancelled
+                  </span>
                 </button>
               </li>
             </ul>

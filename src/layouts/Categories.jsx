@@ -293,10 +293,10 @@ function Categories() {
       <div className="page-content p-b60">
         <div className="container">
           {/* View toggle and error message */}
-          <div className="mb-4">
+          {/* <div className="mb-4">
             {!loading && !error && categories.length > 0 && <ViewToggle />}
             {error && <ErrorMessage message={error} />}
-          </div>
+          </div> */}
 
           {/* Categories display */}
           <div className="row">

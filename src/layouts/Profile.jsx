@@ -144,10 +144,10 @@ function Profile() {
                   className="btn btn-light w-100 d-flex align-items-center justify-content-center py-3"
                 >
                   <i className="fa-solid fa-shopping-cart me-2 text-dark" />
-                  Checkout
+                  Cart
                 </Link>
               </div>
-              <div className="col-6">
+              {/* <div className="col-6">
                 {isAuthenticated ? (
                   <button
                     onClick={onLogoutClick}
@@ -165,7 +165,7 @@ function Profile() {
                     Login
                   </button>
                 )}
-              </div>
+              </div> */}
             </div>
           </div>
           <div className="account-section mt-4">
@@ -181,7 +181,24 @@ function Profile() {
           </div>
         </div>
       </div>
-      <div className="d-flex justify-content-center">
+      <div className="d-flex flex-column align-items-center my-4">
+      <a
+    href="#"
+    onClick={onLogoutClick}
+    style={{
+      color: "#000",
+      fontWeight: 500,
+      fontSize: 17,
+      textDecoration: "none",
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      marginBottom: 8,
+    }}
+  >
+    <i className="fa-solid fa-power-off" style={{ fontSize: 16 }} />
+    Logout
+  </a>
         <MenuMitra />
       </div>
       <Footer />

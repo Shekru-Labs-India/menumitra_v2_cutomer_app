@@ -317,6 +317,16 @@ function Checkout() {
   };
 
   const handleCheckout = async () => {
+    // Validate comments
+    for (const item of cartItems) {
+      if (
+        item.comment &&
+        (item.comment.length < 5 || item.comment.length > 50)
+      ) {
+        toast.error("Comment must be between 5 and 50 characters.");
+        return;
+      }
+    }
     try {
       setLoading(true);
 
@@ -367,7 +377,7 @@ function Checkout() {
       menu_id: item.menuId,
       quantity: item.quantity,
       portion_name: item.portionName.toLowerCase(),
-      comment: item.comment || "",
+      // comment: item.comment || "",
     }));
 
     // Get order settings from localStorage
@@ -438,7 +448,7 @@ function Checkout() {
         menu_id: item.menuId.toString(),
         quantity: item.quantity,
         portion_name: item.portionName.toLowerCase(),
-        comment: item.comment || "",
+        // comment: item.comment || "",
       }));
 
       // Use order_id instead of order_number
@@ -758,6 +768,7 @@ function Checkout() {
         isOpen={existingOrderModal.isOpen}
         onClose={handleModalClose}
         orderNumber={existingOrderModal.orderDetails?.order_number}
+        orderStatus={existingOrderModal.orderDetails?.order_status} // <-- add this line
         onCancelExisting={handleCancelExisting}
         onAddToExisting={handleAddToExisting}
         isLoading={loading}

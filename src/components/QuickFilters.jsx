@@ -50,10 +50,82 @@ const QuickFilters = ({ onFilterChange }) => {
   ];
 
   const spicyOptions = [
-    { id: "all", label: "All", icon: "🌶️" },
-    { id: "low", label: "Low", icon: "🌶️" },
-    { id: "medium", label: "Medium", icon: "🌶️🌶️" },
-    { id: "high", label: "High", icon: "🌶️🌶️🌶️" },
+    {
+      id: "all",
+      label: "All",
+      icon: (
+        <span
+          style={{
+            position: "relative",
+            display: "inline-block",
+            width: 24,
+            height: 20,
+          }}
+        >
+          {/* Green filter icon */}
+          <svg
+            width="22"
+            height="20"
+            viewBox="0 0 22 20"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ verticalAlign: "middle" }}
+          >
+            <path
+              d="M2 3.5C2 2.11929 3.11929 1 4.5 1H17.5C18.8807 1 20 2.11929 20 3.5C20 4.09544 19.7625 4.66812 19.3416 5.08902L13.5 10.9306V17C13.5 17.5523 13.0523 18 12.5 18H9.5C8.94772 18 8.5 17.5523 8.5 17V10.9306L2.65837 5.08902C2.23747 4.66812 2 4.09544 2 3.5Z"
+              fill="#22A45D"
+            />
+          </svg>
+          {/* White X in green circle at bottom right */}
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 13 13"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ position: "absolute", right: -2, bottom: -2 }}
+          >
+            <circle cx="6.5" cy="6.5" r="6.5" fill="#22A45D" />
+            <path
+              d="M4.8 4.8L8.2 8.2M8.2 4.8L4.8 8.2"
+              stroke="white"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+            />
+          </svg>
+        </span>
+      ),
+    },
+    {
+      id: "low",
+      label: "Low",
+      icon: (
+        <i
+          className="fa-solid fa-pepper-hot"
+          style={{ color: "#22A45D", fontSize: 18 }}
+        ></i>
+      ),
+    },
+    {
+      id: "medium",
+      label: "Medium",
+      icon: (
+        <i
+          className="fa-solid fa-pepper-hot"
+          style={{ color: "#FFA500", fontSize: 18 }}
+        ></i>
+      ),
+    },
+    {
+      id: "high",
+      label: "High",
+      icon: (
+        <i
+          className="fa-solid fa-pepper-hot"
+          style={{ color: "#FF2D2D", fontSize: 18 }}
+        ></i>
+      ),
+    },
   ];
 
   const handleFilterClick = (filterType, value) => {
@@ -64,6 +136,34 @@ const QuickFilters = ({ onFilterChange }) => {
     setActiveFilters(newFilters);
     onFilterChange(newFilters);
     setOpenDropdown(null); // Close dropdown after selection
+  };
+
+  const getButtonIcon = (type) => {
+    switch (type.toLowerCase()) {
+      case "type":
+        return (
+          <i
+            className="fa-solid fa-filter"
+            style={{ color: "#22A45D", fontSize: 18, marginRight: 6 }}
+          ></i>
+        );
+      case "price":
+        return (
+          <i
+            className="fa-solid fa-indian-rupee-sign"
+            style={{ color: "#22A45D", fontSize: 18, marginRight: 6 }}
+          ></i>
+        );
+      case "spicy":
+        return (
+          <i
+            className="fa-solid fa-pepper-hot"
+            style={{ color: "#22A45D", fontSize: 18, marginRight: 6 }}
+          ></i>
+        );
+      default:
+        return null;
+    }
   };
 
   const getButtonLabel = (type, options, activeValue) => {
@@ -118,6 +218,7 @@ const QuickFilters = ({ onFilterChange }) => {
                   );
                 }}
               >
+                {getButtonIcon(type)}
                 {getButtonLabel(type, options, activeValue)}
               </button>
               <div

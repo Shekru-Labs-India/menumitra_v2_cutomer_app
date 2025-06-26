@@ -236,123 +236,97 @@ function OutletDetails() {
 
             {/* Statistics Grid */}
             <div className="row g-3 mb-4">
-              <div className="col-4">
-                <div className="card border h-100">
-                  <div className="card-body p-3 d-flex flex-column align-items-center justify-content-center">
-                    <h3 className="mb-1 fw-semibold">
-                      {restaurantDetails?.count?.total_menu}
-                    </h3>
-                    <small className="text-muted">Menu Items</small>
-                  </div>
-                </div>
+              <div className="col-4 d-flex flex-column align-items-center justify-content-center py-3">
+                <h3 className="mb-1 fw-semibold">
+                  {restaurantDetails?.count?.total_menu}
+                </h3>
+                <small className="text-muted">Menu Items</small>
               </div>
-              <div className="col-4">
-                <div className="card border h-100">
-                  <div className="card-body p-3 d-flex flex-column align-items-center justify-content-center">
-                    <h3 className="mb-1 fw-semibold">
-                      {restaurantDetails?.count?.total_special_menu}
-                    </h3>
-                    <small className="text-muted">Special Items</small>
-                  </div>
-                </div>
+              <div className="col-4 d-flex flex-column align-items-center justify-content-center py-3">
+                <h3 className="mb-1 fw-semibold">
+                  {restaurantDetails?.count?.total_special_menu}
+                </h3>
+                <small className="text-muted">Special Items</small>
               </div>
-              <div className="col-4">
-                <div className="card border h-100">
-                  <div className="card-body p-3 d-flex flex-column align-items-center justify-content-center">
-                    <h3 className="mb-1 fw-semibold">
-                      {restaurantDetails?.count?.total_offer_menu}
-                    </h3>
-                    <small className="text-muted">Offer Items</small>
-                  </div>
-                </div>
+              <div className="col-4 d-flex flex-column align-items-center justify-content-center py-3">
+                <h3 className="mb-1 fw-semibold">
+                  {restaurantDetails?.count?.total_offer_menu}
+                </h3>
+                <small className="text-muted">Offer Items</small>
               </div>
-              <div className="col-6">
-                <div className="card border h-100">
-                  <div className="card-body p-3 d-flex flex-column align-items-center justify-content-center">
-                    <h3 className="mb-1 fw-semibold">
-                      {restaurantDetails?.count?.total_category}
-                    </h3>
-                    <small className="text-muted">Categories</small>
-                  </div>
-                </div>
+              <div className="col-6 d-flex flex-column align-items-center justify-content-center py-3">
+                <h3 className="mb-1 fw-semibold">
+                  {restaurantDetails?.count?.total_category}
+                </h3>
+                <small className="text-muted">Categories</small>
               </div>
-              <div className="col-6">
-                <div className="card border h-100">
-                  <div className="card-body p-3 d-flex flex-column align-items-center justify-content-center">
-                    <h3 className="mb-1 fw-semibold">
-                      {restaurantDetails?.count?.total_tables}
-                    </h3>
-                    <small className="text-muted">Total Tables</small>
-                  </div>
-                </div>
+              <div className="col-6 d-flex flex-column align-items-center justify-content-center py-3">
+                <h3 className="mb-1 fw-semibold">
+                  {restaurantDetails?.count?.total_tables}
+                </h3>
+                <small className="text-muted">Total Tables</small>
               </div>
             </div>
 
             {/* UPI Payment Section */}
-            <div className="card border">
-              <div className="card-body">
-                <div className="text-center mb-3">
-                  <h6 className="mb-2">Quick Payment</h6>
+            <div className="text-center mb-3">
+              <h6 className="mb-2">Quick Payment</h6>
+              <div className="d-flex align-items-center justify-content-center">
+                <i className="fas fa-qrcode text-primary me-2"></i>
+                <span className="font-monospace">
+                  {restaurantDetails?.outlet_details?.upi_id}
+                </span>
+              </div>
+            </div>
+
+            <div className="row g-2">
+              <div className="col-6">
+                <button
+                  className="btn w-100"
+                  style={{
+                    backgroundColor: "#5F259F",
+                    color: "white",
+                  }}
+                  onClick={handlePhonePe}
+                  disabled={isProcessingPhonePe}
+                >
                   <div className="d-flex align-items-center justify-content-center">
-                    <i className="fas fa-qrcode text-primary me-2"></i>
-                    <span className="font-monospace">
-                      {restaurantDetails?.outlet_details?.upi_id}
+                    <i className="fas fa-mobile-alt me-2"></i>
+                    <span>
+                      {isProcessingPhonePe ? "Opening..." : "PhonePe"}
                     </span>
                   </div>
-                </div>
-
-                <div className="row g-2">
-                  <div className="col-6">
-                    <button
-                      className="btn w-100"
-                      style={{
-                        backgroundColor: "#5F259F",
-                        color: "white",
-                      }}
-                      onClick={handlePhonePe}
-                      disabled={isProcessingPhonePe}
-                    >
-                      <div className="d-flex align-items-center justify-content-center">
-                        <i className="fas fa-mobile-alt me-2"></i>
-                        <span>
-                          {isProcessingPhonePe ? "Opening..." : "PhonePe"}
-                        </span>
-                      </div>
-                    </button>
+                </button>
+              </div>
+              <div className="col-6">
+                <button
+                  className="btn w-100"
+                  style={{
+                    backgroundColor: "#1a73e8",
+                    color: "white",
+                  }}
+                  onClick={handleGooglePay}
+                  disabled={isProcessingGPay}
+                >
+                  <div className="d-flex align-items-center justify-content-center">
+                    <i className="fab fa-google me-2"></i>
+                    <span>{isProcessingGPay ? "Opening..." : "GPay"}</span>
                   </div>
-                  <div className="col-6">
-                    <button
-                      className="btn w-100"
-                      style={{
-                        backgroundColor: "#1a73e8",
-                        color: "white",
-                      }}
-                      onClick={handleGooglePay}
-                      disabled={isProcessingGPay}
-                    >
-                      <div className="d-flex align-items-center justify-content-center">
-                        <i className="fab fa-google me-2"></i>
-                        <span>
-                          {isProcessingGPay ? "Opening..." : "Google Pay"}
-                        </span>
-                      </div>
-                    </button>
+                </button>
+              </div>
+              <div className="col-12">
+                <button
+                  className="btn btn-primary w-100"
+                  onClick={handleGenericUPI}
+                  disabled={isProcessingUPI}
+                >
+                  <div className="d-flex align-items-center justify-content-center">
+                    <i className="fas fa-wallet me-2"></i>
+                    <span>
+                      {isProcessingUPI ? "Opening..." : "Other UPI Apps"}
+                    </span>
                   </div>
-                  <div className="col-12">
-                    <button
-                      className="btn btn-primary w-100"
-                      onClick={handleGenericUPI}
-                      disabled={isProcessingUPI}
-                    >
-                      <div className="d-flex align-items-center justify-content-center">
-                        <i className="fas fa-wallet me-2"></i>
-                        <span>
-                          {isProcessingUPI ? "Opening..." : "Other UPI Apps"}
-                        </span>
-                      </div>
-                    </button>
-                  </div>
-                </div>
+                </button>
               </div>
             </div>
           </div>

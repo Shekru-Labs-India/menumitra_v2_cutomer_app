@@ -370,7 +370,21 @@ function Home() {
                 <span className="title mb-0 font-18">
                   {isSearching ? "Search Results" : "Categories"}
                 </span>
-                <i className="fas fa-chevron-right"></i>
+                <span
+                  style={{
+                    fontSize: "12px",
+                    color: "#888",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "2px",
+                  }}
+                >
+                  See all{" "}
+                  <i
+                    className="fas fa-chevron-right"
+                    style={{ fontSize: "12px" }}
+                  ></i>
+                </span>
               </div>
 
               {/* Update CategorySwiper with new data */}
@@ -574,185 +588,187 @@ function Home() {
               )}
 
               {/* Special Menus Section */}
-              <div className="title-bar mt-4">
-                <span className="title mb-0 font-18">Special Menus</span>
-              </div>
-              <div className="categories-box p-0 m-0">
-                {specialMenuItems && specialMenuItems.length > 0 ? (
-                  <div className="horizontal-menu-container">
-                    {specialMenuItems.map((menuItem) => (
-                      <div
-                        key={menuItem.menu_id}
-                        className="horizontal-menu-card"
-                      >
-                        <HorizontalMenuCard
-                          image={menuItem.image || null}
-                          title={menuItem.menu_name}
-                          currentPrice={
-                            menuItem.portions && menuItem.portions[0]
-                              ? menuItem.portions[0].price
-                              : 0
-                          }
-                          originalPrice={
-                            menuItem.portions && menuItem.portions[0]
-                              ? menuItem.portions[0].price +
-                                (menuItem.portions[0].price * menuItem.offer) /
-                                  100
-                              : 0
-                          }
-                          discount={
-                            menuItem.offer > 0 ? `${menuItem.offer}%` : null
-                          }
-                          menuItem={{
-                            menuId: menuItem.menu_id,
-                            menuCatId: menuItem.menu_cat_id,
-                            menuName: menuItem.menu_name,
-                            portions: menuItem.portions,
-                            image: menuItem.image,
-                            offer: menuItem.offer,
-                            // rating: menuItem.rating,
-                            description: menuItem.description,
-                          }}
-                          onFavoriteClick={() =>
-                            handleFavoriteClick(menuItem.menu_id)
-                          }
-                          isFavorite={menuItem.is_favourite === 1}
-                        />
-                      </div>
-                    ))}
+              {(specialMenuItems && specialMenuItems.length > 0) ||
+              isLoading ? (
+                <>
+                  <div className="title-bar mt-4">
+                    <span className="title mb-0 font-18">Special Menus</span>
                   </div>
-                ) : isLoading ? (
-                  // Skeleton loader with horizontal scrolling
-                  <div className="horizontal-menu-container">
-                    {[...Array(4)].map((_, index) => (
-                      <div
-                        key={`skeleton-${index}`}
-                        className="horizontal-menu-card"
-                      >
-                        <div
-                          style={{
-                            borderRadius: "16px",
-                            overflow: "hidden",
-                            backgroundColor: "#fff",
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                            display: "flex",
-                            height: "120px",
-                          }}
-                        >
-                          {/* Image Section */}
+                  <div className="categories-box p-0 m-0">
+                    {specialMenuItems && specialMenuItems.length > 0 ? (
+                      <div className="horizontal-menu-container">
+                        {specialMenuItems.map((menuItem) => (
                           <div
-                            style={{
-                              width: "120px",
-                              position: "relative",
-                              flexShrink: 0,
-                            }}
+                            key={menuItem.menu_id}
+                            className="horizontal-menu-card"
                           >
-                            <Skeleton
-                              height="100%"
-                              width="100%"
-                              baseColor="#C8C8C8"
-                              highlightColor="#E0E0E0"
-                              style={{
-                                position: "absolute",
-                                top: 0,
-                                left: 0,
-                                borderRadius: "16px 0 0 16px",
+                            <HorizontalMenuCard
+                              image={menuItem.image || null}
+                              title={menuItem.menu_name}
+                              currentPrice={
+                                menuItem.portions && menuItem.portions[0]
+                                  ? menuItem.portions[0].price
+                                  : 0
+                              }
+                              originalPrice={
+                                menuItem.portions && menuItem.portions[0]
+                                  ? menuItem.portions[0].price +
+                                    (menuItem.portions[0].price *
+                                      menuItem.offer) /
+                                      100
+                                  : 0
+                              }
+                              discount={
+                                menuItem.offer > 0 ? `${menuItem.offer}%` : null
+                              }
+                              menuItem={{
+                                menuId: menuItem.menu_id,
+                                menuCatId: menuItem.menu_cat_id,
+                                menuName: menuItem.menu_name,
+                                portions: menuItem.portions,
+                                image: menuItem.image,
+                                offer: menuItem.offer,
+                                // rating: menuItem.rating,
+                                description: menuItem.description,
                               }}
+                              onFavoriteClick={() =>
+                                handleFavoriteClick(menuItem.menu_id)
+                              }
+                              isFavorite={menuItem.is_favourite === 1}
                             />
-                            {/* Discount Badge */}
+                          </div>
+                        ))}
+                      </div>
+                    ) : isLoading ? (
+                      // Skeleton loader with horizontal scrolling
+                      <div className="horizontal-menu-container">
+                        {[...Array(4)].map((_, index) => (
+                          <div
+                            key={`skeleton-${index}`}
+                            className="horizontal-menu-card"
+                          >
                             <div
                               style={{
-                                position: "absolute",
-                                top: "8px",
-                                left: "8px",
-                                zIndex: 1,
+                                borderRadius: "16px",
+                                overflow: "hidden",
+                                backgroundColor: "#fff",
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                                display: "flex",
+                                height: "120px",
                               }}
                             >
-                              <Skeleton
-                                height={20}
-                                width={40}
-                                baseColor="#C8C8C8"
-                                highlightColor="#E0E0E0"
-                                style={{ borderRadius: "10px" }}
-                              />
-                            </div>
-                          </div>
-
-                          {/* Content Section */}
-                          <div
-                            style={{
-                              flex: 1,
-                              padding: "12px",
-                              display: "flex",
-                              flexDirection: "column",
-                              justifyContent: "space-between",
-                            }}
-                          >
-                            {/* Top Section */}
-                            <div>
-                              {/* Title */}
-                              <Skeleton
-                                height={20}
-                                width="80%"
-                                baseColor="#C8C8C8"
-                                highlightColor="#E0E0E0"
-                                style={{ marginBottom: "8px" }}
-                              />
-
-                              {/* Price */}
+                              {/* Image Section */}
                               <div
-                                className="d-flex align-items-center"
-                                style={{ gap: "8px" }}
+                                style={{
+                                  width: "120px",
+                                  position: "relative",
+                                  flexShrink: 0,
+                                }}
                               >
                                 <Skeleton
-                                  height={16}
-                                  width={60}
+                                  height="100%"
+                                  width="100%"
                                   baseColor="#C8C8C8"
                                   highlightColor="#E0E0E0"
+                                  style={{
+                                    position: "absolute",
+                                    top: 0,
+                                    left: 0,
+                                    borderRadius: "16px 0 0 16px",
+                                  }}
                                 />
-                                <Skeleton
-                                  height={16}
-                                  width={40}
-                                  baseColor="#C8C8C8"
-                                  highlightColor="#E0E0E0"
-                                  style={{ opacity: 0.5 }}
-                                />
+                                {/* Discount Badge */}
+                                <div
+                                  style={{
+                                    position: "absolute",
+                                    top: "8px",
+                                    left: "8px",
+                                    zIndex: 1,
+                                  }}
+                                >
+                                  <Skeleton
+                                    height={20}
+                                    width={40}
+                                    baseColor="#C8C8C8"
+                                    highlightColor="#E0E0E0"
+                                    style={{ borderRadius: "10px" }}
+                                  />
+                                </div>
                               </div>
-                            </div>
 
-                            {/* Bottom Section */}
-                            <div className="d-flex justify-content-between align-items-center">
-                              {/* Favorite Button */}
-                              <Skeleton
-                                circle
-                                height={32}
-                                width={32}
-                                baseColor="#C8C8C8"
-                                highlightColor="#E0E0E0"
-                              />
+                              {/* Content Section */}
+                              <div
+                                style={{
+                                  flex: 1,
+                                  padding: "12px",
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  justifyContent: "space-between",
+                                }}
+                              >
+                                {/* Top Section */}
+                                <div>
+                                  {/* Title */}
+                                  <Skeleton
+                                    height={20}
+                                    width="80%"
+                                    baseColor="#C8C8C8"
+                                    highlightColor="#E0E0E0"
+                                    style={{ marginBottom: "8px" }}
+                                  />
 
-                              {/* Add/Remove Buttons */}
-                              <div style={{ display: "flex", gap: "8px" }}>
-                                <Skeleton
-                                  height={32}
-                                  width={80}
-                                  baseColor="#C8C8C8"
-                                  highlightColor="#E0E0E0"
-                                  style={{ borderRadius: "8px" }}
-                                />
+                                  {/* Price */}
+                                  <div
+                                    className="d-flex align-items-center"
+                                    style={{ gap: "8px" }}
+                                  >
+                                    <Skeleton
+                                      height={16}
+                                      width={60}
+                                      baseColor="#C8C8C8"
+                                      highlightColor="#E0E0E0"
+                                    />
+                                    <Skeleton
+                                      height={16}
+                                      width={40}
+                                      baseColor="#C8C8C8"
+                                      highlightColor="#E0E0E0"
+                                      style={{ opacity: 0.5 }}
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Bottom Section */}
+                                <div className="d-flex justify-content-between align-items-center">
+                                  {/* Favorite Button */}
+                                  <Skeleton
+                                    circle
+                                    height={32}
+                                    width={32}
+                                    baseColor="#C8C8C8"
+                                    highlightColor="#E0E0E0"
+                                  />
+
+                                  {/* Add/Remove Buttons */}
+                                  <div style={{ display: "flex", gap: "8px" }}>
+                                    <Skeleton
+                                      height={32}
+                                      width={80}
+                                      baseColor="#C8C8C8"
+                                      highlightColor="#E0E0E0"
+                                      style={{ borderRadius: "8px" }}
+                                    />
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
+                        ))}
                       </div>
-                    ))}
+                    ) : null}
                   </div>
-                ) : (
-                  <div className="text-center text-muted">
-                    <p>No special menus available</p>
-                  </div>
-                )}
-              </div>
+                </>
+              ) : null}
             </div>
           </div>
         </div>
