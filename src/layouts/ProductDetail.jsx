@@ -383,31 +383,14 @@ function ProductDetail() {
 
         <div className="footer fixed p-b55">
           <div className="container">
-            {!cartItem ? (
-              <button
-                onClick={handleAddToCart}
-                className="btn btn-primary text-start w-100"
-                disabled={!menuDetails.portions?.length}
-              >
-                <i class="fa-solid fa-cart-shopping me-2"></i>
-                ADD TO CART
-              </button>
-            ) : (
-              <div className="d-flex gap-3">
-                <button
-                  onClick={() => window.history.back()}
-                  className="btn btn-outline-primary flex-1"
-                >
-                  ADD MORE MENUS
-                </button>
-                {/* <button
-                  onClick={() => (window.location.href = "/checkout")}
-                  className="btn btn-primary flex-1"
-                >
-                  CHECKOUT
-                </button> */}
-              </div>
-            )}
+            <button
+              onClick={handleAddToCart}
+              className="btn btn-primary text-start w-100"
+              disabled={!menuDetails.portions?.length}
+            >
+              <i className="fa-solid fa-cart-shopping me-2"></i>
+              ADD TO CART
+            </button>
           </div>
         </div>
       </div>
