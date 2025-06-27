@@ -327,13 +327,17 @@ const AuthOffcanvas = () => {
               value={phoneNumber}
               onChange={(e) => {
                 const value = e.target.value.replace(/\D/g, "");
-                if (value.length <= 10) {
+                // Only allow if first digit is 6,7,8,9 or empty
+                if (
+                  value === "" ||
+                  (/^[6-9]/.test(value) && value.length <= 10)
+                ) {
                   setPhoneNumber(value);
                 }
               }}
               onFocus={handleInputFocus}
               placeholder="Enter your phone number"
-              pattern="[0-9]{10}"
+              pattern="[6-9][0-9]{9}"
               maxLength="10"
               required
               disabled={isLoading}
@@ -344,7 +348,11 @@ const AuthOffcanvas = () => {
         <button
           type="submit"
           className="btn btn-primary w-100"
-          disabled={isLoading || phoneNumber.length !== 10}
+          disabled={
+            isLoading ||
+            phoneNumber.length !== 10 ||
+            !/^[6-9][0-9]{9}$/.test(phoneNumber)
+          }
         >
           {isLoading ? (
             <span>
@@ -449,13 +457,13 @@ const AuthOffcanvas = () => {
               value={phoneNumber}
               onChange={(e) => {
                 const value = e.target.value.replace(/\D/g, "");
-                if (value.length <= 10) {
+                if (value === "" || (/^[6-9]/.test(value) && value.length <= 10)) {
                   setPhoneNumber(value);
                 }
               }}
               onFocus={handleInputFocus}
               placeholder="Enter your phone number"
-              pattern="[0-9]{10}"
+              pattern="[6-9]{10}"
               maxLength="10"
               required
               disabled={isLoading}

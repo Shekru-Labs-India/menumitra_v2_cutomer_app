@@ -362,7 +362,7 @@ function AllOutlets() {
           )}
         </div>
       </div>
-      {/* <Footer /> */}
+      <Footer />
     </>
   );
 }

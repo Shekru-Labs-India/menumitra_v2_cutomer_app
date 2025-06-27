@@ -88,6 +88,9 @@ function Checkout() {
     isOpen: false,
     orderDetails: null,
   });
+  const [couponCode, setCouponCode] = useState("");
+  const [couponStatus, setCouponStatus] = useState(null);
+  const [couponLoading, setCouponLoading] = useState(false);
 
   const handleLogin = () => {
     setShowAuthOffcanvas(true);
@@ -123,7 +126,7 @@ function Checkout() {
                       <circle cx="12" cy="7" r="4"></circle>
                     </svg>
                   </div>
-                  <h5 className="mb-3">Please Login to Checkout</h5>
+                  <h5 className="mb-3">Please Login to Cart</h5>
                   <p className="text-muted mb-4">
                     Login to your account to complete your order
                   </p>
@@ -474,11 +477,11 @@ function Checkout() {
         }
       );
 
-      if (response.data?.order_id) {
+      if (response.data?.detail?.order_id) {
         clearCart();
         localStorage.removeItem("cart");
         toast.success("Order cancelled and new order created successfully!");
-        navigate("/");
+        navigate("/orders");
       }
     } catch (error) {
       console.error("Error cancelling order:", error);
@@ -540,6 +543,45 @@ function Checkout() {
     }
   };
 
+  // Coupon input handler: only allow capital letters and numbers
+  const handleCouponInput = (e) => {
+    const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    setCouponCode(value);
+  };
+
+  // Coupon verify handler
+  const handleVerifyCoupon = async () => {
+    setCouponLoading(true);
+    setCouponStatus(null);
+    try {
+      const response = await axios.post(
+        "https://men4u.xyz/v2/common/verify_coupon",
+        {
+          coupon_code: couponCode,
+          app_source: "customer_App",
+        }
+      );
+      if (response.data?.success) {
+        setCouponStatus({
+          success: true,
+          message: response.data.message || "Coupon applied!",
+        });
+      } else {
+        setCouponStatus({
+          success: false,
+          message: response.data.message || "Invalid coupon.",
+        });
+      }
+    } catch (err) {
+      setCouponStatus({
+        success: false,
+        message: "Invalid coupon or network error.",
+      });
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
   return (
     <>
       <Header />
@@ -576,14 +618,17 @@ function Checkout() {
           },
         }}
       />
-      <div className="page-content">
-        {/* shop-cart-wrapper */}
+      <div
+        className="page-content"
+        style={{ background: "#f7f8fa", minHeight: "100vh" }}
+      >
         <div
           className="container bottom-content"
-          style={{ paddingBottom: "390px" }}
+          style={{ paddingBottom: "40px" }}
         >
+          {/* Menu/Cart Items List */}
           <div className="item-list style-2">
-            <ul>
+            <ul className="list-unstyled">
               {cartItems.length === 0 ? (
                 <div
                   className="d-flex flex-column justify-content-center align-items-center"
@@ -619,121 +664,138 @@ function Checkout() {
                 cartItems.map((item) => (
                   <li
                     key={`${item.menuId}-${item.portionId}`}
-                    className="position-relative"
+                    className="mb-3 border-0"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => navigate(`/product-detail/${item.menuId}`)}
                   >
-                    <div className="item-content">
-                      <div className="item-media media media-100">
-                        <LazyImage
-                          src={
-                            item.image ||
-                            "https://cdn.vox-cdn.com/thumbor/aNM9cSJCkTc4-RK1avHURrKBOjU=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/20059022/shutterstock_1435374326.jpg"
-                          }
-                          alt={item.menuName}
-                          blur={true}
-                          className="menu-image"
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                            borderRadius: "12px",
-                          }}
-                        />
-                      </div>
-                      <div className="item-inner">
-                        <div className="item-title-row d-flex justify-content-between align-items-start">
-                          <div>
-                            <h5 className="item-title sub-title">
-                              <a href={`/product/${item.menuId}`}>
-                                {item.menuName}
-                              </a>
+                    <div
+                      className="bg-white rounded-4 shadow-sm position-relative p-3 border-0"
+                      style={{ minHeight: 90 }}
+                    >
+                      {/* Remove button in top right */}
+                      <button
+                        type="button"
+                        className="btn p-0 border-0 bg-transparent shadow-none position-absolute"
+                        aria-label="Remove"
+                        style={{
+                          top: 12,
+                          right: 16,
+                          fontSize: 22,
+                          color: "#b0b3b8",
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveItem(item.menuId, item.portionId);
+                        }}
+                      >
+                        ×
+                      </button>
+                      <div className="d-flex align-items-center">
+                        <div className="flex-grow-1">
+                          <div className="d-flex align-items-center mb-1">
+                            <h5 className="mb-0" style={{ fontWeight: 600 }}>
+                              {item.menuName}
                             </h5>
-                            <div className="item-subtitle text-soft">
-                              {item.portionName}
-                              {item.comment && (
-                                <small className="d-block">
-                                  {item.comment}
-                                </small>
-                              )}
-                            </div>
                           </div>
-                          <button
-                            type="button"
-                            className="btn p-0 border-0 bg-transparent shadow-none"
-                            aria-label="Remove"
-                            onClick={() =>
-                              handleRemoveItem(item.menuId, item.portionId)
-                            }
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              fill="currentColor"
-                              className="bi bi-x"
-                              viewBox="0 0 16 16"
+                          <div className="d-flex align-items-center mb-1">
+                            <span
+                              className="text-success me-2"
+                              style={{
+                                fontSize: 15,
+                                display: "flex",
+                                alignItems: "center",
+                              }}
                             >
-                              <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
-                            </svg>
-                          </button>
-                        </div>
-                        <div className="item-footer">
-                          <div className="d-flex align-items-center">
-                            <h6 className="me-2 mb-0 d-flex align-items-center">
-                              ₹{item.price}
+                              <i
+                                className="fa-solid fa-utensils me-1"
+                                style={{ fontSize: 15, color: "#19b955" }}
+                              ></i>
+                              {item.portionName}
+                            </span>
+                          </div>
+                          <div className="d-flex align-items-center justify-content-between">
+                            <div className="d-flex align-items-center">
+                              <span
+                                className="fw-bold"
+                                style={{ color: "#2196f3", fontSize: 18 }}
+                              >
+                                ₹{item.price}
+                              </span>
                               {item.offer > 0 && (
                                 <>
-                                  <del className="ms-2 text-muted">
+                                  <span
+                                    className="ms-2 text-muted"
+                                    style={{
+                                      textDecoration: "line-through",
+                                      fontSize: 16,
+                                    }}
+                                  >
                                     ₹
-                                    {Math.round(
-                                      item.price / (1 - item.offer / 100)
-                                    )}
-                                  </del>
-                                  <span className="ms-2 text-success small fw-bold">
-                                    {item.offer}% Off
+                                    {item.originalPrice ||
+                                      (
+                                        item.price /
+                                        (1 - item.offer / 100)
+                                      ).toFixed(2)}
                                   </span>
                                 </>
                               )}
-                            </h6>
-                          </div>
-                          <div className="d-flex align-items-center">
-                            <div className="dz-stepper stepper-fill small-stepper border-2">
-                              <div className="input-group bootstrap-touchspin bootstrap-touchspin-injected">
-                                <span className="input-group-btn input-group-prepend">
-                                  <button
-                                    className="btn btn-primary bootstrap-touchspin-down"
-                                    type="button"
-                                    onClick={() =>
-                                      handleQuantityChange(
-                                        item.menuId,
-                                        item.portionId,
-                                        item.quantity - 1
-                                      )
-                                    }
-                                  >
-                                    -
-                                  </button>
+                            </div>
+                            <div className="d-flex flex-column align-items-end gap-1">
+                              {item.offer > 0 && (
+                                <span
+                                  className="text-success fw-bold mb-1"
+                                  style={{ fontSize: 16 }}
+                                >
+                                  {item.offer}% Off
                                 </span>
-                                <input
-                                  className="stepper form-control"
-                                  type="text"
-                                  value={item.quantity}
-                                  readOnly
-                                />
-                                <span className="input-group-btn input-group-append">
-                                  <button
-                                    className="btn btn-primary bootstrap-touchspin-up"
-                                    type="button"
-                                    onClick={() =>
-                                      handleQuantityChange(
-                                        item.menuId,
-                                        item.portionId,
-                                        item.quantity + 1
-                                      )
-                                    }
-                                  >
-                                    +
-                                  </button>
+                              )}
+                              <div className="bg-light rounded-pill d-flex align-items-center px-2 py-1">
+                                <button
+                                  className="btn btn-link p-0 m-0"
+                                  style={{
+                                    color: "#222",
+                                    fontSize: 20,
+                                    minWidth: 28,
+                                  }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleQuantityChange(
+                                      item.menuId,
+                                      item.portionId,
+                                      item.quantity - 1
+                                    );
+                                  }}
+                                >
+                                  –
+                                </button>
+                                <span
+                                  className="mx-2"
+                                  style={{
+                                    minWidth: 18,
+                                    textAlign: "center",
+                                    fontWeight: 500,
+                                  }}
+                                >
+                                  {item.quantity}
                                 </span>
+                                <button
+                                  className="btn btn-link p-0 m-0"
+                                  style={{
+                                    color: "#222",
+                                    fontSize: 20,
+                                    minWidth: 28,
+                                  }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleQuantityChange(
+                                      item.menuId,
+                                      item.portionId,
+                                      item.quantity + 1
+                                    );
+                                  }}
+                                >
+                                  +
+                                </button>
                               </div>
                             </div>
                           </div>
@@ -745,23 +807,147 @@ function Checkout() {
               )}
             </ul>
           </div>
-        </div>
-        {cartItems.length > 0 && (
-          <div className="footer fixed p-b60">
-            <div className="container">
-              <FooterSummary checkoutDetails={checkoutDetails} />
-              <div className="footer-btn d-flex align-items-center">
+          {/* Summary Card - now at the top */}
+          {cartItems.length > 0 && (
+            <>
+              <div
+                className="bg-white rounded-4 shadow-sm p-3 mb-3"
+                style={{ border: "1px solid #e0e0e0", marginTop: 24 }}
+              >
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <span className="fw-bold" style={{ fontSize: 18 }}>
+                    Total
+                  </span>
+                  <span className="fw-bold" style={{ fontSize: 18 }}>
+                    ₹{checkoutDetails?.total_bill_amount || "0.00"}
+                  </span>
+                </div>
+                <hr className="my-2" style={{ borderColor: "#e0e0e0" }} />
+                <div
+                  className="d-flex justify-content-between align-items-center mb-1"
+                  style={{ color: "#b0b3b8" }}
+                >
+                  <span>
+                    Discount ({checkoutDetails?.discount_percent || 0}%)
+                  </span>
+                  <span>-₹{checkoutDetails?.discount_amount || "0.00"}</span>
+                </div>
+                <div
+                  className="d-flex justify-content-between align-items-center mb-1"
+                  style={{ color: "#b0b3b8" }}
+                >
+                  <span>Subtotal</span>
+                  <span>
+                    ₹
+                    {(
+                      parseFloat(checkoutDetails?.total_bill_amount || 0) -
+                      parseFloat(checkoutDetails?.discount_amount || 0)
+                    ).toFixed(2)}
+                  </span>
+                </div>
+                <div
+                  className="d-flex justify-content-between align-items-center mb-1"
+                  style={{ color: "#b0b3b8" }}
+                >
+                  <span>
+                    Service Charges (
+                    {checkoutDetails?.service_charges_percent || 0}%)
+                  </span>
+                  <span>
+                    +₹{checkoutDetails?.service_charges_amount || "0.00"}
+                  </span>
+                </div>
+                <div
+                  className="d-flex justify-content-between align-items-center mb-1"
+                  style={{ color: "#b0b3b8" }}
+                >
+                  <span>GST ({checkoutDetails?.gst_percent || 0}%)</span>
+                  <span>+₹{checkoutDetails?.gst_amount || "0.00"}</span>
+                </div>
+                <hr className="my-2" style={{ borderColor: "#e0e0e0" }} />
+                <div className="d-flex justify-content-between align-items-center">
+                  <span className="fw-bold" style={{ fontSize: 18 }}>
+                    Grand Total
+                  </span>
+                  <span className="fw-bold" style={{ fontSize: 18 }}>
+                    ₹{checkoutDetails?.final_grand_total || "0.00"}
+                  </span>
+                </div>
+              </div>
+              <div className="d-flex justify-content-center mb-4">
                 <button
-                  className="btn btn-primary flex-1"
+                  className="btn"
+                  style={{
+                    background: "#19b955",
+                    color: "#fff",
+                    borderRadius: 30,
+                    fontWeight: 600,
+                    fontSize: 20,
+                    minWidth: 280,
+                    boxShadow: "0 2px 8px rgba(25,185,85,0.15)",
+                  }}
                   onClick={handleCheckout}
                   disabled={cartItems.length === 0 || loading}
                 >
-                  CHECKOUT ({getCartCount()} items)
+                  Place Order{" "}
+                  <span
+                    style={{
+                      color: "#b6f5d1",
+                      fontSize: 16,
+                      fontWeight: 500,
+                      marginLeft: 4,
+                    }}
+                  >
+                    ({getCartCount()} Items)
+                  </span>
                 </button>
               </div>
-            </div>
-          </div>
-        )}
+
+              {/* Apply Coupon UI */}
+              <div className="mt-2 mb-4">
+                <label className="mb-1 fw-semibold" style={{ fontSize: 15 }}>
+                  Apply Coupon
+                </label>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Enter coupon code"
+                    value={couponCode}
+                    onChange={handleCouponInput}
+                    maxLength={20}
+                    style={{ textTransform: "uppercase", fontWeight: 500 }}
+                    autoComplete="off"
+                  />
+                  <button
+                    className="btn"
+                    style={{
+                      background: "#b6d4fe",
+                      color: "#222",
+                      fontWeight: 500,
+                      minWidth: 70,
+                    }}
+                    onClick={handleVerifyCoupon}
+                    disabled={!couponCode || couponLoading}
+                  >
+                    {couponLoading ? "..." : "Verify"}
+                  </button>
+                </div>
+                {couponStatus && (
+                  <div
+                    className={`mt-2 fw-semibold ${
+                      couponStatus.success ? "text-success" : "text-danger"
+                    }`}
+                    style={{ fontSize: 14 }}
+                  >
+                    {couponStatus.message}
+                  </div>
+                )}
+                <hr className="mt-3 mb-0" />
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       <OrderExistsModal

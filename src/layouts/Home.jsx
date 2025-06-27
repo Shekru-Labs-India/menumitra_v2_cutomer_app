@@ -17,6 +17,7 @@ import { useModal } from "../contexts/ModalContext";
 import OutletInfoBanner from "../components/OutletInfoBanner";
 import SearchBar from "../components/SearchBar";
 import axios from "axios";
+import OfferBanner from "./OfferBanner";
 
 const API_BASE_URL = "https://men4u.xyz/v2";
 
@@ -361,6 +362,12 @@ function Home() {
           <div className=" pt-0">
             <div className="container p-b40 p-t0">
               {/* <SearchBar onSearch={handleSearch} menuItems={menuItems || []} /> */}
+
+              {/* Outlet Info Banner (Hotel Name, etc.) */}
+              {/* <OutletInfoBanner /> */}
+
+              {/* Offer Banner Swiper - Inserted here */}
+              <OfferBanner />
 
               <div
                 className="title-bar d-flex justify-content-between align-items-center"

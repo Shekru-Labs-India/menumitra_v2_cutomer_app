@@ -9,6 +9,7 @@ import "../assets/css/style.css";
 import ThemeColorOffcanvas from "./ThemeColorOffcanvas";
 import MenuMitra from "./MenuMitra";
 import axios from "axios";
+import FeedbackButton from "./FeedbackButton";
 
 function Sidebar() {
   const { isOpen, closeSidebar } = useSidebar();
@@ -91,7 +92,7 @@ function Sidebar() {
           <NavLink
             to="/"
             className={({ isActive }) =>
-              `nav-link ${
+              `nav-link d-flex align-items-center ${
                 isActive
                   ? "active bg-success text-white fw-bold px-2 rounded-5"
                   : ""
@@ -100,7 +101,7 @@ function Sidebar() {
             onClick={handleLinkClick}
             end
           >
-            <span className="dz-icon">
+            <span className="dz-icon d-flex align-items-center justify-content-center me-2">
               <i className="fa-solid fa-utensils"></i>
             </span>
             <span>Menu</span>
@@ -110,7 +111,7 @@ function Sidebar() {
           <NavLink
             to="/categories"
             className={({ isActive }) =>
-              `nav-link ${
+              `nav-link d-flex align-items-center ${
                 isActive
                   ? "active bg-success text-white fw-bold px-2 rounded-5"
                   : ""
@@ -118,7 +119,7 @@ function Sidebar() {
             }
             onClick={handleLinkClick}
           >
-            <span className="dz-icon">
+            <span className="dz-icon d-flex align-items-center justify-content-center me-2">
               <i className="fa-solid fa-list"></i>
             </span>
             <span>Category</span>
@@ -128,7 +129,7 @@ function Sidebar() {
           <NavLink
             to="/search"
             className={({ isActive }) =>
-              `nav-link ${
+              `nav-link d-flex align-items-center ${
                 isActive
                   ? "active bg-success text-white fw-bold px-2 rounded-5"
                   : ""
@@ -136,7 +137,7 @@ function Sidebar() {
             }
             onClick={handleLinkClick}
           >
-            <span className="dz-icon">
+            <span className="dz-icon d-flex align-items-center justify-content-center me-2">
               <i className="fa-solid fa-magnifying-glass"></i>
             </span>
             <span>Search</span>
@@ -146,7 +147,7 @@ function Sidebar() {
           <NavLink
             to="/favourites"
             className={({ isActive }) =>
-              `nav-link ${
+              `nav-link d-flex align-items-center ${
                 isActive
                   ? "active bg-success text-white fw-bold px-2 rounded-5"
                   : ""
@@ -154,8 +155,8 @@ function Sidebar() {
             }
             onClick={handleLinkClick}
           >
-            <span className="dz-icon">
-              <i class="fa-solid fa-heart"></i>
+            <span className="dz-icon d-flex align-items-center justify-content-center me-2">
+              <i className="fa-solid fa-heart"></i>
             </span>
             <span>Favourites</span>
           </NavLink>
@@ -163,16 +164,16 @@ function Sidebar() {
         <li>
           <NavLink
             to="/checkout"
-            className="sidebar-link d-flex align-items-center justify-content-between"
+            className="sidebar-link d-flex align-items-center"
             onClick={handleLinkClick}
           >
-            <span>
-              <i className="fa-solid fa-shopping-cart me-2"></i>
-              Cart
+            <span className="dz-icon d-flex align-items-center justify-content-center me-2">
+              <i className="fa-solid fa-shopping-cart"></i>
             </span>
+            <span>Cart</span>
             {cartCount > 0 && (
               <span
-                className="badge rounded-circle"
+                className="badge rounded-circle ms-auto"
                 style={{
                   backgroundColor: "#dc3545",
                   color: "white",
@@ -182,7 +183,7 @@ function Sidebar() {
                   alignItems: "center",
                   justifyContent: "center",
                   fontSize: "0.75rem",
-                  marginLeft: 8,
+                  marginLeft: "auto",
                 }}
               >
                 {cartCount}
@@ -194,7 +195,7 @@ function Sidebar() {
           <NavLink
             to="/orders"
             className={({ isActive }) =>
-              `nav-link ${
+              `nav-link d-flex align-items-center ${
                 isOrderRoute()
                   ? "active bg-success text-white fw-bold px-2 rounded-5"
                   : ""
@@ -202,8 +203,8 @@ function Sidebar() {
             }
             onClick={handleLinkClick}
           >
-            <span className="dz-icon">
-              <i class="fa-solid fa-clock-rotate-left"></i>
+            <span className="dz-icon d-flex align-items-center justify-content-center me-2">
+              <i className="fa-solid fa-clock-rotate-left"></i>
             </span>
             <span>Orders</span>
           </NavLink>
@@ -214,7 +215,7 @@ function Sidebar() {
             <NavLink
               to="/profile"
               className={({ isActive }) =>
-                `nav-link ${
+                `nav-link d-flex align-items-center ${
                   isProfileRoute()
                     ? "active bg-success text-white fw-bold px-2 rounded-5"
                     : ""
@@ -222,8 +223,8 @@ function Sidebar() {
               }
               onClick={handleLinkClick}
             >
-              <span className="dz-icon">
-                <i class="fa-solid fa-user"></i>
+              <span className="dz-icon d-flex align-items-center justify-content-center me-2">
+                <i className="fa-solid fa-user"></i>
               </span>
               <span>Profile</span>
             </NavLink>
@@ -234,7 +235,7 @@ function Sidebar() {
           <NavLink
             to="/logout"
             className={({ isActive }) =>
-              `nav-link ${
+              `nav-link d-flex align-items-center ${
                 isActive
                   ? "active bg-success text-white fw-bold px-2 rounded-5"
                   : ""
@@ -242,11 +243,14 @@ function Sidebar() {
             }
             onClick={onLogoutClick}
           >
-            <span className="dz-icon">
-              <i class="fa-solid fa-power-off font_sie_14"></i>
+            <span className="dz-icon d-flex align-items-center justify-content-center me-2">
+              <i className="fa-solid fa-power-off font_sie_14"></i>
             </span>
             <span>Logout</span>
           </NavLink>
+        </li>
+        <li className="mt-2 mb-2 d-flex justify-content-center">
+          <FeedbackButton />
         </li>
         <li className="nav-label">Settings</li>
 

@@ -1,5 +1,6 @@
 import React from "react";
 import BaseModal from "../BaseModal";
+import { useNavigate } from "react-router-dom";
 
 function OrderExistsModal({
   isOpen,
@@ -11,6 +12,7 @@ function OrderExistsModal({
   orderStatus,
 }) {
   const isCooking = orderStatus === "cooking";
+  const navigate = useNavigate();
 
   return (
     <BaseModal
@@ -39,7 +41,10 @@ function OrderExistsModal({
                 style={{
                   backgroundColor: "#FF3B30",
                 }}
-                onClick={onCancelExisting}
+                onClick={async () => {
+                  await onCancelExisting();
+                  navigate("/orders");
+                }}
                 disabled={isLoading}
               >
                 {isLoading ? (

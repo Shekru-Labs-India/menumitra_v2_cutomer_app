@@ -224,11 +224,21 @@ function Favourite() {
         <div className="content-inner pt-0">
           <div className="container p-b20">
             <div className="dashboard-area">
-              {Object.entries(groupedMenus)
-                .filter(
-                  ([outletName]) => outletName && outletName !== "undefined"
-                )
-                .map(([outletName, menus]) => (
+              {(() => {
+                // Sort outlet groups so current outlet is first
+                const entries = Object.entries(groupedMenus)
+                  .filter(
+                    ([outletName]) => outletName && outletName !== "undefined"
+                  )
+                  .sort(([aName, aMenus], [bName, bMenus]) => {
+                    // Find outletId for each group (assume all menus in group have same outletId)
+                    const aOutletId = aMenus[0]?.outlet_id;
+                    const bOutletId = bMenus[0]?.outlet_id;
+                    if (String(aOutletId) === String(outletId)) return -1;
+                    if (String(bOutletId) === String(outletId)) return 1;
+                    return 0;
+                  });
+                return entries.map(([outletName, menus]) => (
                   <div key={outletName} className="mb-4">
                     <div
                       className="fw-bold text-uppercase mb-2 d-flex align-items-center justify-content-between"
@@ -315,7 +325,8 @@ function Favourite() {
                       </div>
                     )}
                   </div>
-                ))}
+                ));
+              })()}
             </div>
           </div>
         </div>

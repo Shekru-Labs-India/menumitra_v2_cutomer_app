@@ -69,10 +69,14 @@ function Header() {
     if (path === "/") return "MenuMitra";
     if (path.startsWith("/checkout")) return "Cart";
     if (path.startsWith("/profile")) return "Profile";
+    if (path.startsWith("/search")) return "Search";
     if (path.startsWith("/orders")) return "Orders";
     if (path.startsWith("/favourites")) return "Favourite";
     if (path.startsWith("/order-detail")) return "Order Details";
+    if (path.startsWith("/all-outlets")) return "All Outlets" ;
+    if (path.startsWith("/savings")) return "Savings" ;
     if (path.startsWith("/product/") || path.startsWith("/product-detail"))
+ 
       return "Product Details";
     return "";
   };
@@ -102,29 +106,46 @@ function Header() {
                     <i className="fas fa-arrow-left"></i>
                   </button>
                 )}
-                {/* Page title for non-home pages */}
-                {location.pathname !== "/" && getHeaderTitle() && (
-                  <h5 className="title mb-0 text-nowrap" style={{ margin: 0 }}>
-                    {getHeaderTitle()}
-                  </h5>
-                )}
                 {/* Logo and title for home page, left-aligned */}
                 {location.pathname === "/" && (
-                  <>
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 4 }}
+                  >
                     <img
                       src={logo}
                       alt="MenuMitra Logo"
-                      style={{ height: 32, width: 32, marginRight: 8 }}
+                      style={{ height: 50, width: 50, marginRight: 0 }}
                     />
-                    <h5
-                      className="title mb-0 text-nowrap"
-                      style={{ margin: 0 }}
+                    <span
+                      style={{
+                        fontSize: 18,
+                        fontWeight: 600,
+                        color: "#222",
+                        letterSpacing: 0,
+                        lineHeight: 1,
+                      }}
                     >
                       MenuMitra
-                    </h5>
-                  </>
+                    </span>
+                  </div>
                 )}
               </div>
+              {/* Centered header title for all non-home pages */}
+              {location.pathname !== "/" && getHeaderTitle() && (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: "50%",
+                    top: "50%",
+                    transform: "translate(-50%, -50%)",
+                    zIndex: 1,
+                  }}
+                >
+                  <h5 className="title mb-0 text-nowrap" style={{ margin: 0 }}>
+                    {getHeaderTitle()}
+                  </h5>
+                </div>
+              )}
               <div className="mid-content" />
               <div className="right-content d-flex align-items-center gap-2">
                 <Link to="/search" className="header-icon">

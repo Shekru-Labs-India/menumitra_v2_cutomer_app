@@ -38,6 +38,7 @@ function Profile() {
   return (
     <>
       <Header />
+
       <div className="page-content bottom-content ">
         <div className="container profile-area">
           <div
@@ -53,13 +54,27 @@ function Profile() {
                 <h5 className="sub-title mb-0">
                   {isAuthenticated ? `Hello, ${user?.name}` : "Hello User"}
                 </h5>
-                {/* {isAuthenticated && (
-                  <h6 className="sub-title fade-text mb-0 font-w500">
-                    {isAuthenticated
-                      ? `+91 ${user?.mobile}`
-                      : "Login to view your details"}
-                  </h6>
-                )} */}
+                {!isAuthenticated && (
+                  <button
+                    className="btn position-absolute"
+                    style={{
+                      top: 18,
+                      right: 24,
+                      border: "2px solid #fff",
+                      color: "#222",
+                      background: "#fff",
+                      fontWeight: 600,
+                      borderRadius: 8,
+                      padding: "6px 18px",
+                      boxShadow: "none",
+                      outline: "none",
+                      zIndex: 10,
+                    }}
+                    onClick={handleLoginClick}
+                  >
+                    Login
+                  </button>
+                )}
               </div>
             </div>
             {/* <div className="location-box">
@@ -168,37 +183,41 @@ function Profile() {
               </div> */}
             </div>
           </div>
-          <div className="account-section mt-4">
-            <h5 className="mb-3">Account</h5>
-            <ul>
-              <li>
-                <Link to="/edit-profile">
-                  <i className="fa-solid fa-user me-2" style={iconStyle} />
-                  Edit Profile
-                </Link>
-              </li>
-            </ul>
-          </div>
+          {isAuthenticated && (
+            <div className="account-section mt-4">
+              <h5 className="mb-3">Account</h5>
+              <ul>
+                <li>
+                  <Link to="/edit-profile">
+                    <i className="fa-solid fa-user me-2" style={iconStyle} />
+                    Edit Profile
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          )}
         </div>
       </div>
       <div className="d-flex flex-column align-items-center my-4">
-      <a
-    href="#"
-    onClick={onLogoutClick}
-    style={{
-      color: "#000",
-      fontWeight: 500,
-      fontSize: 17,
-      textDecoration: "none",
-      display: "flex",
-      alignItems: "center",
-      gap: 10,
-      marginBottom: 8,
-    }}
-  >
-    <i className="fa-solid fa-power-off" style={{ fontSize: 16 }} />
-    Logout
-  </a>
+        {isAuthenticated && (
+          <a
+            href="#"
+            onClick={onLogoutClick}
+            style={{
+              color: "#000",
+              fontWeight: 500,
+              fontSize: 17,
+              textDecoration: "none",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              marginBottom: 8,
+            }}
+          >
+            <i className="fa-solid fa-power-off" style={{ fontSize: 16 }} />
+            Logout
+          </a>
+        )}
         <MenuMitra />
       </div>
       <Footer />

@@ -490,47 +490,7 @@ function Search() {
               </div>
             </div>
             <QuickFilters onFilterChange={handleQuickFilterChange} />
-            {/* {recentSearches.length > 0 && searchInputValue.trim() !== "" && (
-              <>
-                <div className="title-bar mt-0">
-                  <span className="title mb-0 font-18">Recent Search</span>
-                  <a
-                    className="font-14 font-w500 text-accent all-close"
-                    href="javascript:void(0);"
-                    onClick={clearRecentSearches}
-                  >
-                    Clear All
-                  </a>
-                </div>
-                <ul className="recent-search-list">
-                  {recentSearches.map((term, index) => (
-                    <li key={index}>
-                      <div
-                        className="d-flex align-items-center"
-                        onClick={() => handleRecentSearchClick(term)}
-                        style={{ cursor: "pointer" }}
-                      >
-                        <i
-                          className="fas fa-history"
-                          style={{ fontSize: "20px", color: "#7D8FAB" }}
-                        ></i>
-                        <h5 className="sub-title ms-2 mb-0">{term}</h5>
-                      </div>
-                      <a
-                        href="javascript:void(0);"
-                        className="close-1 remove-tag"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeSearchTerm(term);
-                        }}
-                      >
-                        <i className="fa-solid fa-xmark"></i>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )} */}
+           
             {isLoading ? (
               <div className="text-center py-4">
                 <div className="spinner-border text-primary" role="status">

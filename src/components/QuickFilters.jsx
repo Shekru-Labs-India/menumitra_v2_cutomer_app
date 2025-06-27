@@ -31,12 +31,74 @@ const QuickFilters = ({ onFilterChange }) => {
     };
   }, [openDropdown]);
 
+  // Add getFoodTypeStyles function
+  const getFoodTypeStyles = (foodType) => {
+    // Convert foodType to lowercase for case-insensitive comparison
+    const type = (foodType || "").toLowerCase();
+
+    switch (type) {
+      case "veg":
+        return {
+          icon: <i className="fa-solid fa-circle text-success" />, // green dot
+          border: "border-success",
+          textColor: "text-success",
+          categoryIcon: (
+            <i className="fa-solid fa-utensils text-success me-1" />
+          ),
+        };
+      case "nonveg":
+        return {
+          icon: (
+            <i
+              className="fa-solid fa-play fa-rotate-270"
+              style={{ color: "#FF2D2D" }}
+            />
+          ), // red triangle with custom color
+          border: "border-danger",
+          textColor: "text-danger",
+          categoryIcon: (
+            <i className="fa-solid fa-utensils" style={{ color: "#FF2D2D" }} />
+          ),
+        };
+      case "egg":
+        return {
+          icon: <i className="fa-solid fa-egg gray-text" />, // egg icon
+          border: "gray-text",
+          // textColor: "gray-text",
+          categoryIcon: <i className="fa-solid fa-utensils me-1" />,
+        };
+      case "vegan":
+        return {
+          icon: <i className="fa-solid fa-leaf text-success" />, // leaf icon
+          border: "border-success",
+          textColor: "text-success",
+          categoryIcon: (
+            <i className="fa-solid fa-utensils text-success me-1" />
+          ),
+        };
+      default:
+        return {
+          icon: <i className="fa-solid fa-circle text-success" />, // default green dot
+          border: "border-success",
+          textColor: "text-success",
+          categoryIcon: (
+            <i className="fa-solid fa-utensils text-success me-1" />
+          ),
+        };
+    }
+  };
+
+  // Replace static typeOptions with dynamic icons using getFoodTypeStyles
   const typeOptions = [
-    { id: "all", label: "All", icon: "🍽️" },
-    { id: "veg", label: "Veg", icon: "🥬" },
-    { id: "nonveg", label: "Nonveg", icon: "🍗" },
-    { id: "vegan", label: "Vegan", icon: "🌱" },
-    { id: "egg", label: "Egg", icon: "🥚" },
+    {
+      id: "all",
+      label: "All",
+      icon: <i className="fa-solid fa-utensils text-success" />,
+    },
+    { id: "veg", label: "Veg", icon: getFoodTypeStyles("veg").icon },
+    { id: "nonveg", label: "Nonveg", icon: getFoodTypeStyles("nonveg").icon },
+    { id: "vegan", label: "Vegan", icon: getFoodTypeStyles("vegan").icon },
+    { id: "egg", label: "Egg", icon: getFoodTypeStyles("egg").icon },
   ];
 
   const priceOptions = [
@@ -197,17 +259,22 @@ const QuickFilters = ({ onFilterChange }) => {
     const dropdownType = type.toLowerCase();
 
     return (
-      <div className="card" ref={dropdownRefs[dropdownType]}>
+      <div
+        className="card border-0 bg-transparent"
+        ref={dropdownRefs[dropdownType]}
+      >
         <div className="card-body p-0">
           <div className="basic-dropdown">
             <div className="dropdown">
               <button
                 type="button"
-                className={`btn ${
-                  activeValue && activeValue !== "all"
-                    ? "btn-success"
-                    : "btn-outline-success"
-                } dropdown-toggle`}
+                className={`btn rounded-pill d-flex align-items-center gap-1 px-3 py-2 shadow-none border-0"
+                  style={{ background: '#ededed', color: '#22A45D', fontWeight: 500 }}
+                  dropdown-toggle ${
+                    activeValue && activeValue !== "all"
+                      ? "btn-success"
+                      : "btn-outline-success"
+                  }`}
                 data-bs-toggle="dropdown"
                 aria-expanded={openDropdown === dropdownType}
                 onClick={(e) => {
@@ -219,7 +286,9 @@ const QuickFilters = ({ onFilterChange }) => {
                 }}
               >
                 {getButtonIcon(type)}
-                {getButtonLabel(type, options, activeValue)}
+                <span style={{ color: "#22A45D" }}>
+                  {getButtonLabel(type, options, activeValue)}
+                </span>
               </button>
               <div
                 className={`dropdown-menu ${

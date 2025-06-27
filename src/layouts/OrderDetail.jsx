@@ -533,7 +533,7 @@ function OrderDetail() {
                     #{orderDetails.order_details.order_number}
                   </h5>
                 </div>
-                <span 
+                <span
                   className={`badge rounded-pill ${getStatusClass(
                     orderDetails.order_details.order_status
                   )}`}
@@ -701,6 +701,7 @@ function OrderDetail() {
                 )}
             </div>
           </div>
+
           {/* Invoice Button */}
           {orderDetails.order_details.order_status &&
             orderDetails.order_details.order_status.toLowerCase() ===

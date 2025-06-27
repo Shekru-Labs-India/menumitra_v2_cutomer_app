@@ -359,36 +359,53 @@ const OrderAccordionItem = ({
       >
         <div className="border rounded shadow-sm p-3">
           <div className="d-flex align-items-center justify-content-between w-100">
-            <div className="d-flex align-items-center">
-              <div>
-                <h6 className="mb-0"># {orderNumber}</h6>
-                <p
-                  className="mb-0 text-dark font-weight-bold"
-                  style={{ fontSize: "14px" }}
-                >
-                  <i className="bi bi-shop me-2"></i> {outletName}
-                </p>
-                <p className="mb-0 text-muted" style={{ fontSize: "12px" }}>
-                  <i className="bi bi-silverware me-2"></i> {orderType} •{" "}
-                  {itemCount} Menu
-                </p>
-                {/* Re-introducing status display based on user request */}
+            <div
+              className="d-flex flex-column align-items-start"
+              style={{ minHeight: 70 }}
+            >
+              <div className="d-flex align-items-center gap-2 mb-0">
+                <h6 className="mb-0">#{orderNumber}</h6>
+                {/* Status badge next to order number */}
                 {paymentStatus === "Paid" ? (
-                  <p className="mb-0 text-success" style={{ fontSize: "12px" }}>
-                    <i className="bi bi-check-circle-fill me-2"></i> Paid
-                  </p>
+                  <span
+                    className="badge bg-success text-white"
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: 500,
+                      borderRadius: "6px",
+                    }}
+                  >
+                    <i className="bi bi-check-circle-fill me-1"></i>Paid
+                  </span>
                 ) : status === "Cancelled" ? (
-                  <p className="mb-0 text-danger" style={{ fontSize: "12px" }}>
-                    <i className="bi bi-x-circle-fill me-2"></i> Cancelled
-                  </p>
-                ) : (
-                  <p className="mb-0 text-muted" style={{ fontSize: "12px" }}>
-                    {status}
-                  </p>
-                )}
+                  <span
+                    className="badge bg-danger text-white"
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: 500,
+                      borderRadius: "6px",
+                    }}
+                  >
+                    <i className="bi bi-x-circle-fill me-1"></i>Cancelled
+                  </span>
+                ) : null}
               </div>
+              <p
+                className="mb-0 text-dark font-weight-bold"
+                style={{ fontSize: "14px" }}
+              >
+                {outletName}
+              </p>
+              <p className="mb-0 text-muted" style={{ fontSize: "12px" }}>
+                {orderType} • {itemCount} Menu
+              </p>
+              {/* Status below only if not paid/cancelled */}
+              {paymentStatus !== "Paid" && status !== "Cancelled" && (
+                <p className="mb-0 text-muted" style={{ fontSize: "12px" }}>
+                  {status}
+                </p>
+              )}
             </div>
-
             <div className="text-end">
               <p className="mb-0 text-muted" style={{ fontSize: "12px" }}>
                 {orderTime}

@@ -87,6 +87,14 @@ function Orders() {
     fetchCompletedOrders();
   }, []);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchOngoingOrders();
+    }, 10000); // every 10 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Handler for expanding/collapsing individual date accordions for completed orders
   const toggleCompletedDateExpansion = (date) => {
     setExpandedCompletedDates((prev) => ({
@@ -589,39 +597,13 @@ function Orders() {
               <li className="nav-item flex-shrink-0 w-33" role="presentation">
                 <button
                   className="nav-link active w-100"
-                  id="pending-tab"
-                  data-bs-toggle="tab"
-                  data-bs-target="#pending-tab-pane"
-                  type="button"
-                  role="tab"
-                  aria-controls="pending-tab-pane"
-                  aria-selected="true"
-                  style={{
-                    fontSize: "14px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <i
-                    className="fa-solid fa-clock me-2"
-                    style={{ color: "black", fontSize: "16px" }}
-                  ></i>
-                  <span style={{ fontSize: "12px", fontWeight: 500 }}>
-                    Pending
-                  </span>
-                </button>
-              </li>
-              <li className="nav-item flex-shrink-0 w-33" role="presentation">
-                <button
-                  className="nav-link w-100"
                   id="completed-tab"
                   data-bs-toggle="tab"
                   data-bs-target="#completed-tab-pane"
                   type="button"
                   role="tab"
                   aria-controls="completed-tab-pane"
-                  aria-selected="false"
+                  aria-selected="true"
                   style={{
                     fontSize: "14px",
                     display: "flex",
@@ -633,7 +615,7 @@ function Orders() {
                     className="fa-solid fa-circle-check me-2"
                     style={{ color: "#27ae60", fontSize: "16px" }}
                   ></i>
-                  <span style={{ fontSize: "12px", fontWeight: 500 }}>
+                  <span style={{ fontSize: "13px", fontWeight: 500 }}>
                     Completed
                   </span>
                 </button>
@@ -659,8 +641,34 @@ function Orders() {
                     className="fa-solid fa-ban me-2"
                     style={{ color: "#e74c3c", fontSize: "16px" }}
                   ></i>
-                  <span style={{ fontSize: "12px", fontWeight: 500 }}>
+                  <span style={{ fontSize: "13px", fontWeight: 500 }}>
                     Cancelled
+                  </span>
+                </button>
+              </li>
+              <li className="nav-item flex-shrink-0 w-33" role="presentation">
+                <button
+                  className="nav-link w-100"
+                  id="pending-tab"
+                  data-bs-toggle="tab"
+                  data-bs-target="#pending-tab-pane"
+                  type="button"
+                  role="tab"
+                  aria-controls="pending-tab-pane"
+                  aria-selected="false"
+                  style={{
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <i
+                    className="fa-solid fa-clock me-2"
+                    style={{ color: "black", fontSize: "16px" }}
+                  ></i>
+                  <span style={{ fontSize: "13px", fontWeight: 500 }}>
+                    Pending
                   </span>
                 </button>
               </li>
@@ -668,7 +676,7 @@ function Orders() {
             <div className="tab-content" id="myTabContent3">
               {/* Pending Orders Tab */}
               <div
-                className="tab-pane fade show active"
+                className="tab-pane fade"
                 id="pending-tab-pane"
                 role="tabpanel"
                 aria-labelledby="pending-tab"
@@ -765,7 +773,7 @@ function Orders() {
               </div>
               {/* Completed Orders Tab */}
               <div
-                className="tab-pane fade"
+                className="tab-pane fade show active"
                 id="completed-tab-pane"
                 role="tabpanel"
                 aria-labelledby="completed-tab"

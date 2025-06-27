@@ -26,6 +26,8 @@ import { ThemeColorProvider } from "./contexts/ThemeColorContext";
 import CustomerSavings from "./layouts/CustomerSavings";
 import OutletDetails from "./layouts/OutletDetails";
 import OutletNotFound from "./components/OutletNotFound";
+import FeedbackButton from "./components/FeedbackButton";
+// import CustomerFeedback from "./components/Modal/variants/CustomerFeedback";
 import axios from "axios";
 
 function App() {
