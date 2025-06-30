@@ -185,6 +185,15 @@ const HorizontalMenuCard = ({
       ? `/product-detail/${menuItem.menuId}/${menuItem.menuCatId}`
       : "#";
 
+  // Assume you have variables: price (current price), offer_percent (discount percent)
+  const offer_percent = discount
+    ? parseFloat(discount.replace("%Off", ""))
+    : null;
+  const price = currentPrice;
+  const originalPriceCalculated = offer_percent
+    ? (price / (1 - offer_percent / 100)).toFixed(0)
+    : null;
+
   return (
     <div
       className="horizontal-menu-card card product-card position-relative shadow border border-1 border-light"
@@ -348,14 +357,14 @@ const HorizontalMenuCard = ({
               className="mb-0 me-1"
               style={{ color: "#2d9cdb", fontSize: 14, fontWeight: 600 }}
             >
-              ₹{currentPrice}
+              <span className="fw-bold">₹{price}</span>
             </h6>
-            {originalPrice && (
+            {originalPriceCalculated && (
               <del
                 className="text-muted"
                 style={{ fontSize: 12, marginLeft: 2 }}
               >
-                ₹{originalPrice}
+                ₹{originalPriceCalculated}
               </del>
             )}
           </div>

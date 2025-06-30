@@ -611,7 +611,42 @@ function Home() {
                           >
                             <HorizontalMenuCard
                               image={menuItem.image || null}
-                              title={menuItem.menu_name}
+                              title={
+                                <>
+                                  {typeof menuItem.spicyIndex !==
+                                    "undefined" && (
+                                    <span className="me-1">
+                                      {[...Array(3)].map((_, index) => {
+                                        const spicyIndex = Number(
+                                          menuItem.spicyIndex
+                                        );
+                                        let color = "#E0E0E0"; // default: white/grey
+                                        if (spicyIndex === 1) {
+                                          color =
+                                            index === 0 ? "#22A45D" : "#E0E0E0"; // green, rest white
+                                        } else if (spicyIndex === 2) {
+                                          color =
+                                            index < 2 ? "#FFA500" : "#E0E0E0"; // orange, last white
+                                        } else if (spicyIndex === 3) {
+                                          color = "#FF2D2D"; // all red
+                                        }
+                                        return (
+                                          <i
+                                            key={index}
+                                            className="fa-solid fa-pepper-hot"
+                                            style={{
+                                              color,
+                                              fontSize: 12,
+                                              marginRight: 0,
+                                            }}
+                                          ></i>
+                                        );
+                                      })}
+                                    </span>
+                                  )}
+                                  {menuItem.menu_name}
+                                </>
+                              }
                               currentPrice={
                                 menuItem.portions && menuItem.portions[0]
                                   ? menuItem.portions[0].price
@@ -637,6 +672,10 @@ function Home() {
                                 offer: menuItem.offer,
                                 // rating: menuItem.rating,
                                 description: menuItem.description,
+                                spicyIndex:
+                                  menuItem.spicy_index ||
+                                  menuItem.spicy ||
+                                  menuItem.spicy_level,
                               }}
                               onFavoriteClick={() =>
                                 handleFavoriteClick(menuItem.menu_id)

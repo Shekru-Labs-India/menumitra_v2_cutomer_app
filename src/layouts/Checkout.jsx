@@ -237,7 +237,7 @@ function Checkout() {
       const response = await axios.post(
         "https://men4u.xyz/v2/user/get_checkout_detail",
         {
-          outlet_id: 1,
+          outlet_id: outletId,
           order_items: orderItems,
         },
         {
