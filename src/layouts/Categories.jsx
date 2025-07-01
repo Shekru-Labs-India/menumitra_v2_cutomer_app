@@ -17,8 +17,9 @@ const axiosInstance = axios.create({
 // API service function
 const fetchCategoryList = async (outletId, token) => {
   try {
-    const response = await axiosInstance.post('/user/get_category_list_with_image', 
-      { outlet_id: outletId },
+    const response = await axiosInstance.post('/user/get_category_list',
+      { outlet_id: outletId, app_source: "user_app" },
+
       {
         headers: {
           'Authorization': `Bearer ${token}`

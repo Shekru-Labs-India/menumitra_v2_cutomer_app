@@ -176,6 +176,8 @@ function Home() {
       const { data } = await api.post("/user/get_special_menu_list", {
         user_id: userId,
         outlet_id: outletId,
+        app_source: "user_app"
+
       });
 
       if (data.detail && data.detail.special_menu_list) {
@@ -249,6 +251,7 @@ function Home() {
     try {
       const { data } = await api.post("/user/get_all_menu_list_by_category", {
         outlet_id: outletId,
+          app_source: "user_app"
       });
 
       if (data.detail) {

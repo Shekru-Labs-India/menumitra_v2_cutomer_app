@@ -199,6 +199,7 @@ const VerticalMenuCard = ({
           outlet_id: outletId,
           menu_id: menuItem.menuId,
           user_id: auth.userId || null,
+          app_source: "user_app",
         }),
       });
 

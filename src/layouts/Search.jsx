@@ -134,10 +134,12 @@ function Search() {
       try {
         const payload = {
           outlet_id: outletId,
+          app_source: "user_app",
         };
 
         if (userId) {
           payload.user_id = userId;
+        
         }
 
         const response = await axios({
@@ -180,6 +182,7 @@ function Search() {
       const payload = {
         outlet_id: outletId,
         keyword: searchTerm.trim(),
+        app_source: "user_app",
       };
 
       if (userId) {

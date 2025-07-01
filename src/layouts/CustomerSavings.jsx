@@ -26,7 +26,8 @@ function CustomerSavings() {
             'Authorization': `Bearer ${accessToken}`
           },
           body: JSON.stringify({ 
-            user_id: parseInt(userId)
+            user_id: parseInt(userId),
+            app_source: "user_app",
           })
         });
 

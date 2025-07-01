@@ -419,6 +419,7 @@ function OrderDetail() {
         {
           order_id: orderId,
           user_id: parseInt(userId),
+          app_source: "user_app",
         },
         {
           headers: {
@@ -465,6 +466,7 @@ function OrderDetail() {
             body: JSON.stringify({
               order_id: orderId,
               user_id: parseInt(userId), // Add user_id to payload
+              app_source: "user_app",
             }),
           }
         );

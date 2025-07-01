@@ -38,6 +38,7 @@ function Favourite() {
         {
           outlet_id: outletId,
           user_id: auth.userId,
+          app_source: "user_app",
         },
         {
           headers: {
@@ -103,6 +104,7 @@ function Favourite() {
         {
           outlet_id: outletId,
           user_id: auth.userId,
+          app_source: "user_app",
         },
         {
           headers: {

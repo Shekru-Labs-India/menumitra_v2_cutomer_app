@@ -97,6 +97,7 @@ function AllOutlets() {
             "Content-Type": "application/json",
             Accept: "application/json",
             Authorization: `Bearer ${userData?.accessToken}`,
+            app_source:"customer_app",
           },
         }
       );

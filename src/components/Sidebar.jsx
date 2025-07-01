@@ -54,6 +54,12 @@ function Sidebar() {
     }, 0);
   };
 
+  const handleLogoutAndCloseSidebar = (e) => {
+    if (onLogoutClick) onLogoutClick(e);
+    if (typeof closeSidebar === "function") closeSidebar();
+    navigate("/");
+  };
+
   return (
     <div className={`sidebar style-2 right${isOpen ? " show" : ""}`}>
       {isAuthenticated && (
@@ -231,24 +237,26 @@ function Sidebar() {
           </li>
         )}
 
-        <li>
-          <NavLink
-            to="/logout"
-            className={({ isActive }) =>
-              `nav-link d-flex align-items-center ${
-                isActive
-                  ? "active bg-success text-white fw-bold px-2 rounded-5"
-                  : ""
-              }`
-            }
-            onClick={onLogoutClick}
-          >
-            <span className="dz-icon d-flex align-items-center justify-content-center me-2">
-              <i className="fa-solid fa-power-off font_sie_14"></i>
-            </span>
-            <span>Logout</span>
-          </NavLink>
-        </li>
+        {user && (
+          <li>
+            <NavLink
+              to="/logout"
+              className={({ isActive }) =>
+                `nav-link d-flex align-items-center ${
+                  isActive
+                    ? "active bg-success text-white fw-bold px-2 rounded-5"
+                    : ""
+                }`
+              }
+              onClick={handleLogoutAndCloseSidebar}
+            >
+              <span className="dz-icon d-flex align-items-center justify-content-center me-2">
+                <i className="fa-solid fa-power-off font_sie_14"></i>
+              </span>
+              <span>Logout</span>
+            </NavLink>
+          </li>
+        )}
         <li className="mt-2 mb-2 d-flex justify-content-center">
           <FeedbackButton />
         </li>

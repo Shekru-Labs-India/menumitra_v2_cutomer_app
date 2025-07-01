@@ -457,7 +457,10 @@ const AuthOffcanvas = () => {
               value={phoneNumber}
               onChange={(e) => {
                 const value = e.target.value.replace(/\D/g, "");
-                if (value === "" || (/^[6-9]/.test(value) && value.length <= 10)) {
+                if (
+                  value === "" ||
+                  (/^[6-9]/.test(value) && value.length <= 10)
+                ) {
                   setPhoneNumber(value);
                 }
               }}

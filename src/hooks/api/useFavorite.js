@@ -42,7 +42,8 @@ export const useFavorite = () => {
         },
         body: JSON.stringify({
           outlet_id: outletId,
-          user_id: userId
+          user_id: userId,
+          app_source: "user_app",
         })
       });
 
@@ -86,7 +87,8 @@ export const useFavorite = () => {
         body: JSON.stringify({
           outlet_id: outletId,
           user_id: userId,
-          menu_id: menuId
+          menu_id: menuId,
+          app_source: "user_app",
         })
       });
 

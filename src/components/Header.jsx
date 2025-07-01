@@ -75,6 +75,7 @@ function Header() {
     if (path.startsWith("/order-detail")) return "Order Details";
     if (path.startsWith("/all-outlets")) return "All Outlets" ;
     if (path.startsWith("/savings")) return "Savings" ;
+    if (path.startsWith("/outlet-details")) return "Outlet Details" ;
     if (path.startsWith("/product/") || path.startsWith("/product-detail"))
  
       return "Product Details";

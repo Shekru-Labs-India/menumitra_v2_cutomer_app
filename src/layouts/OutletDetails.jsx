@@ -39,15 +39,21 @@ function OutletDetails() {
 
   const fetchRestaurantDetails = async () => {
     try {
+      // Get the token from your auth context or localStorage
+      const auth = JSON.parse(localStorage.getItem("auth")) || {};
+      const accessToken = auth.accessToken;
+
       const response = await fetch(
         "https://men4u.xyz/v2/user/get_restaurant_details",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
             outlet_id: outletId,
+            app_source: "user_app",
           }),
         }
       );

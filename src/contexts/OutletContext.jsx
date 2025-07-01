@@ -182,12 +182,21 @@ export const OutletProvider = ({ children }) => {
       const sectionId = localStorage.getItem("sectionId");
       const tableId = localStorage.getItem("tableId");
 
+      const auth = JSON.parse(localStorage.getItem("auth")) || {};
+      const accessToken = auth.accessToken;
+
       const response = await axios.post(
         "https://men4u.xyz/v2/user/get_restaurant_details_by_code",
         {
           outlet_code: outletCode,
           section_id: sectionId || "",
           table_number: tableId || "",
+          app_source: "user_app",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
         }
       );
 

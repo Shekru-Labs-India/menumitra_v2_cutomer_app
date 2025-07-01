@@ -76,7 +76,8 @@ function EditProfile() {
         body: JSON.stringify({
           mobile: formData.phoneNumber,
           name: formData.name,
-          user_id: userData.userId
+          user_id: userData.userId,
+          app_source: "user_app",
         })
       });
 

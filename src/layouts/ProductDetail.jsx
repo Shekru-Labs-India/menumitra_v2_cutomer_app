@@ -150,6 +150,7 @@ function ProductDetail() {
             menu_id: Number(menuId),
             menu_cat_id: Number(menuCatId),
             user_id: Number(user_id) || null,
+            app_source: "user_app",
           }
         );
 

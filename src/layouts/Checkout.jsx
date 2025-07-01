@@ -239,6 +239,7 @@ function Checkout() {
         {
           outlet_id: outletId,
           order_items: orderItems,
+            app_source: "user_app",
         },
         {
           headers: {
@@ -297,6 +298,7 @@ function Checkout() {
         {
           user_id: userId,
           outlet_id: outletId,
+            app_source: "user_app",
         },
         {
           headers: {
@@ -397,6 +399,7 @@ function Checkout() {
       order_type: orderType || "dine-in", // Fallback to takeaway if no order type
       order_items: orderItems,
       action: "create_order",
+      app_source: "user_app",
     };
 
     // Add table_id only for dine-in orders
@@ -464,6 +467,7 @@ function Checkout() {
           outlet_id: outletId.toString(),
           section_id: sectionId.toString(),
           order_type: "dine-in",
+          app_source: "user_app",
           table_id: localStorage.getItem("tableId").toString(), // Add this line
 
           order_items: orderItems,
@@ -517,6 +521,7 @@ function Checkout() {
           order_id: existingOrderModal.orderDetails.order_id.toString(),
           user_id: userId.toString(),
           outlet_id: outletId.toString(),
+          app_source: "user_app",
           order_items: orderItems,
         },
         {
@@ -558,7 +563,7 @@ function Checkout() {
         "https://men4u.xyz/v2/common/verify_coupon",
         {
           coupon_code: couponCode,
-          app_source: "customer_App",
+          app_source: "user_App",
         }
       );
       if (response.data?.success) {

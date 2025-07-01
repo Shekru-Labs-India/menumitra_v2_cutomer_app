@@ -201,6 +201,7 @@ function Orders() {
           body: JSON.stringify({
             user_id: parseInt(userId),
             outlet_id: outletId,
+            app_source: "user_app",
           }),
         }
       );
@@ -289,6 +290,7 @@ function Orders() {
         {
           user_id: parseInt(userId),
           outlet_id: outletId,
+          app_source: "user_app",
         },
         {
           headers: { Authorization: `Bearer ${accessToken}` },
@@ -483,6 +485,7 @@ function Orders() {
           outlet_id: outletId,
           order_id: selectedOrderId,
           note: reason,
+          app_source: "user_app",
         },
         {
           headers: { Authorization: `Bearer ${accessToken}` },

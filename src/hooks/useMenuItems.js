@@ -30,7 +30,8 @@ export const useMenuItems = () => {
         },
         body: JSON.stringify({
           outlet_id: outletId,
-          user_id: userData?.userId || null
+          user_id: userData?.userId || null,
+          app_source: "user_app",
         })
       });
 
