@@ -81,6 +81,12 @@ function Orders() {
 
   const [expandedUdhariPaidDates, setExpandedUdhariPaidDates] = useState({});
 
+  // Add state for udhariPendingOrders
+  const [udhariPendingOrders, setUdhariPendingOrders] = useState([]);
+
+  // Add state for managing expansion of date accordions for pending orders
+  const [expandedPendingDates, setExpandedPendingDates] = useState({});
+
   useEffect(() => {
     // Call both APIs independently
     fetchOngoingOrders();
@@ -139,17 +145,28 @@ function Orders() {
     setExpandedCancelledDates({});
   };
 
-  // Helper to group udhari_paid orders by date
+  // Fix groupUdhariPaidByDate to always group by date (Month DD, YYYY)
   const groupUdhariPaidByDate = (orders) => {
     const grouped = {};
     orders.forEach((order) => {
-      // Try to get date from order.datetime or fallback to order.time (if needed)
-      let dateStr = order.datetime
-        ? order.datetime.split(" ").slice(0, 3).join(" ")
-        : order.time;
-      if (!dateStr) dateStr = "Unknown Date";
-      if (!grouped[dateStr]) grouped[dateStr] = [];
-      grouped[dateStr].push(order);
+      let formattedDate = "Unknown Date";
+      if (order.datetime) {
+        // Always use only the first three parts for the date
+        const parts = order.datetime.split(" ");
+        if (parts.length >= 3) {
+          const [day, mon, year] = parts;
+          const dateObj = new Date(`${mon} ${day}, ${year}`);
+          if (!isNaN(dateObj)) {
+            formattedDate = dateObj.toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            });
+          }
+        }
+      }
+      if (!grouped[formattedDate]) grouped[formattedDate] = [];
+      grouped[formattedDate].push(order);
     });
     return grouped;
   };
@@ -223,8 +240,33 @@ function Orders() {
           totalAmount: order.final_grand_total,
           paymentMethod: order.payment_method || "Not selected",
           time: order.time,
+          tableNumber: order.table_number,
+          sectionName: order.section_name,
         }));
         setUdhariPaidOrders(mappedUdhariPaid);
+
+        // Extract udhari_pending orders and flatten them into a single array
+        const udhariPendingRaw = data.detail.lists.udhari_pending || {};
+        const udhariPendingList = Object.values(udhariPendingRaw).flat();
+        const mappedUdhariPending = udhariPendingList.map((order) => ({
+          id: order.order_number,
+          orderId: order.order_id,
+          orderNumber: order.order_number,
+          itemCount: order.menu_count,
+          status: order.order_status,
+          iconColor: "#FFA902",
+          iconBgClass: "bg-warning",
+          isExpanded: false,
+          parentId: "accordionExamplePending",
+          orderType: order.order_type,
+          outletName: order.outlet_name,
+          totalAmount: order.final_grand_total,
+          paymentMethod: order.payment_method || "Not selected",
+          time: order.time,
+          tableNumber: order.table_number,
+          sectionName: order.section_name,
+        }));
+        setUdhariPendingOrders(mappedUdhariPending);
       }
     } catch (err) {
       console.error("Error fetching order history:", err);
@@ -466,6 +508,31 @@ function Orders() {
     setShowAuthOffcanvas(true);
   };
 
+  // Group udhariPendingOrders by date
+  const udhariPendingGrouped = groupUdhariPaidByDate(udhariPendingOrders);
+
+  // Handler for expanding/collapsing individual date accordions for pending orders
+  const togglePendingDateExpansion = (date) => {
+    setExpandedPendingDates((prev) => ({
+      ...prev,
+      [date]: !prev[date],
+    }));
+  };
+
+  // Handler for expanding all pending date accordions
+  const handleExpandAllPending = () => {
+    const newExpandedState = {};
+    Object.keys(udhariPendingGrouped).forEach((date) => {
+      newExpandedState[date] = true;
+    });
+    setExpandedPendingDates(newExpandedState);
+  };
+
+  // Handler for collapsing all pending date accordions
+  const handleCollapseAllPending = () => {
+    setExpandedPendingDates({});
+  };
+
   // First check if user is not logged in
   if (!user) {
     return (
@@ -684,35 +751,67 @@ function Orders() {
               >
                 <div className="accordion style-3" id="accordionExamplePending">
                   {error.ongoing !== "404" &&
-                  Object.keys(udhariPaidGrouped).length > 0 ? (
-                    <div className="accordion" id="accordionUdhariPaid">
-                      {Object.entries(udhariPaidGrouped).map(
+                  Object.keys(udhariPendingGrouped).length > 0 ? (
+                    <>
+                      {/* Expand/Collapse All for Pending Orders */}
+                      <div className="d-flex justify-content-end align-items-center mb-3">
+                        <button
+                          className="btn btn-sm btn-link text-dark p-0"
+                          onClick={
+                            Object.values(expandedPendingDates).some((e) => e)
+                              ? handleCollapseAllPending
+                              : handleExpandAllPending
+                          }
+                          aria-expanded={Object.values(
+                            expandedPendingDates
+                          ).some((e) => e)}
+                        >
+                          <span>
+                            {Object.values(expandedPendingDates).some((e) => e)
+                              ? "Collapse All"
+                              : "Expand All"}
+                          </span>
+                          <i
+                            className={`ms-2 fas ${
+                              Object.values(expandedPendingDates).some((e) => e)
+                                ? "fa-chevron-up"
+                                : "fa-chevron-down"
+                            }`}
+                          ></i>
+                        </button>
+                      </div>
+                      {Object.entries(udhariPendingGrouped).map(
                         ([dateKey, orders]) => (
                           <div className="accordion-item" key={dateKey}>
                             <h2
                               className="accordion-header"
-                              id={"headingUdhari" + dateKey.replace(/\s/g, "")}
+                              id={
+                                "headingUdhariPending" +
+                                dateKey.replace(/\s/g, "")
+                              }
                             >
                               <button
                                 className={
                                   "btn btn-link w-100 d-flex justify-content-between align-items-center p-0 " +
-                                  (!expandedUdhariPaidDates[dateKey]
+                                  (!expandedPendingDates[dateKey]
                                     ? "collapsed"
                                     : "")
                                 }
                                 type="button"
                                 data-bs-toggle="collapse"
                                 data-bs-target={
-                                  "#collapseUdhari" + dateKey.replace(/\s/g, "")
+                                  "#collapseUdhariPending" +
+                                  dateKey.replace(/\s/g, "")
                                 }
                                 aria-expanded={
-                                  expandedUdhariPaidDates[dateKey] || false
+                                  expandedPendingDates[dateKey] || false
                                 }
                                 aria-controls={
-                                  "collapseUdhari" + dateKey.replace(/\s/g, "")
+                                  "collapseUdhariPending" +
+                                  dateKey.replace(/\s/g, "")
                                 }
                                 onClick={() =>
-                                  toggleUdhariPaidDateExpansion(dateKey)
+                                  togglePendingDateExpansion(dateKey)
                                 }
                               >
                                 <span className="flex-grow-1 text-start">
@@ -721,7 +820,7 @@ function Orders() {
                                 <span className="me-2">{orders.length}</span>
                                 <i
                                   className={`ms-2 fas ${
-                                    expandedUdhariPaidDates[dateKey]
+                                    expandedPendingDates[dateKey]
                                       ? "fa-chevron-up"
                                       : "fa-chevron-down"
                                   }`}
@@ -729,15 +828,19 @@ function Orders() {
                               </button>
                             </h2>
                             <div
-                              id={"collapseUdhari" + dateKey.replace(/\s/g, "")}
+                              id={
+                                "collapseUdhariPending" +
+                                dateKey.replace(/\s/g, "")
+                              }
                               className={
                                 "accordion-collapse collapse " +
-                                (expandedUdhariPaidDates[dateKey] ? "show" : "")
+                                (expandedPendingDates[dateKey] ? "show" : "")
                               }
                               aria-labelledby={
-                                "headingUdhari" + dateKey.replace(/\s/g, "")
+                                "headingUdhariPending" +
+                                dateKey.replace(/\s/g, "")
                               }
-                              data-bs-parent="#accordionUdhariPaid"
+                              data-bs-parent="#accordionUdhariPending"
                             >
                               <div className="accordion-body">
                                 {orders.map((order) => (
@@ -765,7 +868,7 @@ function Orders() {
                           </div>
                         )
                       )}
-                    </div>
+                    </>
                   ) : (
                     <NoOrders message="No pending orders" />
                   )}

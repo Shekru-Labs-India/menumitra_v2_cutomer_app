@@ -388,6 +388,17 @@ const OrderAccordionItem = ({
                   >
                     <i className="bi bi-x-circle-fill me-1"></i>Cancelled
                   </span>
+                ) : status === "udhari_pending" ? (
+                  <span
+                    className="badge bg-warning text-dark"
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: 500,
+                      borderRadius: "6px",
+                    }}
+                  >
+                    <i className="fa fa-hourglass-half me-1"></i>Udhari Pending
+                  </span>
                 ) : null}
               </div>
               <p
