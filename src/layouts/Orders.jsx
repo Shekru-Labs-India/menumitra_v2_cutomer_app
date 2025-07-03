@@ -266,6 +266,7 @@ function Orders() {
           time: order.time,
           tableNumber: order.table_number,
           sectionName: order.section_name,
+          datetime: order.datetime,
         }));
         setUdhariPendingOrders(mappedUdhariPending);
       }
@@ -753,8 +754,7 @@ function Orders() {
                 tabIndex={0}
               >
                 <div className="accordion style-3" id="accordionExamplePending">
-                  {error.ongoing !== "404" &&
-                  Object.keys(udhariPendingGrouped).length > 0 ? (
+                  {Object.keys(udhariPendingGrouped).length > 0 ? (
                     <>
                       {/* Expand/Collapse All for Pending Orders */}
                       <div className="d-flex justify-content-end align-items-center mb-3">
@@ -860,8 +860,12 @@ function Orders() {
                                     outletName={order.outletName}
                                     orderType={order.orderType}
                                     totalAmount={order.totalAmount}
-                                    paymentStatus={order.paymentStatus}
-                                    orderTime={order.time}
+                                    paymentStatus={
+                                      order.status === "udhari_pending"
+                                        ? "Udhari Pending"
+                                        : order.paymentStatus
+                                    }
+                                    orderTime={order.time || order.orderTime}
                                     tableNumber={order.tableNumber}
                                     sectionName={order.sectionName}
                                   />

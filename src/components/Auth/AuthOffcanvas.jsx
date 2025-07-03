@@ -173,6 +173,7 @@ const AuthOffcanvas = () => {
     try {
       const { data } = await api.post("/common/login", {
         mobile: phoneNumber,
+        app_type: "customer",
       });
 
       if (data.role === "customer") {
@@ -245,6 +246,7 @@ const AuthOffcanvas = () => {
       const { data } = await api.post("/common/verify_otp", {
         mobile: phoneNumber,
         otp: otp,
+        app_type: "customer",
         ...deviceInfo,
       });
 
@@ -327,7 +329,6 @@ const AuthOffcanvas = () => {
               value={phoneNumber}
               onChange={(e) => {
                 const value = e.target.value.replace(/\D/g, "");
-                // Only allow if first digit is 6,7,8,9 or empty
                 if (
                   value === "" ||
                   (/^[6-9]/.test(value) && value.length <= 10)
@@ -337,7 +338,7 @@ const AuthOffcanvas = () => {
               }}
               onFocus={handleInputFocus}
               placeholder="Enter your phone number"
-              pattern="[6-9][0-9]{9}"
+              pattern="^[6-9][0-9]{9}$"
               maxLength="10"
               required
               disabled={isLoading}
@@ -466,7 +467,7 @@ const AuthOffcanvas = () => {
               }}
               onFocus={handleInputFocus}
               placeholder="Enter your phone number"
-              pattern="[6-9]{10}"
+              pattern="^[6-9][0-9]{9}$"
               maxLength="10"
               required
               disabled={isLoading}

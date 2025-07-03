@@ -117,12 +117,12 @@ function EditProfile() {
       <div className="page-content">
         <div className="container">
           <div className="edit-profile">
-            <div className="profile-image">
+            {/* <div className="profile-image">
               <div className="media media-100 rounded-circle">
                 <img src={defaultAvatar} alt="Profile" />
               </div>
               <a href="javascript:void(0);">Change profile photo</a>
-            </div>
+            </div> */}
             {error && (
               <div className="alert alert-danger py-2 mb-3">
                 {error}

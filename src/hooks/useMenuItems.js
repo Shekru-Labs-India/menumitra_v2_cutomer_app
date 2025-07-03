@@ -56,6 +56,7 @@ export const useMenuItems = () => {
           categoryName: menu.category_name,
           spicyIndex: menu.spicy_index,
           portions: menu.portions,
+          price: menu.price,
           rating: menu.rating,
           offer: menu.offer,
           isSpecial: menu.is_special,

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination } from "swiper/modules";
+import { Pagination, Autoplay } from "swiper/modules";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useCart } from "../contexts/CartContext";
@@ -154,7 +154,11 @@ function ProductDetail() {
           }
         );
 
-        setMenuDetails(response.data.details);
+        setMenuDetails({
+          ...response.data.details,
+          images:
+            response.data.details.menu_images?.map((img) => img.image) || [],
+        });
       } catch (error) {
         console.error("Error fetching menu details:", error);
       }
@@ -204,10 +208,14 @@ function ProductDetail() {
         <div className="content-body bottom-content">
           <div className="swiper-btn-center-lr my-0">
             <Swiper
-              modules={[Pagination]}
+              modules={[Pagination, Autoplay]}
               pagination={{
                 el: ".swiper-pagination",
                 clickable: true,
+              }}
+              autoplay={{
+                delay: 3000,
+                disableOnInteraction: false,
               }}
               className="demo-swiper swiper-initialized swiper-horizontal swiper-pointer-events swiper-watch-progress swiper-backface-hidden"
             >

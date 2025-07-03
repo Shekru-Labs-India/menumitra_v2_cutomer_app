@@ -97,7 +97,7 @@ function AllOutlets() {
             "Content-Type": "application/json",
             Accept: "application/json",
             Authorization: `Bearer ${userData?.accessToken}`,
-            app_source:"customer_app",
+            app_source: "customer_app",
           },
         }
       );
@@ -135,7 +135,15 @@ function AllOutlets() {
     <>
       <Header />
       <div className="page-content">
-        <div className="container">
+        <div
+          className="container"
+          style={{
+            paddingBottom: 80,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
           {/* Title Section */}
           {/* <div className="d-flex justify-content-between align-items-center mb-3">
             <h6 className="mb-0">All Restaurants</h6>
@@ -281,7 +289,7 @@ function AllOutlets() {
               No restaurants found matching your filters
             </div>
           ) : (
-            <div className="d-flex flex-column gap-2">
+            <div className="d-flex flex-column gap-2" style={{ width: "100%" }}>
               {filteredOutlets.map((outlet) => (
                 <div
                   key={outlet.outlet_id}

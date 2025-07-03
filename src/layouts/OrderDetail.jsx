@@ -8,6 +8,7 @@ import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import toast from "react-hot-toast";
 import MenuMitra from "../assets/logo.png";
+import FeedbackButton from "../components/FeedbackButton";
 
 function OrderDetail() {
   const { orderId } = useParams();
@@ -615,40 +616,90 @@ function OrderDetail() {
           </div>
 
           {/* Bill Details */}
-          <div className="card dz-card mt-3">
-            <div className="card-header border-0 pb-0 d-flex justify-content-between align-items-center">
-              <h5 className="card-title">Payment Details</h5>
+          <div className="card dz-card mt-3" style={{ padding: "12px 0" }}>
+            <div
+              className="card-header border-0 pb-0 d-flex justify-content-between align-items-center"
+              style={{ paddingBottom: 4, paddingTop: 8 }}
+            >
+              <h5
+                className="card-title"
+                style={{ fontSize: 16, marginBottom: 0 }}
+              >
+                Payment Details
+              </h5>
               {orderDetails.order_details.payment_method && (
                 <span className="badge bg-primary-light text-primary">
                   {orderDetails.order_details.payment_method}
                 </span>
               )}
             </div>
-            <div className="card-body pt-3">
+            <div
+              className="card-body pt-3"
+              style={{ paddingTop: 8, paddingBottom: 8 }}
+            >
               <ul className="list-group list-group-flush">
-                <li className="list-group-item d-flex justify-content-between px-0">
+                <li
+                  className="list-group-item d-flex justify-content-between px-0"
+                  style={{ paddingTop: 4, paddingBottom: 4, marginBottom: 0 }}
+                >
                   <span>Total</span>
                   <strong>
-                    ₹{orderDetails.order_details.total_bill_amount}
+                    ₹
+                    {Number(
+                      orderDetails.order_details.total_bill_amount
+                    ).toFixed(2)}
                   </strong>
                 </li>
+                {orderDetails.order_details.discount_amount > 0 && (
+                  <li
+                    className="list-group-item d-flex justify-content-between px-0"
+                    style={{ paddingTop: 4, paddingBottom: 4, marginBottom: 0 }}
+                  >
+                    <span>
+                      Discount
+                      {orderDetails.order_details.discount_percent > 0
+                        ? ` (${orderDetails.order_details.discount_percent}%)`
+                        : ""}
+                    </span>
+                    <strong style={{ color: "#e74c3c" }}>
+                      -₹
+                      {Number(
+                        orderDetails.order_details.discount_amount
+                      ).toFixed(2)}
+                    </strong>
+                  </li>
+                )}
                 {orderDetails.order_details.special_discount > 0 && (
-                  <li className="list-group-item d-flex justify-content-between px-0 text-success">
+                  <li
+                    className="list-group-item d-flex justify-content-between px-0"
+                    style={{ paddingTop: 4, paddingBottom: 4, marginBottom: 0 }}
+                  >
                     <span>Special Discount</span>
-                    <strong>
-                      -₹{orderDetails.order_details.special_discount}
+                    <strong style={{ color: "#e74c3c" }}>
+                      -₹
+                      {Number(
+                        orderDetails.order_details.special_discount
+                      ).toFixed(2)}
                     </strong>
                   </li>
                 )}
                 {orderDetails.order_details.charges > 0 && (
-                  <li className="list-group-item d-flex justify-content-between px-0">
+                  <li
+                    className="list-group-item d-flex justify-content-between px-0"
+                    style={{ paddingTop: 4, paddingBottom: 4, marginBottom: 0 }}
+                  >
                     <span>Extra Charges</span>
-                    <strong>+₹{orderDetails.order_details.charges}</strong>
+                    <strong style={{ color: "#22A45D" }}>
+                      +₹{Number(orderDetails.order_details.charges).toFixed(2)}
+                    </strong>
                   </li>
                 )}
-                <li className="list-group-item d-flex justify-content-between px-0">
-                  <span>Subtotal</span>
-                  <strong>
+                <li
+                  className="list-group-item d-flex justify-content-between px-0"
+                  style={{ paddingTop: 4, paddingBottom: 4, marginBottom: 0 }}
+                >
+                  <span style={{ fontWeight: 700 }}>Subtotal</span>
+                  <span style={{ fontWeight: 700 }}>
                     ₹
                     {(
                       Number(
@@ -658,35 +709,61 @@ function OrderDetail() {
                       Number(orderDetails.order_details.special_discount || 0) +
                       Number(orderDetails.order_details.charges || 0)
                     ).toFixed(2)}
-                  </strong>
+                  </span>
                 </li>
                 {orderDetails.order_details.service_charges_amount > 0 && (
-                  <li className="list-group-item d-flex justify-content-between px-0">
+                  <li
+                    className="list-group-item d-flex justify-content-between px-0"
+                    style={{ paddingTop: 4, paddingBottom: 4, marginBottom: 0 }}
+                  >
                     <span>
                       Service Charges (
                       {orderDetails.order_details.service_charges_percent}%)
                     </span>
-                    <strong>
-                      +₹{orderDetails.order_details.service_charges_amount}
+                    <strong style={{ color: "#22A45D" }}>
+                      +₹
+                      {Number(
+                        orderDetails.order_details.service_charges_amount
+                      ).toFixed(2)}
                     </strong>
                   </li>
                 )}
                 {orderDetails.order_details.gst_amount > 0 && (
-                  <li className="list-group-item d-flex justify-content-between px-0">
+                  <li
+                    className="list-group-item d-flex justify-content-between px-0"
+                    style={{ paddingTop: 4, paddingBottom: 4, marginBottom: 0 }}
+                  >
                     <span>GST ({orderDetails.order_details.gst_percent}%)</span>
-                    <strong>+₹{orderDetails.order_details.gst_amount}</strong>
+                    <strong style={{ color: "#22A45D" }}>
+                      +₹
+                      {Number(orderDetails.order_details.gst_amount).toFixed(2)}
+                    </strong>
                   </li>
                 )}
                 {orderDetails.order_details.tip > 0 && (
-                  <li className="list-group-item d-flex justify-content-between px-0">
+                  <li
+                    className="list-group-item d-flex justify-content-between px-0"
+                    style={{ paddingTop: 4, paddingBottom: 4, marginBottom: 0 }}
+                  >
                     <span>Tip</span>
-                    <strong>+₹{orderDetails.order_details.tip}</strong>
+                    <strong style={{ color: "#22A45D" }}>
+                      +₹{Number(orderDetails.order_details.tip).toFixed(2)}
+                    </strong>
                   </li>
                 )}
-                <li className="list-group-item d-flex justify-content-between px-0 border-0">
+              </ul>
+              <hr style={{ margin: "8px 0" }} />
+              <ul className="list-group list-group-flush">
+                <li
+                  className="list-group-item d-flex justify-content-between px-0 border-0"
+                  style={{ paddingTop: 4, paddingBottom: 4, marginBottom: 0 }}
+                >
                   <h6 className="mb-0 fw-bold">Grand Total</h6>
                   <h6 className="mb-0 fw-bold">
-                    ₹{orderDetails.order_details.final_grand_total}
+                    ₹
+                    {Number(
+                      orderDetails.order_details.final_grand_total
+                    ).toFixed(2)}
                   </h6>
                 </li>
               </ul>
@@ -694,7 +771,7 @@ function OrderDetail() {
               {orderDetails.order_details.order_payment_settle_type &&
                 orderDetails.order_details.order_payment_settle_type !==
                   "null" && (
-                  <div className="mt-3 pt-3 border-top">
+                  <div style={{ marginTop: 4 }}>
                     <span className="text-soft">
                       Settlement Type:{" "}
                       {orderDetails.order_details.order_payment_settle_type}
@@ -704,11 +781,14 @@ function OrderDetail() {
             </div>
           </div>
 
-          {/* Invoice Button */}
-          {orderDetails.order_details.order_status &&
-            orderDetails.order_details.order_status.toLowerCase() ===
-              "paid" && (
-              <div className="d-flex justify-content-end mt-3">
+          {/* Invoice and Feedback Buttons */}
+          <div className="d-flex justify-content-between align-items-center mt-3">
+            <div>
+              <FeedbackButton />
+            </div>
+            {orderDetails.order_details.order_status &&
+              orderDetails.order_details.order_status.toLowerCase() ===
+                "paid" && (
                 <button
                   className="d-flex align-items-center"
                   style={{
@@ -731,8 +811,8 @@ function OrderDetail() {
                   ></i>
                   Invoice
                 </button>
-              </div>
-            )}
+              )}
+          </div>
 
           {/* Table Information */}
           {/* {orderDetails.order_details.table_number && 

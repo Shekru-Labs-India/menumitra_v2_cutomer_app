@@ -1,11 +1,45 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import AuthOffcanvas from "../components/Auth/AuthOffcanvas";
+import { useAuth } from "../contexts/AuthContext";
 
 function CustomerSavings() {
   const [savingsData, setSavingsData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { user, showAuthOffcanvas, setShowAuthOffcanvas } = useAuth();
+
+  // Handler to open AuthOffcanvas
+  const handleLogin = () => setShowAuthOffcanvas(true);
+
+  // If not logged in, show AuthOffcanvas and login prompt
+  if (!user) {
+    return (
+      <>
+        <Header />
+        <AuthOffcanvas
+          isOpen={showAuthOffcanvas}
+          onClose={() => setShowAuthOffcanvas(false)}
+        />
+        <div className="page-content bottom-content">
+          <div
+            className="container d-flex flex-column justify-content-center align-items-center"
+            style={{ minHeight: "60vh" }}
+          >
+            <div className="text-center">
+              <h5>Please login to view your savings.</h5>
+              <br />
+              <button className="btn btn-primary mt-3" onClick={handleLogin}>
+                Login Now
+              </button>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
   useEffect(() => {
     const fetchSavingsData = async () => {
@@ -19,31 +53,34 @@ function CustomerSavings() {
           throw new Error("Authentication token not found");
         }
 
-        const response = await fetch('https://men4u.xyz/v2/user/get_user_count', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`
-          },
-          body: JSON.stringify({ 
-            user_id: parseInt(userId),
-            app_source: "user_app",
-          })
-        });
+        const response = await fetch(
+          "https://men4u.xyz/v2/user/get_user_count",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+              user_id: parseInt(userId),
+              app_source: "user_app",
+            }),
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Failed to fetch savings data");
         }
 
         const data = await response.json();
-        
+
         if (data.detail) {
           setSavingsData(data.detail);
         } else {
           throw new Error("Invalid response format");
         }
       } catch (error) {
-        console.error('Error fetching savings data:', error);
+        console.error("Error fetching savings data:", error);
         setError(error.message);
       } finally {
         setIsLoading(false);
@@ -95,9 +132,14 @@ function CustomerSavings() {
       <div className="page-content bottom-content">
         <div className="container px-3">
           {/* Total Savings Card */}
-          <div className="card border-0 mb-4" style={{ backgroundColor: '#027335' }}>
+          <div
+            className="card border-0 mb-4"
+            style={{ backgroundColor: "#027335" }}
+          >
             <div className="card-body text-white py-3">
-              <h6 className="mb-3 fw-normal text-center text-white">Total Savings</h6>
+              <h6 className="mb-3 fw-normal text-center text-white">
+                Total Savings
+              </h6>
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <span className="fw-light">Regular Discount</span>
                 <span className="fs-5">₹{savingsData.regular_discount}</span>
@@ -112,28 +154,44 @@ function CustomerSavings() {
           {/* Statistics Cards */}
           <div className="row g-3 mb-4">
             <div className="col-6">
-              <div className="card h-100" style={{ 
-                border: '1px solid #E5E7EB', 
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-              }}>
+              <div
+                className="card h-100"
+                style={{
+                  border: "1px solid #E5E7EB",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                }}
+              >
                 <div className="card-body p-3 d-flex flex-column justify-content-center align-items-center">
                   <div className="fs-3 fw-bold text-dark mb-1">
                     {savingsData.user_count}
                   </div>
-                  <div className="text-muted small" style={{ color: '#6B7280' }}>Total Orders</div>
+                  <div
+                    className="text-muted small"
+                    style={{ color: "#6B7280" }}
+                  >
+                    Total Orders
+                  </div>
                 </div>
               </div>
             </div>
             <div className="col-6">
-              <div className="card h-100" style={{ 
-                border: '1px solid #E5E7EB', 
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-              }}>
+              <div
+                className="card h-100"
+                style={{
+                  border: "1px solid #E5E7EB",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                }}
+              >
                 <div className="card-body p-3 d-flex flex-column justify-content-center align-items-center">
                   <div className="fs-3 fw-bold text-dark mb-1">
                     ₹{savingsData.total_amount_spent}
                   </div>
-                  <div className="text-muted small" style={{ color: '#6B7280' }}>Amount Spent</div>
+                  <div
+                    className="text-muted small"
+                    style={{ color: "#6B7280" }}
+                  >
+                    Amount Spent
+                  </div>
                 </div>
               </div>
             </div>
@@ -141,35 +199,52 @@ function CustomerSavings() {
 
           {/* Outlet Details */}
           {Object.entries(savingsData.outlet_wise_data).map(([key, outlet]) => (
-            <div key={key} className="card mb-4" style={{ 
-              border: '1px solid #E5E7EB', 
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-              backgroundColor: '#FFFFFF'
-            }}>
+            <div
+              key={key}
+              className="card mb-4"
+              style={{
+                border: "1px solid #E5E7EB",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                backgroundColor: "#FFFFFF",
+              }}
+            >
               <div className="card-body p-3">
                 <h6 className="mb-4 fw-semibold">{outlet.outlet_name}</h6>
                 <div className="d-flex justify-content-between align-items-center mb-3">
-                  <span style={{ color: '#A1A5B7' }}>Orders</span>
-                  <span className="badge bg-success rounded-pill px-3">{outlet.order_count}</span>
+                  <span style={{ color: "#A1A5B7" }}>Orders</span>
+                  <span className="badge bg-success rounded-pill px-3">
+                    {outlet.order_count}
+                  </span>
                 </div>
                 <div className="d-flex justify-content-between align-items-center mb-3">
-                  <span style={{ color: '#A1A5B7' }}>Amount Spent</span>
-                  <span className="text-dark">₹{outlet.total_amount_spent}</span>
+                  <span style={{ color: "#A1A5B7" }}>Amount Spent</span>
+                  <span className="text-dark">
+                    ₹{outlet.total_amount_spent}
+                  </span>
                 </div>
                 <div className="d-flex justify-content-between align-items-center mb-3">
-                  <span style={{ color: '#A1A5B7' }}>Regular Discount</span>
-                  <span style={{ color: '#027335' }}>₹{outlet.regular_discount}</span>
+                  <span style={{ color: "#A1A5B7" }}>Regular Discount</span>
+                  <span style={{ color: "#027335" }}>
+                    ₹{outlet.regular_discount}
+                  </span>
                 </div>
                 <div className="d-flex justify-content-between align-items-center mb-3">
-                  <span style={{ color: '#A1A5B7' }}>Special Discount</span>
-                  <span style={{ color: '#027335' }}>₹{outlet.special_discount}</span>
+                  <span style={{ color: "#A1A5B7" }}>Special Discount</span>
+                  <span style={{ color: "#027335" }}>
+                    ₹{outlet.special_discount}
+                  </span>
                 </div>
                 <div className="d-flex justify-content-between align-items-center">
-                  <span style={{ color: '#A1A5B7' }}>Complementary Items</span>
-                  <span className="badge rounded-pill px-3" style={{ 
-                    backgroundColor: '#E8F3FF',
-                    color: '#3699FF'
-                  }}>{outlet.complementary_count}</span>
+                  <span style={{ color: "#A1A5B7" }}>Complementary Items</span>
+                  <span
+                    className="badge rounded-pill px-3"
+                    style={{
+                      backgroundColor: "#E8F3FF",
+                      color: "#3699FF",
+                    }}
+                  >
+                    {outlet.complementary_count}
+                  </span>
                 </div>
               </div>
             </div>
