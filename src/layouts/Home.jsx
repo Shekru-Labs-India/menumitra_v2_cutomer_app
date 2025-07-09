@@ -18,6 +18,7 @@ import OutletInfoBanner from "../components/OutletInfoBanner";
 import SearchBar from "../components/SearchBar";
 import axios from "axios";
 import OfferBanner from "./OfferBanner";
+import { useCacheData } from '../contexts/CacheDataContext';
 
 const API_BASE_URL = "https://men4u.xyz/v2";
 
@@ -74,6 +75,7 @@ function Home() {
 
   const { outletId } = useOutlet();
   const { openModal } = useModal();
+  const { fetchData } = useCacheData();
 
   const [filteredMenuItems, setFilteredMenuItems] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -253,10 +255,11 @@ function Home() {
     setFilteredMenuItems(searchResults);
   };
 
-  // Refactored fetchMenuListByCategory using axios
+  // Update the fetchMenuListByCategory function in Home.jsx
   const fetchMenuListByCategory = async () => {
     try {
-      const { data } = await api.post("/user/get_all_menu_list_by_category", {
+      // Use caching system instead of axios
+      const data = await fetchData("get_all_menu_list_by_category", {
         outlet_id: outletId,
         app_source: "user_app",
       });

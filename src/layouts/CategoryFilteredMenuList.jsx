@@ -4,8 +4,8 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import VerticalMenuCard from '../components/VerticalMenuCard';
 import { useOutlet } from '../contexts/OutletContext';
+import { useCacheData } from '../contexts/CacheDataContext';
 
-const API_BASE_URL = "https://men4u.xyz/v2";
 const DEFAULT_IMAGE = 'https://as2.ftcdn.net/jpg/02/79/12/03/1000_F_279120368_WzIoR2LV2Cgy33oxy6eEKQYSkaWr8AFU.jpg';
 
 function CategoryFilteredMenuList() {
@@ -14,6 +14,7 @@ function CategoryFilteredMenuList() {
   const categoryName = location.state?.categoryName;
   const menuCount = location.state?.menuCount;
   const { outletId } = useOutlet();
+  const { fetchData } = useCacheData();
 
   const [categoryData, setCategoryData] = useState({
     category: null,
@@ -31,25 +32,14 @@ function CategoryFilteredMenuList() {
 
       console.log('🔄 Fetching menus for category:', categoryId);
       try {
-        const authData = localStorage.getItem('auth');
-        const userData = authData ? JSON.parse(authData) : null;
-
         console.log('📦 Using outlet ID:', outletId);
 
-        const response = await fetch(`${API_BASE_URL}/user/get_all_menu_list_by_category`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${userData?.accessToken}`
-          },
-          body: JSON.stringify({
-            outlet_id: outletId,
-            user_id: userData?.userId || null
-          })
+        // Use caching system instead of direct fetch
+        const data = await fetchData('get_all_menu_list_by_category', {
+          outlet_id: outletId,
+          app_source: "user_app"
         });
 
-        const data = await response.json();
         console.log('✅ API Response:', data);
         
         if (data.detail) {
@@ -78,8 +68,10 @@ function CategoryFilteredMenuList() {
       }
     };
 
-    fetchMenusByCategory();
-  }, [categoryId, categoryName, menuCount]); // Removed outletId dependency
+    if (outletId && categoryId) {
+      fetchMenusByCategory();
+    }
+  }, [categoryId, categoryName, menuCount, outletId, fetchData]); // Added fetchData as dependency
 
   if (loading) {
     return (

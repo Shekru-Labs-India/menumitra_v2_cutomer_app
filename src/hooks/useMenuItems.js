@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useOutlet } from '../contexts/OutletContext';
-
-const API_BASE_URL = 'https://men4u.xyz/v2';
+import { useCacheData } from '../contexts/CacheDataContext';
 
 export const useMenuItems = () => {
   const [menuCategories, setMenuCategories] = useState([]);
@@ -9,6 +8,7 @@ export const useMenuItems = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const { outletId } = useOutlet();
+  const { fetchData } = useCacheData();
 
   const fetchMenusByCategory = async () => {
     if (!outletId) {
@@ -18,24 +18,12 @@ export const useMenuItems = () => {
 
     console.log('🔄 Fetching menu items for outlet:', outletId);
     try {
-      const authData = localStorage.getItem('auth');
-      const userData = authData ? JSON.parse(authData) : null;
-
-      const response = await fetch(`${API_BASE_URL}/user/get_all_menu_list_by_category`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${userData?.accessToken}`
-        },
-        body: JSON.stringify({
-          outlet_id: outletId,
-          user_id: userData?.userId || null,
-          app_source: "user_app",
-        })
+      // Use caching system instead of direct fetch
+      const data = await fetchData('get_all_menu_list_by_category', {
+        outlet_id: outletId,
+        app_source: "user_app",
       });
-
-      const data = await response.json();
+      
       console.log('✅ Menu API Response:', data);
 
       if (data.detail) {
@@ -64,9 +52,6 @@ export const useMenuItems = () => {
           isActive: menu.is_active,
           image: menu.image
         })) || [];
-
-        // console.log('✨ Formatted categories:', categories);
-        // console.log('✨ Formatted menu items:', menus);
 
         setMenuCategories(categories);
         setMenuItems(menus);
