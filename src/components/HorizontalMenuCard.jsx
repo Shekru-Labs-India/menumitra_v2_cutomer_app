@@ -134,6 +134,9 @@ const HorizontalMenuCard = ({
   const { outletId } = useOutlet();
   const { clearCacheItem, generateCacheKey } = useCacheData();
 
+  // Check if this menu item belongs to the current outlet
+  const isCurrentOutlet = menuItem?.outletId === outletId;
+
   const handleFavoriteToggle = async (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -264,33 +267,35 @@ const HorizontalMenuCard = ({
             </span>
           )}
           
-          {/* Updated favorite icon */}
-          <span
-            className={`favorite-icon ${isFavorite ? "active" : ""} ${isLoading ? "disabled" : ""}`}
-            onClick={handleFavoriteToggle}
-            style={{
-              position: "absolute",
-              right: 2,
-              bottom: 2,
-              background: "#fff",
-              borderRadius: "50%",
-              width: 18,
-              height: 18,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
-              border: "1.5px solid #fff",
-              cursor: isLoading ? "not-allowed" : "pointer",
-              zIndex: 3,
-              pointerEvents: isLoading ? "none" : "auto",
-            }}
-          >
-            <i
-              className={`fa-${isFavorite ? "solid" : "regular"} fa-heart`}
-              style={{ color: isFavorite ? "#e74c3c" : "#ccc", fontSize: 12 }}
-            ></i>
-          </span>
+          {/* Updated favorite icon - only show for current outlet */}
+          {isCurrentOutlet && (
+            <span
+              className={`favorite-icon ${isFavorite ? "active" : ""} ${isLoading ? "disabled" : ""}`}
+              onClick={handleFavoriteToggle}
+              style={{
+                position: "absolute",
+                right: 2,
+                bottom: 2,
+                background: "#fff",
+                borderRadius: "50%",
+                width: 18,
+                height: 18,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
+                border: "1.5px solid #fff",
+                cursor: isLoading ? "not-allowed" : "pointer",
+                zIndex: 3,
+                pointerEvents: isLoading ? "none" : "auto",
+              }}
+            >
+              <i
+                className={`fa-${isFavorite ? "solid" : "regular"} fa-heart`}
+                style={{ color: isFavorite ? "#e74c3c" : "#ccc", fontSize: 12 }}
+              ></i>
+            </span>
+          )}
         </div>
         {/* Right side - Content */}
         <div className="ms-2 flex-grow-1 pe-1">
