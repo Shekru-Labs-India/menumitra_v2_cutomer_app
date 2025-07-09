@@ -125,24 +125,18 @@ const VerticalMenuCard = ({
   title,
   currentPrice,
   reviewCount,
-  isFavorite: initialIsFavorite = false,
+  isFavorite = false,
   discount,
   menuItem = {},
   onFavoriteUpdate,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
   const { openModal } = useModal();
   const { cartItems, updateQuantity, removeFromCart, getCartItemComment } =
     useCart();
   const { user, setShowAuthOffcanvas } = useAuth();
   const { outletId } = useOutlet();
   const MAX_QUANTITY = 20;
-
-  // Sync local isFavorite state with prop
-  React.useEffect(() => {
-    setIsFavorite(initialIsFavorite);
-  }, [initialIsFavorite]);
 
   // Generate the product URL from menuItem data with safety checks
   const detailPageUrl =
@@ -206,12 +200,10 @@ const VerticalMenuCard = ({
       const data = await response.json();
 
       if (response.ok) {
-        setIsFavorite(!isFavorite);
         onFavoriteUpdate(menuItem.menuId, !isFavorite);
       } else {
         console.error("Failed to update favorite status:", data.detail);
         if (data.detail === "Menu already in favorites") {
-          setIsFavorite(true); // Force UI update to show as favorite
           onFavoriteUpdate(menuItem.menuId, true);
           window.alert("Menu is already in your favorites.");
         } else {

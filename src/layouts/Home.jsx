@@ -218,6 +218,14 @@ function Home() {
       }
       return newIds;
     });
+    // Update filteredMenuItems so isFavourite persists
+    setFilteredMenuItems((prev) =>
+      prev.map((item) =>
+        item.menuId === menuId || item.menu_id === menuId
+          ? { ...item, isFavourite: isFavorite ? 1 : 0 }
+          : item
+      )
+    );
   };
 
   const outletParams = extractOutletParamsFromPath(location.pathname);
@@ -272,7 +280,7 @@ function Home() {
               spicyIndex: menu.spicy_index,
               portions: menu.portions,
               rating: menu.rating,
-              price:menu.price,
+              price: menu.price,
               offer: menu.offer,
               isSpecial: menu.is_special,
               isFavourite: menu.is_favourite,
@@ -528,10 +536,7 @@ function Home() {
                           reviewCount={
                             menuItem.rating ? parseInt(menuItem.rating) : null
                           }
-                          isFavorite={
-                            favoriteMenuIds.has(menuItem.menuId) ||
-                            menuItem.isFavourite === 1
-                          }
+                          isFavorite={menuItem.is_favourite === 1}
                           discount={
                             menuItem.offer > 0 ? `${menuItem.offer}%` : null
                           }
@@ -620,56 +625,32 @@ function Home() {
                             className="horizontal-menu-card"
                           >
                             <HorizontalMenuCard
-                              image={menuItem.image || null}
-                              title={
-                                <>
-                                  {typeof menuItem.spicyIndex !==
-                                    "undefined" && (
-                                    <span className="me-1">
-                                      {[...Array(3)].map((_, index) => {
-                                        const spicyIndex = Number(
-                                          menuItem.spicyIndex
-                                        );
-                                        let color = "#E0E0E0"; // default: white/grey
-                                        if (spicyIndex === 1) {
-                                          color =
-                                            index === 0 ? "#22A45D" : "#E0E0E0"; // green, rest white
-                                        } else if (spicyIndex === 2) {
-                                          color =
-                                            index < 2 ? "#FFA500" : "#E0E0E0"; // orange, last white
-                                        } else if (spicyIndex === 3) {
-                                          color = "#FF2D2D"; // all red
-                                        }
-                                        return (
-                                          <i
-                                            key={index}
-                                            className="fa-solid fa-pepper-hot"
-                                            style={{
-                                              color,
-                                              fontSize: 12,
-                                              marginRight: 0,
-                                            }}
-                                          ></i>
-                                        );
-                                      })}
-                                    </span>
-                                  )}
-                                  {menuItem.menu_name}
-                                </>
+                              image={
+                                menuItem.image ? (
+                                  menuItem.image
+                                ) : (
+                                  <i
+                                    className="fa-solid fa-utensils"
+                                    style={{
+                                      fontSize: 56,
+                                      opacity: 0.15,
+                                      color: "#888",
+                                    }}
+                                  ></i>
+                                )
                               }
+                              title={menuItem.menu_name}
                               currentPrice={
                                 menuItem.portions && menuItem.portions[0]
                                   ? menuItem.portions[0].price
                                   : 0
                               }
-                              originalPrice={
-                                menuItem.portions && menuItem.portions[0]
-                                  ? menuItem.portions[0].price +
-                                    (menuItem.portions[0].price *
-                                      menuItem.offer) /
-                                      100
-                                  : 0
+                              reviewCount={
+                                menuItem.rating
+                                  ? parseFloat(menuItem.rating)
+                                  : null
                               }
+                              isFavorite={menuItem.is_favourite === 1}
                               discount={
                                 menuItem.offer > 0 ? `${menuItem.offer}%` : null
                               }
@@ -677,20 +658,20 @@ function Home() {
                                 menuId: menuItem.menu_id,
                                 menuCatId: menuItem.menu_cat_id,
                                 menuName: menuItem.menu_name,
+                                menuFoodType: menuItem.menu_food_type,
+                                categoryName: menuItem.category_name,
+                                spicyIndex: menuItem.spicy_index,
                                 portions: menuItem.portions,
-                                image: menuItem.image,
+                                rating: menuItem.rating,
                                 offer: menuItem.offer,
-                                // rating: menuItem.rating,
-                                description: menuItem.description,
-                                spicyIndex:
-                                  menuItem.spicy_index ||
-                                  menuItem.spicy ||
-                                  menuItem.spicy_level,
+                                isSpecial: menuItem.is_special,
+                                isFavourite: menuItem.is_favourite === 1,
+                                isActive: true,
+                                image: menuItem.image,
+                                outletName: menuItem.outlet_name,
+                                outletId: menuItem.outlet_id,
                               }}
-                              onFavoriteClick={() =>
-                                handleFavoriteClick(menuItem.menu_id)
-                              }
-                              isFavorite={menuItem.is_favourite === 1}
+                              onFavoriteUpdate={handleFavoriteClick}
                             />
                           </div>
                         ))}
