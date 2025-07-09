@@ -135,8 +135,12 @@ const HorizontalMenuCard = ({
   const { outletId } = useOutlet();
   const { clearCacheItem, generateCacheKey } = useCacheData();
 
+  // Convert isFavorite to boolean if it's a number - add this line
+  const isFavoriteBoolean = typeof isFavorite === 'number' ? isFavorite === 1 : Boolean(isFavorite);
+
   // Check if this menu item belongs to the current outlet
-  const isCurrentOutlet = menuItem?.outletId === outletId;
+  // const isCurrentOutlet = menuItem?.outletId === outletId;
+  const isCurrentOutlet = true;
 
   const handleFavoriteToggle = async (e) => {
     e.preventDefault();
@@ -160,7 +164,7 @@ const HorizontalMenuCard = ({
         return;
       }
 
-      const apiUrl = isFavorite
+      const apiUrl = isFavoriteBoolean
         ? "https://men4u.xyz/v2/user/remove_favourite_menu"
         : "https://men4u.xyz/v2/user/save_favourite_menu";
 
@@ -194,7 +198,7 @@ const HorizontalMenuCard = ({
         clearCacheItem(menuListCacheKey);
         clearCacheItem(specialMenuCacheKey);
         
-        onFavoriteUpdate(menuItem.menuId, !isFavorite);
+        onFavoriteUpdate(menuItem.menuId, !isFavoriteBoolean);
       } else {
         console.error("Failed to update favorite status:", data.detail);
         if (data.detail === "Menu already in favorites") {
@@ -290,32 +294,36 @@ const HorizontalMenuCard = ({
           
           {/* Updated favorite icon - only show for current outlet */}
           {isCurrentOutlet && (
-            <span
-              className={`favorite-icon ${isFavorite ? "active" : ""} ${isLoading ? "disabled" : ""}`}
+            <a
+              href="javascript:void(0);"
+              className={`${isLoading ? "disabled" : ""}`}
               onClick={handleFavoriteToggle}
               style={{
                 position: "absolute",
                 right: 2,
                 bottom: 2,
-                background: "#fff",
-                borderRadius: "50%",
-                width: 18,
-                height: 18,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
-                border: "1.5px solid #fff",
-                cursor: isLoading ? "not-allowed" : "pointer",
-                zIndex: 3,
                 pointerEvents: isLoading ? "none" : "auto",
+                cursor: "pointer",
+                textDecoration: "none",
+                zIndex: 3,
               }}
             >
-              <i
-                className={`fa-${isFavorite ? "solid" : "regular"} fa-heart`}
-                style={{ color: isFavorite ? "#e74c3c" : "#ccc", fontSize: 12 }}
-              ></i>
-            </span>
+              <div className={`like-button ${isFavoriteBoolean ? "active" : ""}`}>
+                <i
+                  className={`fa-${isFavoriteBoolean ? "solid" : "regular"} fa-heart`}
+                  style={{
+                    fontSize: "16px",
+                    color: isFavoriteBoolean ? "#dc3545" : "#6c757d",
+                    lineHeight: 1,
+                    background: "#fff",
+                    padding: "4px",
+                    borderRadius: "50%",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
+                    border: "1.5px solid #fff",
+                  }}
+                />
+              </div>
+            </a>
           )}
         </div>
         {/* Right side - Content */}
@@ -381,7 +389,7 @@ HorizontalMenuCard.propTypes = {
   currentPrice: PropTypes.number,
   discount: PropTypes.string,
   menuItem: PropTypes.object,
-  isFavorite: PropTypes.bool,
+  isFavorite: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
   onFavoriteUpdate: PropTypes.func.isRequired,
   image: PropTypes.oneOfType([PropTypes.string, PropTypes.node]), // Add image prop type
 };
