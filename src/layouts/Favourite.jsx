@@ -249,29 +249,12 @@ function Favourite() {
                         {menus.map((menu) => (
                           <div className="mb-2" key={menu.menu_id}>
                             <HorizontalMenuCard
-                              image={
-                                menu.image ? (
-                                  menu.image
-                                ) : (
-                                  <i
-                                    className="fa-solid fa-utensils"
-                                    style={{
-                                      fontSize: 56,
-                                      opacity: 0.15,
-                                      color: "#888",
-                                    }}
-                                  ></i>
-                                )
-                              }
+                              image={menu.image && Array.isArray(menu.image) && menu.image.length > 0 ? menu.image[0].image : null}
                               title={menu.menu_name}
                               currentPrice={menu.portions?.[0]?.price || 0}
-                              reviewCount={
-                                menu.rating ? parseFloat(menu.rating) : null
-                              }
+                              reviewCount={menu.rating ? parseFloat(menu.rating) : null}
                               isFavorite={true}
-                              discount={
-                                menu.offer > 0 ? `${menu.offer}%` : null
-                              }
+                              discount={menu.offer > 0 ? `${menu.offer}%` : null}
                               menuItem={{
                                 menuId: menu.menu_id,
                                 menuCatId: menu.menu_cat_id,
@@ -285,7 +268,9 @@ function Favourite() {
                                 isSpecial: menu.is_special,
                                 isFavourite: true,
                                 isActive: true,
-                                image: menu.image,
+                                image: menu.image && Array.isArray(menu.image) && menu.image.length > 0 
+                                  ? menu.image[0].image 
+                                  : null,
                                 outletName: menu.outlet_name,
                                 outletId: menu.outlet_id,
                               }}

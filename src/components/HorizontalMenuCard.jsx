@@ -127,6 +127,7 @@ const HorizontalMenuCard = ({
   menuItem = {},
   isFavorite = false,
   onFavoriteUpdate,
+  image, // Add image prop
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { openModal } = useModal();
@@ -235,7 +236,7 @@ const HorizontalMenuCard = ({
             flexShrink: 0,
             overflow: "hidden",
           }}>
-          {/* Fork & Knife icon as background */}
+          {/* Background icon */}
           <i
             className="fa-solid fa-utensils"
             style={{
@@ -252,6 +253,26 @@ const HorizontalMenuCard = ({
               pointerEvents: "none",
             }}
           ></i>
+          
+          {/* Menu Image */}
+          {typeof image === 'string' && (
+            <img
+              src={image}
+              alt={title}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                position: "absolute",
+                left: 0,
+                top: 0,
+                zIndex: 2,
+              }}
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
+          )}
           
           {/* Veg/Nonveg/Vegan/Egg icon in bottom-left */}
           {menuItem.menuFoodType && (
@@ -362,6 +383,7 @@ HorizontalMenuCard.propTypes = {
   menuItem: PropTypes.object,
   isFavorite: PropTypes.bool,
   onFavoriteUpdate: PropTypes.func.isRequired,
+  image: PropTypes.oneOfType([PropTypes.string, PropTypes.node]), // Add image prop type
 };
 
 export default HorizontalMenuCard;
