@@ -142,16 +142,13 @@ function OrderDetail() {
         return;
       }
 
+      // Destructure at the top level correctly
       const { order_details, menu_details } = orderDetails;
-      const outlet_name =
-        localStorage.getItem("outlet_name") || order_details.outlet_name || "";
+      const outlet_name = localStorage.getItem("outlet_name") || order_details.outlet_name || "";
       const outlet_address = localStorage.getItem("outlet_address") || "-";
       const outlet_mobile = localStorage.getItem("outlet_mobile") || "-";
       const website_url = "https://menumitra.com";
-      const customerName =
-        localStorage.getItem("customerName") ||
-        order_details.customer_name ||
-        "Guest";
+      const customerName = localStorage.getItem("customerName") || order_details.user_name || "Guest";
 
       // Add current date and time for PDF generation timestamp
       const now = new Date();
@@ -321,9 +318,7 @@ function OrderDetail() {
             </div>
             <div style="text-align: right;">
               <p style="margin: 0 0 10px 0; font-weight: bold;">Payment Method</p>
-              <p style="margin: 5px 0; text-transform: uppercase;">${
-                order_details.payment_method || ""
-              }</p>
+              <p style="margin: 5px 0; text-transform: uppercase;">${order_details.payment_method || ""}</p>
         </div>
           </div>
 
