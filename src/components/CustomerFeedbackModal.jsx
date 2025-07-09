@@ -47,6 +47,20 @@ const CustomerFeedbackModal = ({ show, onClose }) => {
       if (/^[6-9]\d{0,9}$/.test(numbersOnly)) {
         setForm((prev) => ({ ...prev, [name]: numbersOnly }));
       }
+    } else if (name === 'order_number') {
+      // Allow empty value for clearing the input
+      if (value === '') {
+        setForm((prev) => ({ ...prev, [name]: '' }));
+        return;
+      }
+
+      // Remove any non-digit characters
+      const numbersOnly = value.replace(/\D/g, '');
+      
+      // Only update if the value contains 6-12 digits
+      if (/^\d{0,12}$/.test(numbersOnly)) {
+        setForm((prev) => ({ ...prev, [name]: numbersOnly }));
+      }
     } else {
       setForm((prev) => ({ ...prev, [name]: value }));
     }
@@ -56,6 +70,13 @@ const CustomerFeedbackModal = ({ show, onClose }) => {
     e.preventDefault();
     setError("");
     setSuccess("");
+
+    // Add order number validation
+    if (form.order_number && form.order_number.length < 6) {
+      setError("Order number must be at least 6 digits.");
+      return;
+    }
+
     if (!form.feedback_description.trim() || !form.feedback_rating) {
       setError("Feedback and rating are required.");
       return;
