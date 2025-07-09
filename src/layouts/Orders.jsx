@@ -70,22 +70,14 @@ function Orders() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [selectedOrderNumber, setSelectedOrderNumber] = useState(null);
-  const [cancelOrderStatus, setCancelOrderStatus] = useState(true);
+  const [cancelOrderStatus, _setCancelOrderStatus] = useState(true); // Prefix with _ to indicate intentionally unused
   const navigate = useNavigate();
 
   // State for managing expansion of date accordions
   const [expandedCompletedDates, setExpandedCompletedDates] = useState({});
   const [expandedCancelledDates, setExpandedCancelledDates] = useState({});
-
-  const [udhariPaidOrders, setUdhariPaidOrders] = useState([]);
-
-  const [expandedUdhariPaidDates, setExpandedUdhariPaidDates] = useState({});
-
-  // Add state for udhariPendingOrders
-  const [udhariPendingOrders, setUdhariPendingOrders] = useState([]);
-
-  // Add state for managing expansion of date accordions for pending orders
   const [expandedPendingDates, setExpandedPendingDates] = useState({});
+  const [udhariPendingOrders, setUdhariPendingOrders] = useState([]);
 
   useEffect(() => {
     // Call both APIs independently
@@ -146,39 +138,13 @@ function Orders() {
   };
 
   // Fix groupUdhariPaidByDate to always group by date (Month DD, YYYY)
-  const groupUdhariPaidByDate = (orders) => {
-    const grouped = {};
-    orders.forEach((order) => {
-      let formattedDate = "Unknown Date";
-      if (order.datetime) {
-        // Always use only the first three parts for the date
-        const parts = order.datetime.split(" ");
-        if (parts.length >= 3) {
-          const [day, mon, year] = parts;
-          const dateObj = new Date(`${mon} ${day}, ${year}`);
-          if (!isNaN(dateObj)) {
-            formattedDate = dateObj.toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            });
-          }
-        }
-      }
-      if (!grouped[formattedDate]) grouped[formattedDate] = [];
-      grouped[formattedDate].push(order);
-    });
-    return grouped;
-  };
+  // const groupUdhariPaidByDate = (orders) => { ... };
 
-  const udhariPaidGrouped = groupUdhariPaidByDate(udhariPaidOrders);
-
-  const toggleUdhariPaidDateExpansion = (date) => {
-    setExpandedUdhariPaidDates((prev) => ({
-      ...prev,
-      [date]: !prev[date],
-    }));
-  };
+  // Remove the groupUdhariPaidByDate function and udhariPaidGrouped constant since we don't need them anymore
+  // const udhariPaidGrouped = groupUdhariPaidByDate(udhariPaidOrders);
+  
+  // Remove the toggleUdhariPaidDateExpansion function since we don't need it anymore
+  // const toggleUdhariPaidDateExpansion = (date) => { ... };
 
   const fetchCompletedOrders = async () => {
     try {
@@ -217,34 +183,12 @@ function Orders() {
         const transformedData = {
           paid: data.detail.lists.paid || {},
           complimentary_paid: data.detail.lists.complimentary_paid || {},
+          complementary_paid: data.detail.lists.complementary_paid || {},
           cancelled: data.detail.lists.cancelled || {},
-          // Add any other order types here
+          udhari_paid: data.detail.lists.udhari_paid || {},
+          udhari_pending: data.detail.lists.udhari_pending || {},
         };
         setOrdersData(transformedData);
-
-        // Extract udhari_paid orders and flatten them into a single array
-        const udhariPaidRaw = data.detail.lists.udhari_paid || {};
-        const udhariPaidList = Object.values(udhariPaidRaw).flat();
-        // Map to match ongoingOrders structure
-        const mappedUdhariPaid = udhariPaidList.map((order) => ({
-          id: order.order_number,
-          orderId: order.order_id,
-          orderNumber: order.order_number,
-          itemCount: order.menu_count,
-          status: order.order_status,
-          iconColor: "#FFA902",
-          iconBgClass: "bg-warning",
-          isExpanded: false,
-          parentId: "accordionExample1",
-          orderType: order.order_type,
-          outletName: order.outlet_name,
-          totalAmount: order.final_grand_total,
-          paymentMethod: order.payment_method || "Not selected",
-          time: order.time,
-          tableNumber: order.table_number,
-          sectionName: order.section_name,
-        }));
-        setUdhariPaidOrders(mappedUdhariPaid);
 
         // Extract udhari_pending orders and flatten them into a single array
         const udhariPendingRaw = data.detail.lists.udhari_pending || {};
@@ -356,6 +300,7 @@ function Orders() {
     const getOrderStatus = (order) => {
       switch (order.order_status) {
         case "complimentary_paid":
+        case "complementary_paid":
           return {
             status: "Complimentary",
             iconColor: "#6c5ce7",
@@ -364,6 +309,12 @@ function Orders() {
         case "paid":
           return {
             status: "Completed",
+            iconColor: "#00B67A",
+            iconBgClass: "bg-success",
+          };
+        case "udhari_paid":
+          return {
+            status: "Udhari Paid",
             iconColor: "#00B67A",
             iconBgClass: "bg-success",
           };
@@ -400,19 +351,15 @@ function Orders() {
           outletName: order.outlet_name,
           orderType: order.order_type,
           totalAmount: order.final_grand_total,
-          paymentStatus:
-            order.order_status === "complimentary_paid"
-              ? "Complimentary"
-              : order.order_status === "paid"
-              ? "Paid"
-              : order.order_status === "cancelled"
-              ? "Cancelled"
-              : order.payment_status,
+          paymentStatus: status,
           orderTime: order.time,
           tableNumber: order.table_number,
           sectionName: order.section_name,
         };
       });
+
+      // Sort orders by order number in descending order
+      orders.sort((a, b) => parseInt(b.orderNumber) - parseInt(a.orderNumber));
 
       if (isCancelled) {
         transformedOrders.cancelledByDate[formattedDate] = {
@@ -425,7 +372,7 @@ function Orders() {
           transformedOrders.completedByDate[formattedDate].orders = [
             ...transformedOrders.completedByDate[formattedDate].orders,
             ...orders,
-          ];
+          ].sort((a, b) => parseInt(b.orderNumber) - parseInt(a.orderNumber)); // Sort after merging
           transformedOrders.completedByDate[formattedDate].orderCount +=
             orders.length;
         } else {
@@ -446,12 +393,18 @@ function Orders() {
     }
 
     // Process complimentary paid orders
-    if (orders.complimentary_paid) {
-      Object.entries(orders.complimentary_paid).forEach(
-        ([dateKey, orderList]) => {
-          processOrders(orderList, dateKey);
-        }
-      );
+    if (orders.complimentary_paid || orders.complementary_paid) {
+      const complimentaryOrders = orders.complimentary_paid || orders.complementary_paid;
+      Object.entries(complimentaryOrders).forEach(([dateKey, orderList]) => {
+        processOrders(orderList, dateKey);
+      });
+    }
+
+    // Process udhari paid orders
+    if (orders.udhari_paid) {
+      Object.entries(orders.udhari_paid).forEach(([dateKey, orderList]) => {
+        processOrders(orderList, dateKey);
+      });
     }
 
     // Process cancelled orders
@@ -480,7 +433,7 @@ function Orders() {
       const accessToken = auth.accessToken;
       if (!accessToken) throw new Error("Authentication token not found");
 
-      const { data } = await axios.post(
+      await axios.post(
         "https://men4u.xyz/v2/user/cancel_order",
         {
           outlet_id: outletId,
@@ -493,11 +446,11 @@ function Orders() {
         }
       );
 
-      setCancelOrderStatus(true);
+      _setCancelOrderStatus(true);
       await fetchOngoingOrders();
       handleCloseCancelModal();
     } catch (err) {
-      setCancelOrderStatus(false);
+      _setCancelOrderStatus(false);
       console.error("Error cancelling order:", err);
     }
   };
@@ -513,20 +466,32 @@ function Orders() {
   };
 
   // Group udhariPendingOrders by date
-  const udhariPendingGrouped = groupUdhariPaidByDate(udhariPendingOrders);
+  // const udhariPendingGrouped = groupUdhariPaidByDate(udhariPendingOrders);
 
-  // Handler for expanding/collapsing individual date accordions for pending orders
-  const togglePendingDateExpansion = (date) => {
-    setExpandedPendingDates((prev) => ({
-      ...prev,
-      [date]: !prev[date],
-    }));
-  };
+  // Group pending orders by date using the same logic as completed orders
+  const pendingOrdersByDate = {};
+  udhariPendingOrders.forEach(order => {
+    const dateKey = order.datetime.split(' ').slice(0, 3).join(' ');
+    if (!pendingOrdersByDate[dateKey]) {
+      pendingOrdersByDate[dateKey] = {
+        date: dateKey,
+        orderCount: 0,
+        orders: []
+      };
+    }
+    pendingOrdersByDate[dateKey].orders.push(order);
+    pendingOrdersByDate[dateKey].orderCount++;
+  });
+
+  // Sort pending orders by order number in descending order
+  Object.values(pendingOrdersByDate).forEach(dateGroup => {
+    dateGroup.orders.sort((a, b) => parseInt(b.orderNumber) - parseInt(a.orderNumber));
+  });
 
   // Handler for expanding all pending date accordions
   const handleExpandAllPending = () => {
     const newExpandedState = {};
-    Object.keys(udhariPendingGrouped).forEach((date) => {
+    Object.keys(pendingOrdersByDate).forEach((date) => {
       newExpandedState[date] = true;
     });
     setExpandedPendingDates(newExpandedState);
@@ -535,6 +500,14 @@ function Orders() {
   // Handler for collapsing all pending date accordions
   const handleCollapseAllPending = () => {
     setExpandedPendingDates({});
+  };
+
+  // Handler for expanding/collapsing individual date accordions for pending orders
+  const togglePendingDateExpansion = (date) => {
+    setExpandedPendingDates((prev) => ({
+      ...prev,
+      [date]: !prev[date],
+    }));
   };
 
   // First check if user is not logged in
@@ -754,9 +727,8 @@ function Orders() {
                 tabIndex={0}
               >
                 <div className="accordion style-3" id="accordionExamplePending">
-                  {Object.keys(udhariPendingGrouped).length > 0 ? (
+                  {Object.keys(pendingOrdersByDate).length > 0 ? (
                     <>
-                      {/* Expand/Collapse All for Pending Orders */}
                       <div className="d-flex justify-content-end align-items-center mb-3">
                         <button
                           className="btn btn-sm btn-link text-dark p-0"
@@ -765,9 +737,7 @@ function Orders() {
                               ? handleCollapseAllPending
                               : handleExpandAllPending
                           }
-                          aria-expanded={Object.values(
-                            expandedPendingDates
-                          ).some((e) => e)}
+                          aria-expanded={Object.values(expandedPendingDates).some((e) => e)}
                         >
                           <span>
                             {Object.values(expandedPendingDates).some((e) => e)
@@ -783,98 +753,73 @@ function Orders() {
                           ></i>
                         </button>
                       </div>
-                      {Object.entries(udhariPendingGrouped).map(
-                        ([dateKey, orders]) => (
-                          <div className="accordion-item" key={dateKey}>
-                            <h2
-                              className="accordion-header"
-                              id={
-                                "headingUdhariPending" +
-                                dateKey.replace(/\s/g, "")
-                              }
-                            >
-                              <button
-                                className={
-                                  "btn btn-link w-100 d-flex justify-content-between align-items-center p-0 " +
-                                  (!expandedPendingDates[dateKey]
-                                    ? "collapsed"
-                                    : "")
-                                }
-                                type="button"
-                                data-bs-toggle="collapse"
-                                data-bs-target={
-                                  "#collapseUdhariPending" +
-                                  dateKey.replace(/\s/g, "")
-                                }
-                                aria-expanded={
-                                  expandedPendingDates[dateKey] || false
-                                }
-                                aria-controls={
-                                  "collapseUdhariPending" +
-                                  dateKey.replace(/\s/g, "")
-                                }
-                                onClick={() =>
-                                  togglePendingDateExpansion(dateKey)
-                                }
-                              >
-                                <span className="flex-grow-1 text-start">
-                                  {dateKey}
-                                </span>
-                                <span className="me-2">{orders.length}</span>
-                                <i
-                                  className={`ms-2 fas ${
-                                    expandedPendingDates[dateKey]
-                                      ? "fa-chevron-up"
-                                      : "fa-chevron-down"
-                                  }`}
-                                ></i>
-                              </button>
-                            </h2>
-                            <div
-                              id={
-                                "collapseUdhariPending" +
-                                dateKey.replace(/\s/g, "")
-                              }
+                      {Object.entries(pendingOrdersByDate).map(([dateKey, dailyData]) => (
+                        <div className="accordion-item" key={dateKey}>
+                          <h2
+                            className="accordion-header"
+                            id={"headingPending" + dateKey.replace(/\s/g, "")}
+                          >
+                            <button
                               className={
-                                "accordion-collapse collapse " +
-                                (expandedPendingDates[dateKey] ? "show" : "")
+                                "btn btn-link w-100 d-flex justify-content-between align-items-center p-0 " +
+                                (!expandedPendingDates[dateKey] ? "collapsed" : "")
                               }
-                              aria-labelledby={
-                                "headingUdhariPending" +
-                                dateKey.replace(/\s/g, "")
-                              }
-                              data-bs-parent="#accordionUdhariPending"
+                              type="button"
+                              data-bs-toggle="collapse"
+                              data-bs-target={"#collapsePending" + dateKey.replace(/\s/g, "")}
+                              aria-expanded={expandedPendingDates[dateKey] || false}
+                              aria-controls={"collapsePending" + dateKey.replace(/\s/g, "")}
+                              onClick={() => togglePendingDateExpansion(dateKey)}
                             >
-                              <div className="accordion-body">
-                                {orders.map((order) => (
-                                  <OrderAccordionItem
-                                    key={order.id + "-" + order.status}
-                                    orderId={order.orderId}
-                                    orderNumber={order.orderNumber}
-                                    itemCount={order.itemCount}
-                                    status={order.status}
-                                    iconColor={order.iconColor}
-                                    iconBgClass={order.iconBgClass}
-                                    isExpanded={order.isExpanded}
-                                    parentId={order.parentId}
-                                    outletName={order.outletName}
-                                    orderType={order.orderType}
-                                    totalAmount={order.totalAmount}
-                                    paymentStatus={
-                                      order.status === "udhari_pending"
-                                        ? "Udhari Pending"
-                                        : order.paymentStatus
-                                    }
-                                    orderTime={order.time || order.orderTime}
-                                    tableNumber={order.tableNumber}
-                                    sectionName={order.sectionName}
-                                  />
-                                ))}
-                              </div>
+                              <span className="flex-grow-1 text-start">{dailyData.date}</span>
+                              <span className="me-2">{dailyData.orderCount}</span>
+                              <i
+                                className={`ms-2 fas ${
+                                  expandedPendingDates[dateKey]
+                                    ? "fa-chevron-up"
+                                    : "fa-chevron-down"
+                                }`}
+                              ></i>
+                            </button>
+                          </h2>
+                          <div
+                            id={"collapsePending" + dateKey.replace(/\s/g, "")}
+                            className={
+                              "accordion-collapse collapse " +
+                              (expandedPendingDates[dateKey] ? "show" : "")
+                            }
+                            aria-labelledby={"headingPending" + dateKey.replace(/\s/g, "")}
+                            data-bs-parent="#accordionExamplePending"
+                          >
+                            <div className="accordion-body">
+                              {dailyData.orders.map((order) => (
+                                <OrderAccordionItem
+                                  key={order.id + "-" + order.status}
+                                  orderId={order.orderId}
+                                  orderNumber={order.orderNumber}
+                                  itemCount={order.itemCount}
+                                  status={order.status}
+                                  iconColor={order.iconColor}
+                                  iconBgClass={order.iconBgClass}
+                                  isExpanded={order.isExpanded}
+                                  parentId={order.parentId}
+                                  outletName={order.outletName}
+                                  orderType={order.orderType}
+                                  totalAmount={order.totalAmount}
+                                  paymentStatus={
+                                    order.status === "udhari_pending"
+                                      ? "Udhari Pending"
+                                      : order.paymentStatus
+                                  }
+                                  orderTime={order.time || order.orderTime}
+                                  tableNumber={order.tableNumber}
+                                  sectionName={order.sectionName}
+                                />
+                              ))}
                             </div>
                           </div>
-                        )
-                      )}
+                        </div>
+                      ))}
                     </>
                   ) : (
                     <NoOrders message="No pending orders" />
