@@ -80,7 +80,7 @@ function Checkout() {
     clearCart,
   } = useCart();
   const { outletId, sectionId, outletDetails } = useOutlet();
-  const { user, setShowAuthOffcanvas } = useAuth();
+  const { user, setShowAuthOffcanvas, getAccessToken } = useAuth();
   const [checkoutDetails, setCheckoutDetails] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -559,11 +559,20 @@ function Checkout() {
     setCouponLoading(true);
     setCouponStatus(null);
     try {
+      const accessToken = getAccessToken();  // Get the access token
+      
       const response = await axios.post(
         "https://men4u.xyz/v2/common/verify_coupon",
         {
           coupon_code: couponCode,
           app_source: "user_App",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
         }
       );
       if (response.data?.success) {
