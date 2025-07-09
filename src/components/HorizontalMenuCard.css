@@ -22,8 +22,8 @@
 /* Individual card styles */
 .horizontal-menu-card {
   flex: 0 0 auto;
-  width: calc(100vw - 2rem);
-  max-width: 340px;
+  /* width: calc(100vw - 2rem); */
+  max-width: 380px;
   min-width: 200px;
   scroll-snap-align: start;
   cursor: grab;

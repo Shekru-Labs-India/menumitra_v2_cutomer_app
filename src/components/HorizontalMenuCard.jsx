@@ -207,7 +207,7 @@ const HorizontalMenuCard = ({
         <div
           className="position-relative d-flex align-items-center justify-content-center"
           style={{
-            width: "80px",
+            width: "100px",
             height: "100px",
             background: "#f5f5f5",
             borderRadius: 0,
