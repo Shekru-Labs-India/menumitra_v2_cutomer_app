@@ -268,9 +268,9 @@ const AuthOffcanvas = () => {
     setIsLoading(true);
 
     try {
-      const { data } = await api.post("/common/resend-otp", {
-        phone: phoneNumber,
-        country_code: "+91",
+      const { data } = await api.post("/common/resend_otp", {
+        mobile: phoneNumber,
+        app_type: "customer",
       });
 
       if (data.success) {
