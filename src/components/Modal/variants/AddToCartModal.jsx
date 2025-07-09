@@ -216,6 +216,7 @@ export const AddToCartModal = () => {
           {
             outlet_id: outletId,
             menu_id: modalConfig.data?.menuId || modalConfig.data?.menu_id,
+            app_source: "user_app",
           },
           {
             headers: {
