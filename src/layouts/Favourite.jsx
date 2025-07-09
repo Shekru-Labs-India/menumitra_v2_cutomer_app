@@ -2,10 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import VerticalMenuCard from "../components/VerticalMenuCard";
 import HorizontalMenuCard from "../components/HorizontalMenuCard";
 import { useAuth } from "../contexts/AuthContext";
-import { useModal } from "../contexts/ModalContext";
 import { useOutlet } from "../contexts/OutletContext";
 import { useCacheData } from "../contexts/CacheDataContext";
 import { useFavorite } from "../hooks/api/useFavorite";
@@ -15,10 +13,8 @@ function Favourite() {
   const [favoriteMenus, setFavoriteMenus] = useState([]);
   const [loading, setLoading] = useState(false);
   const { user, setShowAuthOffcanvas } = useAuth();
-  const { openModal } = useModal();
   const { outletId } = useOutlet();
   const { fetchData } = useCacheData();
-  const [expanded, setExpanded] = useState({});
   const [expandedOutlet, setExpandedOutlet] = useState({});
   const { toggleFavorite } = useFavorite();
 
@@ -144,22 +140,7 @@ function Favourite() {
     }, {});
   };
 
-  const groupByCategory = (menus) => {
-    return menus.reduce((acc, menu) => {
-      if (!acc[menu.categoryName]) acc[menu.categoryName] = [];
-      acc[menu.categoryName].push(menu);
-      return acc;
-    }, {});
-  };
-
   const groupedMenus = groupByOutlet(favoriteMenus);
-
-  const toggleCategory = (outlet, category) => {
-    setExpanded((prev) => ({
-      ...prev,
-      [`${outlet}_${category}`]: !prev[`${outlet}_${category}`],
-    }));
-  };
 
   // Check if user is not logged in
   if (!user) {
@@ -221,8 +202,7 @@ function Favourite() {
                   .filter(
                     ([outletName]) => outletName && outletName !== "undefined"
                   )
-                  .sort(([aName, aMenus], [bName, bMenus]) => {
-                    // Find outletId for each group (assume all menus in group have same outletId)
+                  .sort(([, aMenus], [, bMenus]) => {
                     const aOutletId = aMenus[0]?.outlet_id;
                     const bOutletId = bMenus[0]?.outlet_id;
                     if (String(aOutletId) === String(outletId)) return -1;
