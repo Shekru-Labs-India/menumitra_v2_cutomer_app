@@ -67,8 +67,8 @@ export const useFavorite = () => {
       }
 
       const endpoint = isFavorite 
-        ? `user/remove_favourite_menu`
-        : `user/save_favourite_menu`;
+        ? `remove_favourite_menu`
+        : `save_favourite_menu`;
 
       const response = await fetchData(endpoint, {
         outlet_id: outletId,
