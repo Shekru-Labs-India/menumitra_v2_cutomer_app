@@ -71,6 +71,7 @@ const FooterSummary = React.memo(function FooterSummary({ checkoutDetails }) {
 });
 
 function Checkout() {
+  // Move ALL hooks to the top
   const {
     cartItems,
     updateQuantity,
@@ -92,110 +93,10 @@ function Checkout() {
   const [couponStatus, setCouponStatus] = useState(null);
   const [couponLoading, setCouponLoading] = useState(false);
 
+  // Keep all your handlers and effects here
   const handleLogin = () => {
     setShowAuthOffcanvas(true);
   };
-
-  // First check if user is not logged in (regardless of cart state)
-  if (!user) {
-    return (
-      <>
-        <Header />
-        <div className="page-content">
-          <div className="content-inner pt-0">
-            <div className="container p-b20">
-              <div
-                className="d-flex align-items-center justify-content-center"
-                style={{ minHeight: "calc(100vh - 300px)" }}
-              >
-                <div className="text-center">
-                  <div className="mb-4">
-                    <svg
-                      width="80"
-                      height="80"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      style={{ opacity: "0.5" }}
-                      className="text-muted"
-                    >
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                      <circle cx="12" cy="7" r="4"></circle>
-                    </svg>
-                  </div>
-                  <h5 className="mb-3">Please Login to Cart</h5>
-                  <p className="text-muted mb-4">
-                    Login to your account to complete your order
-                  </p>
-                  <button
-                    className="btn btn-primary px-4 py-3"
-                    style={{ borderRadius: 12, fontWeight: 500 }}
-                    onClick={handleLogin}
-                  >
-                    Login Now
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <Footer />
-      </>
-    );
-  }
-
-  // Only show empty cart message if user is logged in and cart is empty
-  if (user && cartItems.length === 0) {
-    return (
-      <>
-        <Header />
-        <div className="page-content">
-          <div className="content-inner pt-0">
-            <div className="container p-b20">
-              <div
-                className="d-flex align-items-center justify-content-center"
-                style={{ minHeight: "calc(100vh - 300px)" }}
-              >
-                <div className="text-center">
-                  <div className="mb-4">
-                    <svg
-                      width="80"
-                      height="80"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      style={{ opacity: "0.5" }}
-                      className="text-muted"
-                    >
-                      <path d="M7 18a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7.16 15l.94-2h7.45a2 2 0 0 0 1.92-1.45l2.13-7.11A1 1 0 0 0 18.64 3H6.21l-.94-2H1v2h2l3.6 7.59-1.35 2.44A2 2 0 0 0 5 17h12v-2H7.42a.25.25 0 0 1-.26-.19z" />
-                    </svg>
-                  </div>
-                  <h5 className="mb-3">Your cart is empty</h5>
-                  <p className="text-muted mb-4">
-                    Add some items to your cart to get started
-                  </p>
-                  <button
-                    className="btn btn-primary px-4 py-3"
-                    style={{ borderRadius: 12, fontWeight: 500 }}
-                    onClick={() => navigate("/")}
-                  >
-                    Go to Home
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <Footer />
-      </>
-    );
-  }
 
   // Calculate subtotal
   const subtotal = getCartTotal();
@@ -607,6 +508,7 @@ function Checkout() {
     }
   };
 
+  // Instead of early returns, use conditional rendering in the return statement
   return (
     <>
       <Header />
@@ -643,337 +545,425 @@ function Checkout() {
           },
         }}
       />
-      <div
-        className="page-content"
-        style={{ background: "#f7f8fa", minHeight: "100vh" }}
-      >
-        <div
-          className="container bottom-content"
-          style={{ paddingBottom: "40px" }}
-        >
-          {/* Menu/Cart Items List */}
-          <div className="item-list style-2">
-            <ul className="list-unstyled">
-              {cartItems.length === 0 ? (
-                <div
-                  className="d-flex flex-column justify-content-center align-items-center"
-                  style={{
-                    minHeight: "60vh", // Adjust as needed for your header/footer
-                    width: "100%",
-                    // background: '#fcfbfc'
-                  }}
-                >
-                  {/* Cart SVG Icon */}
-                  <svg width="64" height="64" fill="none" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="12" fill="#f8f9fa" />
-                    <path
-                      d="M7 18a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7.16 15l.94-2h7.45a2 2 0 0 0 1.92-1.45l2.13-7.11A1 1 0 0 0 18.64 3H6.21l-.94-2H1v2h2l3.6 7.59-1.35 2.44A2 2 0 0 0 5 17h12v-2H7.42a.25.25 0 0 1-.26-.19z"
-                      fill="#adb5bd"
-                    />
-                  </svg>
-                  <span
-                    className="text-muted fs-5 mt-3 mb-2"
-                    style={{ color: "#b0b3b8" }}
-                  >
-                    Your cart is empty
-                  </span>
+      {!user ? (
+        // Not logged in view
+        <div className="page-content">
+          <div className="content-inner pt-0">
+            <div className="container p-b20">
+              <div
+                className="d-flex align-items-center justify-content-center"
+                style={{ minHeight: "calc(100vh - 300px)" }}
+              >
+                <div className="text-center">
+                  <div className="mb-4">
+                    <svg
+                      width="80"
+                      height="80"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      style={{ opacity: "0.5" }}
+                      className="text-muted"
+                    >
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                  </div>
+                  <h5 className="mb-3">Please Login to Cart</h5>
+                  <p className="text-muted mb-4">
+                    Login to your account to complete your order
+                  </p>
                   <button
-                    className="btn btn-outline-success px-4 py-3 mt-4"
+                    className="btn btn-primary px-4 py-3"
+                    style={{ borderRadius: 12, fontWeight: 500 }}
+                    onClick={handleLogin}
+                  >
+                    Login Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : cartItems.length === 0 ? (
+        // Empty cart view
+        <div className="page-content">
+          <div className="content-inner pt-0">
+            <div className="container p-b20">
+              <div
+                className="d-flex align-items-center justify-content-center"
+                style={{ minHeight: "calc(100vh - 300px)" }}
+              >
+                <div className="text-center">
+                  <div className="mb-4">
+                    <svg
+                      width="80"
+                      height="80"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      style={{ opacity: "0.5" }}
+                      className="text-muted"
+                    >
+                      <path d="M7 18a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7.16 15l.94-2h7.45a2 2 0 0 0 1.92-1.45l2.13-7.11A1 1 0 0 0 18.64 3H6.21l-.94-2H1v2h2l3.6 7.59-1.35 2.44A2 2 0 0 0 5 17h12v-2H7.42a.25.25 0 0 1-.26-.19z" />
+                    </svg>
+                  </div>
+                  <h5 className="mb-3">Your cart is empty</h5>
+                  <p className="text-muted mb-4">
+                    Add some items to your cart to get started
+                  </p>
+                  <button
+                    className="btn btn-primary px-4 py-3"
                     style={{ borderRadius: 12, fontWeight: 500 }}
                     onClick={() => navigate("/")}
                   >
                     Go to Home
                   </button>
                 </div>
-              ) : (
-                cartItems.map((item) => (
-                  <li
-                    key={`${item.menuId}-${item.portionId}`}
-                    className="mb-3 border-0"
-                    style={{ cursor: "pointer" }}
-                    onClick={() => navigate(`/product-detail/${item.menuId}`)}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        // Main checkout view
+        <div
+          className="page-content"
+          style={{ background: "#f7f8fa", minHeight: "100vh" }}
+        >
+          <div
+            className="container bottom-content"
+            style={{ paddingBottom: "40px" }}
+          >
+            {/* Menu/Cart Items List */}
+            <div className="item-list style-2">
+              <ul className="list-unstyled">
+                {cartItems.length === 0 ? (
+                  <div
+                    className="d-flex flex-column justify-content-center align-items-center"
+                    style={{
+                      minHeight: "60vh", // Adjust as needed for your header/footer
+                      width: "100%",
+                      // background: '#fcfbfc'
+                    }}
                   >
-                    <div
-                      className="bg-white rounded-4 shadow-sm position-relative p-3 border-0"
-                      style={{ minHeight: 90 }}
+                    {/* Cart SVG Icon */}
+                    <svg width="64" height="64" fill="none" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="12" fill="#f8f9fa" />
+                      <path
+                        d="M7 18a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7.16 15l.94-2h7.45a2 2 0 0 0 1.92-1.45l2.13-7.11A1 1 0 0 0 18.64 3H6.21l-.94-2H1v2h2l3.6 7.59-1.35 2.44A2 2 0 0 0 5 17h12v-2H7.42a.25.25 0 0 1-.26-.19z"
+                        fill="#adb5bd"
+                      />
+                    </svg>
+                    <span
+                      className="text-muted fs-5 mt-3 mb-2"
+                      style={{ color: "#b0b3b8" }}
                     >
-                      {/* Remove button in top right */}
-                      <button
-                        type="button"
-                        className="btn p-0 border-0 bg-transparent shadow-none position-absolute"
-                        aria-label="Remove"
-                        style={{
-                          top: 12,
-                          right: 16,
-                          fontSize: 22,
-                          color: "#b0b3b8",
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveItem(item.menuId, item.portionId);
-                        }}
+                      Your cart is empty
+                    </span>
+                    <button
+                      className="btn btn-outline-success px-4 py-3 mt-4"
+                      style={{ borderRadius: 12, fontWeight: 500 }}
+                      onClick={() => navigate("/")}
+                    >
+                      Go to Home
+                    </button>
+                  </div>
+                ) : (
+                  cartItems.map((item) => (
+                    <li
+                      key={`${item.menuId}-${item.portionId}`}
+                      className="mb-3 border-0"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => navigate(`/product-detail/${item.menuId}`)}
+                    >
+                      <div
+                        className="bg-white rounded-4 shadow-sm position-relative p-3 border-0"
+                        style={{ minHeight: 90 }}
                       >
-                        ×
-                      </button>
-                      <div className="d-flex align-items-center">
-                        <div className="flex-grow-1">
-                          <div className="d-flex align-items-center mb-1">
-                            <h5 className="mb-0" style={{ fontWeight: 600 }}>
-                              {item.menuName}
-                            </h5>
-                          </div>
-                          <div className="d-flex align-items-center mb-1">
-                            <span
-                              className="text-success me-2"
-                              style={{
-                                fontSize: 15,
-                                display: "flex",
-                                alignItems: "center",
-                              }}
-                            >
-                              <i
-                                className="fa-solid fa-utensils me-1"
-                                style={{ fontSize: 15, color: "#19b955" }}
-                              ></i>
-                              {item.portionName}
-                            </span>
-                          </div>
-                          <div className="d-flex align-items-center justify-content-between">
-                            <div className="d-flex align-items-center">
+                        {/* Remove button in top right */}
+                        <button
+                          type="button"
+                          className="btn p-0 border-0 bg-transparent shadow-none position-absolute"
+                          aria-label="Remove"
+                          style={{
+                            top: 12,
+                            right: 16,
+                            fontSize: 22,
+                            color: "#b0b3b8",
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveItem(item.menuId, item.portionId);
+                          }}
+                        >
+                          ×
+                        </button>
+                        <div className="d-flex align-items-center">
+                          <div className="flex-grow-1">
+                            <div className="d-flex align-items-center mb-1">
+                              <h5 className="mb-0" style={{ fontWeight: 600 }}>
+                                {item.menuName}
+                              </h5>
+                            </div>
+                            <div className="d-flex align-items-center mb-1">
                               <span
-                                className="fw-bold"
-                                style={{ color: "#2196f3", fontSize: 18 }}
+                                className="text-success me-2"
+                                style={{
+                                  fontSize: 15,
+                                  display: "flex",
+                                  alignItems: "center",
+                                }}
                               >
-                                ₹{item.price}
+                                <i
+                                  className="fa-solid fa-utensils me-1"
+                                  style={{ fontSize: 15, color: "#19b955" }}
+                                ></i>
+                                {item.portionName}
                               </span>
-                              {item.offer > 0 && (
-                                <>
+                            </div>
+                            <div className="d-flex align-items-center justify-content-between">
+                              <div className="d-flex align-items-center">
+                                <span
+                                  className="fw-bold"
+                                  style={{ color: "#2196f3", fontSize: 18 }}
+                                >
+                                  ₹{item.price}
+                                </span>
+                                {item.offer > 0 && (
+                                  <>
+                                    <span
+                                      className="ms-2 text-muted"
+                                      style={{
+                                        textDecoration: "line-through",
+                                        fontSize: 16,
+                                      }}
+                                    >
+                                      ₹
+                                      {item.originalPrice ||
+                                        (
+                                          item.price /
+                                          (1 - item.offer / 100)
+                                        ).toFixed(2)}
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+                              <div className="d-flex flex-column align-items-end gap-1">
+                                {item.offer > 0 && (
                                   <span
-                                    className="ms-2 text-muted"
+                                    className="text-success fw-bold mb-1"
+                                    style={{ fontSize: 16 }}
+                                  >
+                                    {item.offer}% Off
+                                  </span>
+                                )}
+                                <div className="bg-light rounded-pill d-flex align-items-center px-2 py-1">
+                                  <button
+                                    className="btn btn-link p-0 m-0"
                                     style={{
-                                      textDecoration: "line-through",
-                                      fontSize: 16,
+                                      color: "#222",
+                                      fontSize: 20,
+                                      minWidth: 28,
+                                    }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleQuantityChange(
+                                        item.menuId,
+                                        item.portionId,
+                                        item.quantity - 1
+                                      );
                                     }}
                                   >
-                                    ₹
-                                    {item.originalPrice ||
-                                      (
-                                        item.price /
-                                        (1 - item.offer / 100)
-                                      ).toFixed(2)}
+                                    –
+                                  </button>
+                                  <span
+                                    className="mx-2"
+                                    style={{
+                                      minWidth: 18,
+                                      textAlign: "center",
+                                      fontWeight: 500,
+                                    }}
+                                  >
+                                    {item.quantity}
                                   </span>
-                                </>
-                              )}
-                            </div>
-                            <div className="d-flex flex-column align-items-end gap-1">
-                              {item.offer > 0 && (
-                                <span
-                                  className="text-success fw-bold mb-1"
-                                  style={{ fontSize: 16 }}
-                                >
-                                  {item.offer}% Off
-                                </span>
-                              )}
-                              <div className="bg-light rounded-pill d-flex align-items-center px-2 py-1">
-                                <button
-                                  className="btn btn-link p-0 m-0"
-                                  style={{
-                                    color: "#222",
-                                    fontSize: 20,
-                                    minWidth: 28,
-                                  }}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleQuantityChange(
-                                      item.menuId,
-                                      item.portionId,
-                                      item.quantity - 1
-                                    );
-                                  }}
-                                >
-                                  –
-                                </button>
-                                <span
-                                  className="mx-2"
-                                  style={{
-                                    minWidth: 18,
-                                    textAlign: "center",
-                                    fontWeight: 500,
-                                  }}
-                                >
-                                  {item.quantity}
-                                </span>
-                                <button
-                                  className="btn btn-link p-0 m-0"
-                                  style={{
-                                    color: "#222",
-                                    fontSize: 20,
-                                    minWidth: 28,
-                                  }}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleQuantityChange(
-                                      item.menuId,
-                                      item.portionId,
-                                      item.quantity + 1
-                                    );
-                                  }}
-                                >
-                                  +
-                                </button>
+                                  <button
+                                    className="btn btn-link p-0 m-0"
+                                    style={{
+                                      color: "#222",
+                                      fontSize: 20,
+                                      minWidth: 28,
+                                    }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleQuantityChange(
+                                        item.menuId,
+                                        item.portionId,
+                                        item.quantity + 1
+                                      );
+                                    }}
+                                  >
+                                    +
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </li>
-                ))
-              )}
-            </ul>
-          </div>
-          {/* Summary Card - now at the top */}
-          {cartItems.length > 0 && (
-            <>
-              <div
-                className="bg-white rounded-4 shadow-sm p-3 mb-3"
-                style={{ border: "1px solid #e0e0e0", marginTop: 24 }}
-              >
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <span className="fw-bold" style={{ fontSize: 18 }}>
-                    Total
-                  </span>
-                  <span className="fw-bold" style={{ fontSize: 18 }}>
-                    ₹{checkoutDetails?.total_bill_amount || "0.00"}
-                  </span>
-                </div>
-                <hr className="my-2" style={{ borderColor: "#e0e0e0" }} />
+                    </li>
+                  ))
+                )}
+              </ul>
+            </div>
+            {/* Summary Card - now at the top */}
+            {cartItems.length > 0 && (
+              <>
                 <div
-                  className="d-flex justify-content-between align-items-center mb-1"
-                  style={{ color: "#b0b3b8" }}
+                  className="bg-white rounded-4 shadow-sm p-3 mb-3"
+                  style={{ border: "1px solid #e0e0e0", marginTop: 24 }}
                 >
-                  <span>
-                    Discount ({checkoutDetails?.discount_percent || 0}%)
-                  </span>
-                  <span>-₹{checkoutDetails?.discount_amount || "0.00"}</span>
-                </div>
-                <div
-                  className="d-flex justify-content-between align-items-center mb-1"
-                  style={{ color: "#b0b3b8" }}
-                >
-                  <span>Subtotal</span>
-                  <span>
-                    ₹
-                    {(
-                      parseFloat(checkoutDetails?.total_bill_amount || 0) -
-                      parseFloat(checkoutDetails?.discount_amount || 0)
-                    ).toFixed(2)}
-                  </span>
-                </div>
-                <div
-                  className="d-flex justify-content-between align-items-center mb-1"
-                  style={{ color: "#b0b3b8" }}
-                >
-                  <span>
-                    Service Charges (
-                    {checkoutDetails?.service_charges_percent || 0}%)
-                  </span>
-                  <span>
-                    +₹{checkoutDetails?.service_charges_amount || "0.00"}
-                  </span>
-                </div>
-                <div
-                  className="d-flex justify-content-between align-items-center mb-1"
-                  style={{ color: "#b0b3b8" }}
-                >
-                  <span>GST ({checkoutDetails?.gst_percent || 0}%)</span>
-                  <span>+₹{checkoutDetails?.gst_amount || "0.00"}</span>
-                </div>
-                <hr className="my-2" style={{ borderColor: "#e0e0e0" }} />
-                <div className="d-flex justify-content-between align-items-center">
-                  <span className="fw-bold" style={{ fontSize: 18 }}>
-                    Grand Total
-                  </span>
-                  <span className="fw-bold" style={{ fontSize: 18 }}>
-                    ₹{checkoutDetails?.final_grand_total || "0.00"}
-                  </span>
-                </div>
-              </div>
-              <div className="d-flex justify-content-center mb-4">
-                <button
-                  className="btn"
-                  style={{
-                    background: "#19b955",
-                    color: "#fff",
-                    borderRadius: 30,
-                    fontWeight: 600,
-                    fontSize: 20,
-                    minWidth: 280,
-                    boxShadow: "0 2px 8px rgba(25,185,85,0.15)",
-                  }}
-                  onClick={handleCheckout}
-                  disabled={cartItems.length === 0 || loading}
-                >
-                  Place Order{" "}
-                  <span
-                    style={{
-                      color: "#b6f5d1",
-                      fontSize: 16,
-                      fontWeight: 500,
-                      marginLeft: 4,
-                    }}
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <span className="fw-bold" style={{ fontSize: 18 }}>
+                      Total
+                    </span>
+                    <span className="fw-bold" style={{ fontSize: 18 }}>
+                      ₹{checkoutDetails?.total_bill_amount || "0.00"}
+                    </span>
+                  </div>
+                  <hr className="my-2" style={{ borderColor: "#e0e0e0" }} />
+                  <div
+                    className="d-flex justify-content-between align-items-center mb-1"
+                    style={{ color: "#b0b3b8" }}
                   >
-                    ({getCartCount()} Items)
-                  </span>
-                </button>
-              </div>
-
-              {/* Apply Coupon UI */}
-              <div className="mt-2 mb-4">
-                <label className="mb-1 fw-semibold" style={{ fontSize: 15 }}>
-                  Apply Coupon
-                </label>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Enter coupon code"
-                    value={couponCode}
-                    onChange={handleCouponInput}
-                    maxLength={20}
-                    style={{ textTransform: "uppercase", fontWeight: 500 }}
-                    autoComplete="off"
-                  />
+                    <span>
+                      Discount ({checkoutDetails?.discount_percent || 0}%)
+                    </span>
+                    <span>-₹{checkoutDetails?.discount_amount || "0.00"}</span>
+                  </div>
+                  <div
+                    className="d-flex justify-content-between align-items-center mb-1"
+                    style={{ color: "#b0b3b8" }}
+                  >
+                    <span>Subtotal</span>
+                    <span>
+                      ₹
+                      {(
+                        parseFloat(checkoutDetails?.total_bill_amount || 0) -
+                        parseFloat(checkoutDetails?.discount_amount || 0)
+                      ).toFixed(2)}
+                    </span>
+                  </div>
+                  <div
+                    className="d-flex justify-content-between align-items-center mb-1"
+                    style={{ color: "#b0b3b8" }}
+                  >
+                    <span>
+                      Service Charges (
+                      {checkoutDetails?.service_charges_percent || 0}%)
+                    </span>
+                    <span>
+                      +₹{checkoutDetails?.service_charges_amount || "0.00"}
+                    </span>
+                  </div>
+                  <div
+                    className="d-flex justify-content-between align-items-center mb-1"
+                    style={{ color: "#b0b3b8" }}
+                  >
+                    <span>GST ({checkoutDetails?.gst_percent || 0}%)</span>
+                    <span>+₹{checkoutDetails?.gst_amount || "0.00"}</span>
+                  </div>
+                  <hr className="my-2" style={{ borderColor: "#e0e0e0" }} />
+                  <div className="d-flex justify-content-between align-items-center">
+                    <span className="fw-bold" style={{ fontSize: 18 }}>
+                      Grand Total
+                    </span>
+                    <span className="fw-bold" style={{ fontSize: 18 }}>
+                      ₹{checkoutDetails?.final_grand_total || "0.00"}
+                    </span>
+                  </div>
+                </div>
+                <div className="d-flex justify-content-center mb-4">
                   <button
                     className="btn"
                     style={{
-                      background: "#b6d4fe",
-                      color: "#222",
-                      fontWeight: 500,
-                      minWidth: 70,
+                      background: "#19b955",
+                      color: "#fff",
+                      borderRadius: 30,
+                      fontWeight: 600,
+                      fontSize: 20,
+                      minWidth: 280,
+                      boxShadow: "0 2px 8px rgba(25,185,85,0.15)",
                     }}
-                    onClick={handleVerifyCoupon}
-                    disabled={!couponCode || couponLoading}
+                    onClick={handleCheckout}
+                    disabled={cartItems.length === 0 || loading}
                   >
-                    {couponLoading ? "..." : "Verify"}
+                    Place Order{" "}
+                    <span
+                      style={{
+                        color: "#b6f5d1",
+                        fontSize: 16,
+                        fontWeight: 500,
+                        marginLeft: 4,
+                      }}
+                    >
+                      ({getCartCount()} Items)
+                    </span>
                   </button>
                 </div>
-                {couponStatus && (
-                  <div
-                    className={`mt-2 fw-semibold ${
-                      couponStatus.success ? "text-success" : "text-danger"
-                    }`}
-                    style={{ fontSize: 14 }}
-                  >
-                    {couponStatus.message}
+
+                {/* Apply Coupon UI */}
+                <div className="mt-2 mb-4">
+                  <label className="mb-1 fw-semibold" style={{ fontSize: 15 }}>
+                    Apply Coupon
+                  </label>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Enter coupon code"
+                      value={couponCode}
+                      onChange={handleCouponInput}
+                      maxLength={20}
+                      style={{ textTransform: "uppercase", fontWeight: 500 }}
+                      autoComplete="off"
+                    />
+                    <button
+                      className="btn"
+                      style={{
+                        background: "#b6d4fe",
+                        color: "#222",
+                        fontWeight: 500,
+                        minWidth: 70,
+                      }}
+                      onClick={handleVerifyCoupon}
+                      disabled={!couponCode || couponLoading}
+                    >
+                      {couponLoading ? "..." : "Verify"}
+                    </button>
                   </div>
-                )}
-                <hr className="mt-3 mb-0" />
-              </div>
-            </>
-          )}
+                  {couponStatus && (
+                    <div
+                      className={`mt-2 fw-semibold ${
+                        couponStatus.success ? "text-success" : "text-danger"
+                      }`}
+                      style={{ fontSize: 14 }}
+                    >
+                      {couponStatus.message}
+                    </div>
+                  )}
+                  <hr className="mt-3 mb-0" />
+                </div>
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       <OrderExistsModal
         isOpen={existingOrderModal.isOpen}
