@@ -18,11 +18,34 @@ const CustomerFeedbackModal = ({ show, onClose }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     
-    // Add validation for customer_name field
     if (name === 'customer_name') {
       // Only allow letters and spaces
       if (/^[A-Za-z\s]*$/.test(value)) {
         setForm((prev) => ({ ...prev, [name]: value }));
+      }
+    } else if (name === 'mobile') {
+      // Allow empty value for clearing the input
+      if (value === '') {
+        setForm((prev) => ({ ...prev, [name]: '' }));
+        return;
+      }
+
+      // Remove any non-digit characters
+      const numbersOnly = value.replace(/\D/g, '');
+      
+      // Check if first digit is valid (6-9)
+      if (numbersOnly.length > 0) {
+        const firstDigit = parseInt(numbersOnly[0]);
+        if (firstDigit < 6) {
+          // Clear input if starts with 0-5
+          setForm((prev) => ({ ...prev, [name]: '' }));
+          return;
+        }
+      }
+      
+      // Limit to 10 digits and validate format
+      if (/^[6-9]\d{0,9}$/.test(numbersOnly)) {
+        setForm((prev) => ({ ...prev, [name]: numbersOnly }));
       }
     } else {
       setForm((prev) => ({ ...prev, [name]: value }));
