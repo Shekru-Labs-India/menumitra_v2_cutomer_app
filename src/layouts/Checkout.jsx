@@ -559,7 +559,7 @@ function Checkout() {
     setCouponLoading(true);
     setCouponStatus(null);
     try {
-      const accessToken = getAccessToken();  // Get the access token
+      const accessToken = getAccessToken();
       
       const response = await axios.post(
         "https://men4u.xyz/v2/common/verify_coupon",
@@ -575,21 +575,32 @@ function Checkout() {
           },
         }
       );
-      if (response.data?.success) {
+
+      if (response.data?.detail) {
+        const { detail, discount_type, discount_value } = response.data;
+        const discountText = discount_type === 'amount' 
+          ? `₹${discount_value}`
+          : `${discount_value}%`;
+          
         setCouponStatus({
           success: true,
-          message: response.data.message || "Coupon applied!",
+          message: `${detail} - You will get ${discountText} off!`,
+          couponDetails: {
+            code: response.data.coupon_code,
+            type: discount_type,
+            value: discount_value
+          }
         });
       } else {
         setCouponStatus({
           success: false,
-          message: response.data.message || "Invalid coupon.",
+          message: "Invalid coupon code.",
         });
       }
     } catch (err) {
       setCouponStatus({
         success: false,
-        message: "Invalid coupon or network error.",
+        message: err.response?.data?.detail || "Invalid coupon or network error.",
       });
     } finally {
       setCouponLoading(false);
