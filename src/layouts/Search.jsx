@@ -250,21 +250,18 @@ function Search() {
     }
   };
 
-  // Modified handleSearchChange
+  // Modified handleSearchChange to not trigger API calls
   const handleSearchChange = (event) => {
     const searchTerm = event.target.value;
-    setSearchInputValue(searchTerm); // Update the input value state
-
-    // If user clears the search, show empty state without error
+    setSearchInputValue(searchTerm); // Only update the input value state
+    
+    // If user clears the search, just clear the results
     if (!searchTerm || searchTerm.trim() === "") {
       setSearchResults([]);
       setOriginalSearchResults([]);
       setError(null);
       setIsLoading(false);
-      return;
     }
-
-    handleSearch(searchTerm);
   };
 
   // Modified handleRecentSearchClick
@@ -469,7 +466,11 @@ function Search() {
               <div className="w-100">
                 <div className="mb-0 input-group input-group-icon">
                   <div className="input-group-text">
-                    <div className="input-icon search-icon">
+                    <div 
+                      className="input-icon search-icon" 
+                      onClick={() => handleSearch(searchInputValue)} // Add click handler for search icon
+                      style={{ cursor: 'pointer' }} // Add pointer cursor
+                    >
                       <i
                         className="fas fa-search"
                         style={{ fontSize: "20px", color: "#7D8FAB" }}
@@ -579,7 +580,7 @@ function Search() {
         </div>
       </div>
 
-      {hasSearchResults() && (
+      {/* {hasSearchResults() && (
         <div
           className={`offcanvas offcanvas-start be-0 ${
             showFilter ? "show" : ""
@@ -594,7 +595,7 @@ function Search() {
             onApplyFilter={handleApplyFilter}
           />
         </div>
-      )}
+      )} */}
 
       <Footer />
     </>
