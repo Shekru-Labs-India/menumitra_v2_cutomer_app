@@ -179,11 +179,16 @@ function Orders() {
       const data = await response.json();
 
       if (data.detail && data.detail.lists) {
+        // Merge both spellings of complementary/complimentary orders
+        const complementaryOrders = {
+          ...(data.detail.lists.complementary_paid || {}),
+          ...(data.detail.lists.complimentary_paid || {})
+        };
+
         // Transform the data to include all order types
         const transformedData = {
           paid: data.detail.lists.paid || {},
-          complimentary_paid: data.detail.lists.complimentary_paid || {},
-          complementary_paid: data.detail.lists.complementary_paid || {},
+          complimentary_paid: complementaryOrders,
           cancelled: data.detail.lists.cancelled || {},
           udhari_paid: data.detail.lists.udhari_paid || {},
           udhari_pending: data.detail.lists.udhari_pending || {},
@@ -276,7 +281,44 @@ function Orders() {
     }
   };
 
-  // Transform API data for OrderAccordionItem
+  // Update the getOrderStatus function to handle both spellings
+  const getOrderStatus = (order) => {
+    switch (order.order_status) {
+      case "complimentary_paid":
+      case "complementary_paid":
+        return {
+          status: "Complimentary",
+          iconColor: "#6c5ce7",
+          iconBgClass: "bg-info",
+        };
+      case "paid":
+        return {
+          status: "Completed",
+          iconColor: "#00B67A",
+          iconBgClass: "bg-success",
+        };
+      case "udhari_paid":
+        return {
+          status: "Udhari Paid",
+          iconColor: "#00B67A",
+          iconBgClass: "bg-success",
+        };
+      case "cancelled":
+        return {
+          status: "Cancelled",
+          iconColor: "#E74C3C",
+          iconBgClass: "bg-danger",
+        };
+      default:
+        return {
+          status: order.order_status || "Completed",
+          iconColor: "#00B67A",
+          iconBgClass: "bg-success",
+        };
+    }
+  };
+
+  // Update the transformOrderData function to handle complementary orders
   const transformOrderData = (orders) => {
     const transformedOrders = {
       completedByDate: {},
@@ -293,43 +335,6 @@ function Orders() {
       } catch (e) {
         console.error("Invalid date string:", dateString, e);
         return dateString; // Fallback
-      }
-    };
-
-    // Helper function to get order status and styling
-    const getOrderStatus = (order) => {
-      switch (order.order_status) {
-        case "complimentary_paid":
-        case "complementary_paid":
-          return {
-            status: "Complimentary",
-            iconColor: "#6c5ce7",
-            iconBgClass: "bg-info",
-          };
-        case "paid":
-          return {
-            status: "Completed",
-            iconColor: "#00B67A",
-            iconBgClass: "bg-success",
-          };
-        case "udhari_paid":
-          return {
-            status: "Udhari Paid",
-            iconColor: "#00B67A",
-            iconBgClass: "bg-success",
-          };
-        case "cancelled":
-          return {
-            status: "Cancelled",
-            iconColor: "#E74C3C",
-            iconBgClass: "bg-danger",
-          };
-        default:
-          return {
-            status: order.order_status || "Completed",
-            iconColor: "#00B67A",
-            iconBgClass: "bg-success",
-          };
       }
     };
 
@@ -393,9 +398,8 @@ function Orders() {
     }
 
     // Process complimentary paid orders
-    if (orders.complimentary_paid || orders.complementary_paid) {
-      const complimentaryOrders = orders.complimentary_paid || orders.complementary_paid;
-      Object.entries(complimentaryOrders).forEach(([dateKey, orderList]) => {
+    if (orders.complimentary_paid) {
+      Object.entries(orders.complimentary_paid).forEach(([dateKey, orderList]) => {
         processOrders(orderList, dateKey);
       });
     }
