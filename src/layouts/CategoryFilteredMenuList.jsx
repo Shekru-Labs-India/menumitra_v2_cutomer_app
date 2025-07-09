@@ -7,7 +7,7 @@ import { useOutlet } from '../contexts/OutletContext';
 import { useCacheData } from '../contexts/CacheDataContext';
 import { useAuth } from '../contexts/AuthContext'; // Add this import
 
-const DEFAULT_IMAGE = 'https://as2.ftcdn.net/jpg/02/79/12/03/1000_F_279120368_WzIoR2LV2Cgy33oxy6eEKQYSkaWr8AFU.jpg';
+const DEFAULT_IMAGE = '';
 
 function CategoryFilteredMenuList() {
   const { categoryId } = useParams();
@@ -127,7 +127,7 @@ function CategoryFilteredMenuList() {
             {categoryData.menus.map((menu) => (
               <div key={menu.menu_id} className="col-12">
                 <VerticalMenuCard
-                  image={menu.image || DEFAULT_IMAGE}
+                  image={menu.images?.[0]?.image || DEFAULT_IMAGE}
                   title={menu.menu_name}
                   currentPrice={menu.portions?.[0]?.price || 0}
                   reviewCount={menu.rating || 0}
@@ -146,7 +146,7 @@ function CategoryFilteredMenuList() {
                     isSpecial: menu.is_special,
                     isFavourite: menu.is_favourite === 1,
                     isActive: menu.is_active,
-                    image: menu.image || DEFAULT_IMAGE
+                    image: menu.images?.[0]?.image || DEFAULT_IMAGE
                   }}
                   onFavoriteClick={(isFavorite, menuId) => {
                     setCategoryData(prevData => ({
