@@ -273,16 +273,16 @@ const AuthOffcanvas = () => {
         app_type: "customer",
       });
 
-      if (data.success) {
-        setError("OTP resent successfully!");
+      if (data.role === "customer") {
+        setError(data.detail || "OTP resent successfully!");
         setTimeout(() => setError(""), 3000);
       } else {
-        throw new Error(data.message || "Failed to resend OTP");
+        throw new Error("Invalid response from server");
       }
     } catch (err) {
       console.error("Resend OTP error:", err);
       setError(
-        err.response?.data?.message || "Failed to resend OTP. Please try again."
+        err.response?.data?.detail || "Failed to resend OTP. Please try again."
       );
     } finally {
       setIsLoading(false);
