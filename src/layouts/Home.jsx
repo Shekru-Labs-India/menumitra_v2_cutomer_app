@@ -161,7 +161,7 @@ function Home() {
     return cartItem ? cartItem.quantity : 0;
   };
 
-  // Refactored fetchSpecialMenuItems using axios
+  // Refactored fetchSpecialMenuItems to use caching system
   const fetchSpecialMenuItems = async () => {
     console.log("🔄 Fetching special menu items...");
     try {
@@ -175,7 +175,8 @@ function Home() {
         return;
       }
 
-      const { data } = await api.post("/user/get_special_menu_list", {
+      // Use the caching system instead of direct API call
+      const data = await fetchData("get_special_menu_list", {
         user_id: userId,
         outlet_id: outletId,
         app_source: "user_app",
