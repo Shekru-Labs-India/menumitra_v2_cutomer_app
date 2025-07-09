@@ -536,7 +536,7 @@ function Search() {
                   {searchResults.map((menu) => (
                     <li key={menu.menu_id}>
                       <HorizontalMenuCard
-                        image={menu.image || null}
+                        image={menu.image || null} // The image is already a URL string, no need for array check
                         title={menu.menu_name}
                         currentPrice={menu.portions?.[0]?.price || 0}
                         originalPrice={
@@ -558,15 +558,13 @@ function Search() {
                               unit_value: portion.unit_value,
                               unit_type: portion.unit_type,
                             })) || [],
-                          image: menu.image,
+                          image: menu.image, // Pass the image URL directly
                           menuFoodType: menu.menu_food_type,
                           category: menu.category_name,
                           rating: menu.rating,
                           isSpecial: menu.is_special,
                         }}
-                        onFavoriteClick={() =>
-                          handleFavoriteClick(menu.menu_id)
-                        }
+                        onFavoriteClick={() => handleFavoriteClick(menu.menu_id)}
                         isFavorite={menu.is_favourite === 1}
                         rating={menu.rating}
                         categoryName={menu.category_name}
