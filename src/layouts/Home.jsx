@@ -72,6 +72,9 @@ function Home() {
   const navigate = useNavigate();
   const [favoriteMenuIds, setFavoriteMenuIds] = useState(new Set());
   const location = useLocation();
+  
+  // Add getUserId from AuthContext
+  const { getUserId } = useAuth();
 
   const { outletId } = useOutlet();
   const { openModal } = useModal();
@@ -165,8 +168,8 @@ function Home() {
   const fetchSpecialMenuItems = async () => {
     console.log("🔄 Fetching special menu items...");
     try {
-      const userData = getAuthData();
-      const userId = userData?.userId || null;
+      // Get user ID from AuthContext instead of local storage
+      const userId = getUserId() || null;
       console.log("📦 Using outlet ID:", outletId);
 
       // Add a guard clause
@@ -208,7 +211,7 @@ function Home() {
         "⏳ Waiting for outletId before fetching special menu items..."
       );
     }
-  }, [outletId]); // Depend on outletId
+  }, [outletId, getUserId]); // Added getUserId as dependency
 
   // Add this function to handle favorite updates
   const handleFavoriteUpdate = (menuId, isFavorite) => {
@@ -221,11 +224,11 @@ function Home() {
       }
       return newIds;
     });
-    // Update filteredMenuItems so isFavourite persists
+    // Update filteredMenuItems so is_favourite persists
     setFilteredMenuItems((prev) =>
       prev.map((item) =>
         item.menuId === menuId || item.menu_id === menuId
-          ? { ...item, isFavourite: isFavorite ? 1 : 0 }
+          ? { ...item, is_favourite: isFavorite ? 1 : 0, isFavourite: isFavorite ? 1 : 0 }
           : item
       )
     );
@@ -259,9 +262,13 @@ function Home() {
   // Update the fetchMenuListByCategory function in Home.jsx
   const fetchMenuListByCategory = async () => {
     try {
+      // Get user ID from AuthContext
+      const userId = getUserId() || null;
+      
       // Use caching system instead of axios
       const data = await fetchData("get_all_menu_list_by_category", {
         outlet_id: outletId,
+        user_id: userId,
         app_source: "user_app",
       });
 
@@ -287,7 +294,8 @@ function Home() {
               price: menu.price,
               offer: menu.offer,
               isSpecial: menu.is_special,
-              isFavourite: menu.is_favourite,
+              is_favourite: menu.is_favourite,  // Keep original property
+              isFavourite: menu.is_favourite === 1,  // Add transformed property
               isActive: menu.is_active,
               image:
                 Array.isArray(menu.images) && menu.images.length > 0
@@ -338,7 +346,7 @@ function Home() {
     if (outletId) {
       fetchMenuListByCategory();
     }
-  }, [outletId]);
+  }, [outletId, getUserId]);
 
   // Filter menu items based on selected category
   useEffect(() => {
@@ -572,7 +580,7 @@ function Home() {
                         }
                         isFavorite={
                           favoriteMenuIds.has(menuItem.menuId) ||
-                          menuItem.isFavourite === 1
+                          menuItem.is_favourite === 1
                         }
                         discount={
                           menuItem.offer > 0 ? `${menuItem.offer}%` : null
@@ -669,7 +677,7 @@ function Home() {
                                 rating: menuItem.rating,
                                 offer: menuItem.offer,
                                 isSpecial: menuItem.is_special,
-                                isFavourite: menuItem.is_favourite === 1,
+                                is_favourite: menuItem.is_favourite,
                                 isActive: true,
                                 image: menuItem.image,
                                 outletName: menuItem.outlet_name,

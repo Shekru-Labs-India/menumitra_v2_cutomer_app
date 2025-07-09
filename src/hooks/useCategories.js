@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useOutlet } from '../contexts/OutletContext';
 import { useCacheData } from '../contexts/CacheDataContext';
+import { useAuth } from '../contexts/AuthContext'; // Add this import
 
 export const useCategories = () => {
   const [categories, setCategories] = useState([]);
@@ -9,6 +10,7 @@ export const useCategories = () => {
   const [error, setError] = useState(null);
   const { outletId } = useOutlet();
   const { fetchData } = useCacheData();
+  const { getUserId } = useAuth(); // Add this line to get the getUserId function
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -16,10 +18,14 @@ export const useCategories = () => {
       try {
         setLoading(true);
         console.log('📦 Using outlet ID:', outletId);
+        
+        // Get user ID from AuthContext
+        const userId = getUserId() || null;
 
         // Use caching system instead of direct fetch
         const response = await fetchData('get_all_menu_list_by_category', {
           outlet_id: outletId,
+          user_id: userId, // Add the user_id parameter
           app_source: "user_app",
         });
         
@@ -45,7 +51,7 @@ export const useCategories = () => {
     if (outletId) {
       fetchCategories();
     }
-  }, [outletId, fetchData]); // Added fetchData as dependency
+  }, [outletId, fetchData, getUserId]); // Added getUserId as dependency
 
   return { categories, loading, error };
 };

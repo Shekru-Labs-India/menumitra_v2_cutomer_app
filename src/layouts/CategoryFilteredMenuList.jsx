@@ -5,6 +5,7 @@ import Footer from "../components/Footer";
 import VerticalMenuCard from '../components/VerticalMenuCard';
 import { useOutlet } from '../contexts/OutletContext';
 import { useCacheData } from '../contexts/CacheDataContext';
+import { useAuth } from '../contexts/AuthContext'; // Add this import
 
 const DEFAULT_IMAGE = 'https://as2.ftcdn.net/jpg/02/79/12/03/1000_F_279120368_WzIoR2LV2Cgy33oxy6eEKQYSkaWr8AFU.jpg';
 
@@ -15,6 +16,7 @@ function CategoryFilteredMenuList() {
   const menuCount = location.state?.menuCount;
   const { outletId } = useOutlet();
   const { fetchData } = useCacheData();
+  const { getUserId } = useAuth(); // Add this line to get the getUserId function
 
   const [categoryData, setCategoryData] = useState({
     category: null,
@@ -33,10 +35,14 @@ function CategoryFilteredMenuList() {
       console.log('🔄 Fetching menus for category:', categoryId);
       try {
         console.log('📦 Using outlet ID:', outletId);
+        
+        // Get user ID from AuthContext
+        const userId = getUserId() || null;
 
         // Use caching system instead of direct fetch
         const data = await fetchData('get_all_menu_list_by_category', {
           outlet_id: outletId,
+          user_id: userId, // Add the user_id parameter
           app_source: "user_app"
         });
 
@@ -71,7 +77,7 @@ function CategoryFilteredMenuList() {
     if (outletId && categoryId) {
       fetchMenusByCategory();
     }
-  }, [categoryId, categoryName, menuCount, outletId, fetchData]); // Added fetchData as dependency
+  }, [categoryId, categoryName, menuCount, outletId, fetchData, getUserId]); // Added getUserId as dependency
 
   if (loading) {
     return (

@@ -130,6 +130,9 @@ const VerticalMenuCard = ({
   menuItem = {},
   onFavoriteUpdate,
 }) => {
+  // Convert isFavorite to boolean if it's a number
+  const isFavoriteBoolean = typeof isFavorite === 'number' ? isFavorite === 1 : Boolean(isFavorite);
+  
   const [isLoading, setIsLoading] = useState(false);
   const { openModal } = useModal();
   const { cartItems, updateQuantity, removeFromCart, getCartItemComment } =
@@ -178,7 +181,7 @@ const VerticalMenuCard = ({
       }
 
       // Choose API endpoint based on current favorite status
-      const apiUrl = isFavorite
+      const apiUrl = isFavoriteBoolean
         ? "https://men4u.xyz/v2/user/remove_favourite_menu"
         : "https://men4u.xyz/v2/user/save_favourite_menu";
 
@@ -200,7 +203,7 @@ const VerticalMenuCard = ({
       const data = await response.json();
 
       if (response.ok) {
-        onFavoriteUpdate(menuItem.menuId, !isFavorite);
+        onFavoriteUpdate(menuItem.menuId, !isFavoriteBoolean);
       } else {
         console.error("Failed to update favorite status:", data.detail);
         if (data.detail === "Menu already in favorites") {
@@ -330,12 +333,12 @@ const VerticalMenuCard = ({
               textDecoration: "none",
             }}
           >
-            <div className={`like-button ${isFavorite ? "active" : ""}`}>
+            <div className={`like-button ${isFavoriteBoolean ? "active" : ""}`}>
               <i
-                className={`fa-${isFavorite ? "solid" : "regular"} fa-heart`}
+                className={`fa-${isFavoriteBoolean ? "solid" : "regular"} fa-heart`}
                 style={{
                   fontSize: "16px",
-                  color: isFavorite ? "#dc3545" : "#6c757d",
+                  color: isFavoriteBoolean ? "#dc3545" : "#6c757d",
                   lineHeight: 1,
                 }}
               />
@@ -497,7 +500,7 @@ VerticalMenuCard.propTypes = {
   title: PropTypes.string.isRequired,
   currentPrice: PropTypes.number.isRequired,
   reviewCount: PropTypes.number,
-  isFavorite: PropTypes.bool,
+  isFavorite: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
   discount: PropTypes.string,
   menuItem: PropTypes.object,
   onFavoriteUpdate: PropTypes.func.isRequired,
