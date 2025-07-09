@@ -29,6 +29,8 @@ import OutletNotFound from "./components/OutletNotFound";
 import FeedbackButton from "./components/FeedbackButton";
 // import CustomerFeedback from "./components/Modal/variants/CustomerFeedback";
 import axios from "axios";
+import { CacheDataProvider } from "./contexts/CacheDataContext";
+import CacheStatus from "./components/CacheStatus";
 
 function App() {
   const [shouldClearCart, setShouldClearCart] = useState(false);
@@ -42,13 +44,14 @@ function App() {
   return (
     <ModalProvider>
       <Router basename={import.meta.env.BASE_URL}>
-        <OutletProvider>
-          <ThemeColorProvider>
-            <ThemeProvider>
-              <AuthProvider>
-                <CartProvider onLogout={handleLogout}>
-                  <AuthOffcanvas />
-                  <SidebarProvider>
+        <CacheDataProvider>
+          <OutletProvider>
+            <ThemeColorProvider>
+              <ThemeProvider>
+                <AuthProvider>
+                  <CartProvider onLogout={handleLogout}>
+                    <AuthOffcanvas />
+                    <SidebarProvider>
                     <Routes>
                       <Route path="*" element={<Home />} />
                       <Route path="/all-outlets" element={<AllOutlets />} />
@@ -81,11 +84,13 @@ function App() {
                     <Sidebar />
                   </SidebarProvider>
                   <ModalManager />
+                  {/* <CacheStatus /> */}
                 </CartProvider>
               </AuthProvider>
             </ThemeProvider>
           </ThemeColorProvider>
         </OutletProvider>
+        </CacheDataProvider>
       </Router>
     </ModalProvider>
   );

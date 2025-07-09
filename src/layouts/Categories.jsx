@@ -1,46 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useOutlet } from '../contexts/OutletContext';
-
-// API configuration
-const axiosInstance = axios.create({
-  baseURL: "https://men4u.xyz/v2",
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  }
-});
-
-// API service function
-const fetchCategoryList = async (outletId, token) => {
-  try {
-    const response = await axiosInstance.post('/user/get_category_list',
-      { outlet_id: outletId, app_source: "user_app" },
-
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      }
-    );
-    return response.data?.detail?.menu_list || [];
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      // Handle specific axios errors
-      if (error.response) {
-        // Server responded with error status
-        throw new Error(`Server Error: ${error.response.data?.message || 'Unknown server error'}`);
-      } else if (error.request) {
-        // Request made but no response
-        throw new Error('Network Error: No response from server');
-      }
-    }
-    throw new Error('Failed to fetch categories');
-  }
-};
+import { useCacheData } from '../contexts/CacheDataContext';
+import TestCacheButton from '../components/TestCacheButton';
 
 function Categories() {
   const navigate = useNavigate();
@@ -49,6 +13,7 @@ function Categories() {
   const [error, setError] = useState(null);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const { outletId } = useOutlet();
+  const { fetchData } = useCacheData();
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -68,8 +33,14 @@ function Categories() {
           throw new Error('Outlet ID is required');
         }
 
-        // Fetch categories
-        const categoryList = await fetchCategoryList(outletId, userData.accessToken);
+        // Fetch categories using the caching system
+        const response = await fetchData('get_category_list', {
+          outlet_id: outletId,
+          app_source: "user_app"
+        });
+        
+        // Extract the data from the response
+        const categoryList = response?.detail?.menu_list || [];
         
         // Map categories
         const mappedCategories = categoryList.map(category => ({
@@ -91,7 +62,7 @@ function Categories() {
     };
 
     loadCategories();
-  }, [outletId]); // Added outletId as dependency
+  }, [outletId, fetchData]); // Added fetchData as dependency
 
   const handleCategoryClick = (e, category) => {
     e.preventDefault();
@@ -192,24 +163,6 @@ function Categories() {
         >
           <i className="fas fa-th-large"></i>
         </button>
-        {/* <button
-          type="button"
-          className={`btn btn-sm rounded-pill px-3 py-2 ${
-            viewMode === 'list' 
-              ? 'text-white shadow-sm' 
-              : 'text-muted'
-          }`}
-          onClick={() => setViewMode('list')}
-          style={{
-            background: viewMode === 'list' 
-              ? 'linear-gradient(135deg, #FF7043 0%, #F4511E 100%)' 
-              : 'transparent',
-            border: 'none',
-            transition: 'all 0.3s ease',
-          }}
-        >
-          <i className="fas fa-bars"></i>
-        </button> */}
       </div>
       <style>
         {`
@@ -293,12 +246,9 @@ function Categories() {
       <Header />
       <div className="page-content p-b60">
         <div className="container">
-          {/* View toggle and error message */}
-          {/* <div className="mb-4">
-            {!loading && !error && categories.length > 0 && <ViewToggle />}
-            {error && <ErrorMessage message={error} />}
-          </div> */}
-
+          {/* Test cache controls - Remove in production */}
+          {/* <TestCacheButton /> */}
+          
           {/* Categories display */}
           <div className="row">
             {loading ? (
