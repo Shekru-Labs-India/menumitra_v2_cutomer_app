@@ -661,7 +661,7 @@ function Orders() {
 
           <div className="default-tab style-1">
             <ul
-              className="nav nav-tabs d-flex flex-nowrap overflow-auto w-100"
+              className="nav nav-tabs d-flex flex-nowrap overflow-auto w-120 justify-content-between"
               id="myTab3"
               role="tablist"
             >
