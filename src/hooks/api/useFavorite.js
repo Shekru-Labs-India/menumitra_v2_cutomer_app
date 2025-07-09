@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useOutlet } from '../../contexts/OutletContext';
+import { useCacheData } from '../../contexts/CacheDataContext';
 
 const API_BASE_URL = 'https://men4u.xyz/v2';
 
@@ -9,6 +10,7 @@ export const useFavorite = () => {
   const [error, setError] = useState(null);
   const { getUserId } = useAuth();
   const { outletId } = useOutlet();
+  const { fetchData, clearCacheItem } = useCacheData();
 
   // Helper function to get auth data
   const getAuthData = () => {
@@ -33,24 +35,15 @@ export const useFavorite = () => {
         throw new Error('Please login to view favorites');
       }
 
-      const response = await fetch(`${API_BASE_URL}/user/get_favourite_list`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        },
-        body: JSON.stringify({
-          outlet_id: outletId,
-          user_id: userId,
-          app_source: "user_app",
-        })
+      // Use caching system
+      const response = await fetchData('user/get_favourite_list', {
+        outlet_id: outletId,
+        user_id: userId,
+        app_source: "user_app",
       });
 
-      const data = await response.json();
-
-      if (data.detail && data.detail.lists) {
-        return Object.values(data.detail.lists).flat();
+      if (response.detail && response.detail.lists) {
+        return Object.values(response.detail.lists).flat();
       }
       return [];
     } catch (err) {
@@ -74,31 +67,20 @@ export const useFavorite = () => {
       }
 
       const endpoint = isFavorite 
-        ? `${API_BASE_URL}/user/remove_favourite`
-        : `${API_BASE_URL}/user/add_favourite`;
+        ? `user/remove_favourite`
+        : `user/add_favourite`;
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        },
-        body: JSON.stringify({
-          outlet_id: outletId,
-          user_id: userId,
-          menu_id: menuId,
-          app_source: "user_app",
-        })
-      });
+      const response = await fetchData(endpoint, {
+        outlet_id: outletId,
+        user_id: userId,
+        menu_id: menuId,
+        app_source: "user_app",
+      }, { forceRefresh: true });
 
-      const data = await response.json();
+      // Clear favorites cache after adding/removing a favorite
+      clearCacheItem('user/get_favourite_list');
 
-      if (!response.ok) {
-        throw new Error(data.message || `Failed to ${isFavorite ? 'remove from' : 'add to'} favorites`);
-      }
-
-      return data;
+      return response;
     } catch (err) {
       setError(err.message || 'Failed to update favorite status');
       throw err;

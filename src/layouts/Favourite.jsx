@@ -7,9 +7,8 @@ import HorizontalMenuCard from "../components/HorizontalMenuCard";
 import { useAuth } from "../contexts/AuthContext";
 import { useModal } from "../contexts/ModalContext";
 import { useOutlet } from "../contexts/OutletContext";
-import axios from "axios";
-
-const API_BASE_URL = "https://men4u.xyz/v2";
+import { useCacheData } from "../contexts/CacheDataContext";
+import { useFavorite } from "../hooks/api/useFavorite";
 
 function Favourite() {
   const navigate = useNavigate();
@@ -18,8 +17,10 @@ function Favourite() {
   const { user, setShowAuthOffcanvas } = useAuth();
   const { openModal } = useModal();
   const { outletId } = useOutlet();
+  const { fetchData } = useCacheData();
   const [expanded, setExpanded] = useState({});
   const [expandedOutlet, setExpandedOutlet] = useState({});
+  const { toggleFavorite } = useFavorite();
 
   const loadFavorites = async () => {
     try {
@@ -33,25 +34,16 @@ function Favourite() {
         return;
       }
 
-      const response = await axios.post(
-        `${API_BASE_URL}/user/get_favourite_list`,
-        {
-          outlet_id: outletId,
-          user_id: auth.userId,
-          app_source: "user_app",
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${auth.accessToken}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        }
-      );
+      // Use the caching system
+      const response = await fetchData("get_favourite_list", {
+        outlet_id: outletId,
+        user_id: auth.userId,
+        app_source: "user_app",
+      });
 
       const allMenus = [];
-      if (response.data.detail?.lists) {
-        Object.entries(response.data.detail.lists).forEach(
+      if (response.detail?.lists) {
+        Object.entries(response.detail.lists).forEach(
           ([outletName, menus]) => {
             menus.forEach((menu) => {
               allMenus.push({
@@ -99,25 +91,16 @@ function Favourite() {
         return;
       }
 
-      const response = await axios.post(
-        `${API_BASE_URL}/user/get_favourite_list`,
-        {
-          outlet_id: outletId,
-          user_id: auth.userId,
-          app_source: "user_app",
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${auth.accessToken}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        }
-      );
+      // Use the caching system with forceRefresh to get latest data
+      const response = await fetchData("user/get_favourite_list", {
+        outlet_id: outletId,
+        user_id: auth.userId,
+        app_source: "user_app",
+      }, { forceRefresh: true });
 
       const allMenus = [];
-      if (response.data.detail?.lists) {
-        Object.entries(response.data.detail.lists).forEach(
+      if (response.detail?.lists) {
+        Object.entries(response.detail.lists).forEach(
           ([outletName, menus]) => {
             menus.forEach((menu) => {
               allMenus.push({
@@ -142,8 +125,14 @@ function Favourite() {
       setFavoriteMenus((prev) =>
         prev.filter((menu) => menu.menu_id !== menuId)
       );
-      // Then refresh the list silently
-      await silentRefresh();
+      // Use the toggleFavorite function from useFavorite hook
+      try {
+        await toggleFavorite(menuId, true);
+        // Then refresh the list silently
+        await silentRefresh();
+      } catch (error) {
+        console.error("Error updating favorite:", error);
+      }
     }
   };
 
