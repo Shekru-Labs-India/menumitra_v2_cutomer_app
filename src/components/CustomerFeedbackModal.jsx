@@ -17,7 +17,16 @@ const CustomerFeedbackModal = ({ show, onClose }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    
+    // Add validation for customer_name field
+    if (name === 'customer_name') {
+      // Only allow letters and spaces
+      if (/^[A-Za-z\s]*$/.test(value)) {
+        setForm((prev) => ({ ...prev, [name]: value }));
+      }
+    } else {
+      setForm((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = async (e) => {
