@@ -35,6 +35,11 @@
   margin-right: 0.5rem;
   min-height: 70px;
   padding: 8px 0;
+  width: "100%"; // Add full width
+  overflowX: "auto"; // Add horizontal scroll
+  whiteSpace: "nowrap"; // Prevent content wrapping
+  WebkitOverflowScrolling: "touch"; // Smooth scrolling on iOS
+  msOverflowStyle: "-ms-autohiding-scrollbar"; // Better scrollbar on Windows
 }
 
 /* First card specific styling */

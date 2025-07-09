@@ -227,9 +227,23 @@ const HorizontalMenuCard = ({
       : "#";
 
   return (
-    <div className="horizontal-menu-card card product-card position-relative shadow border border-1 border-light"
-      style={{ minHeight: 50, padding: "8px 0" }}>
-      <div className="d-flex align-items-center p-1" style={{ minHeight: 70 }}>
+    <div 
+      className="horizontal-menu-card card product-card position-relative shadow border border-1 border-light"
+      style={{ 
+        minHeight: 50, 
+        padding: "8px 0",
+        width: "100%", // Add full width
+        overflowX: "auto", // Add horizontal scroll
+        whiteSpace: "nowrap", // Prevent content wrapping
+        WebkitOverflowScrolling: "touch", // Smooth scrolling on iOS
+        msOverflowStyle: "-ms-autohiding-scrollbar", // Better scrollbar on Windows
+      }}>
+      <div 
+        className="d-flex align-items-center p-1" 
+        style={{ 
+          minHeight: 70,
+          minWidth: "100%", // Ensure inner content takes full width
+        }}>
         {/* Left side - Image and Icons */}
         <div className="position-relative d-flex align-items-center justify-content-center"
           style={{
