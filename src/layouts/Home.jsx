@@ -78,7 +78,7 @@ function Home() {
 
   const { outletId } = useOutlet();
   const { openModal } = useModal();
-  const { fetchData } = useCacheData();
+  const { fetchData, getCachedData, generateCacheKey } = useCacheData();
 
   const [filteredMenuItems, setFilteredMenuItems] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -200,19 +200,6 @@ function Home() {
     }
   };
 
-  // Instead, only use the effect that depends on outletId
-  useEffect(() => {
-    if (outletId) {
-      // Only fetch if we have an outletId
-      console.log("🏁 OutletId available, fetching special menu items...");
-      fetchSpecialMenuItems();
-    } else {
-      console.log(
-        "⏳ Waiting for outletId before fetching special menu items..."
-      );
-    }
-  }, [outletId, getUserId]); // Added getUserId as dependency
-
   // Add this function to handle favorite updates
   const handleFavoriteUpdate = (menuId, isFavorite) => {
     setFavoriteMenuIds((prevIds) => {
@@ -224,6 +211,7 @@ function Home() {
       }
       return newIds;
     });
+    
     // Update filteredMenuItems so is_favourite persists
     setFilteredMenuItems((prev) =>
       prev.map((item) =>
@@ -232,6 +220,9 @@ function Home() {
           : item
       )
     );
+
+    // Refetch special menu list to get updated data
+    fetchSpecialMenuItems();
   };
 
   const outletParams = extractOutletParamsFromPath(location.pathname);
@@ -344,7 +335,96 @@ function Home() {
   // Add this effect to fetch menu list when outletId changes
   useEffect(() => {
     if (outletId) {
-      fetchMenuListByCategory();
+      // Only fetch if we have an outletId
+      const userId = getUserId() || null;
+      const cacheKey = generateCacheKey("get_all_menu_list_by_category", {
+        outlet_id: outletId,
+        user_id: userId,
+        app_source: "user_app",
+      });
+      
+      // Check if we have valid cached data
+      const cachedData = getCachedData(cacheKey);
+      if (!cachedData) {
+        console.log("No valid cached data found, fetching fresh data...");
+        fetchMenuListByCategory();
+      } else {
+        console.log("Using cached menu list data");
+        // Process the cached data
+        const menusByCategory = {};
+        let totalMenuCount = 0;
+
+        if (cachedData.detail.menus) {
+          cachedData.detail.menus.forEach((menu) => {
+            if (!menusByCategory[menu.menu_cat_id]) {
+              menusByCategory[menu.menu_cat_id] = [];
+            }
+            menusByCategory[menu.menu_cat_id].push({
+              menuId: menu.menu_id,
+              menuName: menu.menu_name,
+              menuFoodType: menu.menu_food_type,
+              menuCatId: menu.menu_cat_id,
+              categoryName: menu.category_name,
+              spicyIndex: menu.spicy_index,
+              portions: menu.portions,
+              rating: menu.rating,
+              price: menu.price,
+              offer: menu.offer,
+              isSpecial: menu.is_special,
+              is_favourite: menu.is_favourite,
+              isFavourite: menu.is_favourite === 1,
+              isActive: menu.is_active,
+              image: Array.isArray(menu.images) && menu.images.length > 0 ? menu.images[0].image : null,
+              imageId: Array.isArray(menu.images) && menu.images.length > 0 ? menu.images[0].image_id : null,
+            });
+            totalMenuCount++;
+          });
+        }
+
+        const categories = cachedData.detail.category.map((cat) => ({
+          menuCatId: cat.menu_cat_id,
+          categoryName: cat.category_name,
+          menuCount: cat.menu_count,
+        }));
+
+        const allCategory = {
+          menuCatId: "all",
+          categoryName: "All",
+          menuCount: totalMenuCount,
+        };
+        categories.unshift(allCategory);
+
+        setCategoriesData({
+          categories: categories,
+          menusByCategory: menusByCategory,
+        });
+
+        setFilteredMenuItems(cachedData.detail.menus || []);
+      }
+    }
+  }, [outletId, getUserId]);
+
+  // Instead, only use the effect that depends on outletId for special menu items
+  useEffect(() => {
+    if (outletId) {
+      const userId = getUserId() || null;
+      const cacheKey = generateCacheKey("get_special_menu_list", {
+        user_id: userId,
+        outlet_id: outletId,
+        app_source: "user_app",
+      });
+      
+      // Check if we have valid cached data
+      const cachedData = getCachedData(cacheKey);
+      if (!cachedData) {
+        console.log("No valid cached special menu data found, fetching fresh data...");
+        fetchSpecialMenuItems();
+      } else {
+        console.log("Using cached special menu data");
+        if (cachedData.detail && cachedData.detail.special_menu_list) {
+          setSpecialMenuItems(cachedData.detail.special_menu_list);
+        }
+      }
     }
   }, [outletId, getUserId]);
 

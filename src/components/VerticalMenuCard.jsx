@@ -6,6 +6,7 @@ import { useModal } from "../contexts/ModalContext";
 import { useCart } from "../contexts/CartContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useOutlet } from "../contexts/OutletContext";
+import { useCacheData } from "../contexts/CacheDataContext"; // Add this import
 
 // FoodTypeIcon component
 const FoodTypeIcon = ({ foodType }) => {
@@ -141,6 +142,9 @@ const VerticalMenuCard = ({
   const { outletId } = useOutlet();
   const MAX_QUANTITY = 20;
 
+  // Add clearCacheItem from useCacheData
+  const { clearCacheItem, generateCacheKey } = useCacheData();
+
   // Generate the product URL from menuItem data with safety checks
   const detailPageUrl =
     menuItem?.menuId && menuItem?.menuCatId
@@ -203,6 +207,19 @@ const VerticalMenuCard = ({
       const data = await response.json();
 
       if (response.ok) {
+        // Clear cache for both menu list and special menu list APIs
+        const menuListCacheKey = generateCacheKey("get_all_menu_list_by_category", {
+          outlet_id: outletId,
+          user_id: auth.userId,
+        });
+        const specialMenuCacheKey = generateCacheKey("get_special_menu_list", {
+          outlet_id: outletId,
+          user_id: auth.userId,
+        });
+        
+        clearCacheItem(menuListCacheKey);
+        clearCacheItem(specialMenuCacheKey);
+        
         onFavoriteUpdate(menuItem.menuId, !isFavoriteBoolean);
       } else {
         console.error("Failed to update favorite status:", data.detail);
