@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
-import fallbackImage from "../assets/images/food/small/6.png";
+import { Link } from "react-router-dom";
 import { useModal } from "../contexts/ModalContext";
 import { useAuth } from "../contexts/AuthContext";
-import { useCart } from "../contexts/CartContext";
+import { useOutlet } from "../contexts/OutletContext";
+import { useCacheData } from "../contexts/CacheDataContext";
 import "./HorizontalMenuCard.css"; // We'll create this CSS file next
-import { Link } from "react-router-dom";
 
 // FoodTypeIcon component
 const FoodTypeIcon = ({ foodType }) => {
@@ -121,61 +121,94 @@ const FoodTypeIcon = ({ foodType }) => {
 };
 
 const HorizontalMenuCard = ({
-  image,
   title = "Fresh Tomatoes",
   currentPrice = 5.0,
-  originalPrice = 8.9,
   discount = "10%Off",
   menuItem = {},
-  onFavoriteClick = () => {},
   isFavorite = false,
-  productUrl = "#",
+  onFavoriteUpdate,
 }) => {
+  const [isLoading, setIsLoading] = useState(false);
   const { openModal } = useModal();
   const { user, setShowAuthOffcanvas } = useAuth();
-  const { cartItems } = useCart();
+  const { outletId } = useOutlet();
+  const { clearCacheItem, generateCacheKey } = useCacheData();
 
-  // Check if any portion of this menu exists in cart
-  const cartItemsForMenu = menuItem?.menuId
-    ? cartItems.filter((item) => item.menuId === menuItem.menuId)
-    : [];
-
-  const handleAddToCart = (e) => {
+  const handleFavoriteToggle = async (e) => {
     e.preventDefault();
-
-    if (!menuItem) return;
+    e.stopPropagation();
 
     if (!user) {
       setShowAuthOffcanvas(true);
       return;
     }
 
-    openModal("addToCart", menuItem);
-  };
+    if (isLoading || !menuItem?.menuId) return;
 
-  // Add touch handling for swipe gestures
-  const [touchStart, setTouchStart] = React.useState(null);
-  const [touchEnd, setTouchEnd] = React.useState(null);
+    try {
+      setIsLoading(true);
 
-  // the required distance between touchStart and touchEnd to be detected as a swipe
-  const minSwipeDistance = 50;
+      const authData = localStorage.getItem("auth");
+      const auth = authData ? JSON.parse(authData) : null;
 
-  const onTouchStart = (e) => {
-    setTouchEnd(null); // otherwise the swipe is fired even with usual touch events
-    setTouchStart(e.targetTouches[0].clientX);
-  };
+      if (!auth || !auth.userId || !auth.accessToken) {
+        openModal("LOGIN_REQUIRED");
+        return;
+      }
 
-  const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
+      const apiUrl = isFavorite
+        ? "https://men4u.xyz/v2/user/remove_favourite_menu"
+        : "https://men4u.xyz/v2/user/save_favourite_menu";
 
-  const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `Bearer ${auth.accessToken}`,
+        },
+        body: JSON.stringify({
+          outlet_id: outletId,
+          menu_id: menuItem.menuId,
+          user_id: auth.userId || null,
+          app_source: "user_app",
+        }),
+      });
 
-    if (isLeftSwipe || isRightSwipe) {
-      // You can add swipe actions here if needed
-      console.log("swiped", isLeftSwipe ? "left" : "right");
+      const data = await response.json();
+
+      if (response.ok) {
+        const menuListCacheKey = generateCacheKey("get_all_menu_list_by_category", {
+          outlet_id: outletId,
+          user_id: auth.userId,
+        });
+        const specialMenuCacheKey = generateCacheKey("get_special_menu_list", {
+          outlet_id: outletId,
+          user_id: auth.userId,
+        });
+        
+        clearCacheItem(menuListCacheKey);
+        clearCacheItem(specialMenuCacheKey);
+        
+        onFavoriteUpdate(menuItem.menuId, !isFavorite);
+      } else {
+        console.error("Failed to update favorite status:", data.detail);
+        if (data.detail === "Menu already in favorites") {
+          onFavoriteUpdate(menuItem.menuId, true);
+          window.alert("Menu is already in your favorites.");
+        } else {
+          openModal("ERROR", {
+            message: data.detail || "Failed to update favorite status",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error updating favorite status:", error);
+      openModal("ERROR", {
+        message: "Failed to connect to the server",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -185,27 +218,12 @@ const HorizontalMenuCard = ({
       ? `/product-detail/${menuItem.menuId}/${menuItem.menuCatId}`
       : "#";
 
-  // Assume you have variables: price (current price), offer_percent (discount percent)
-  const offer_percent = discount
-    ? parseFloat(discount.replace("%Off", ""))
-    : null;
-  const price = currentPrice;
-  const originalPriceCalculated = offer_percent
-    ? (price / (1 - offer_percent / 100)).toFixed(0)
-    : null;
-
   return (
-    <div
-      className="horizontal-menu-card card product-card position-relative shadow border border-1 border-light"
-      style={{ minHeight: 50, padding: "8px 0" }}
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
-    >
+    <div className="horizontal-menu-card card product-card position-relative shadow border border-1 border-light"
+      style={{ minHeight: 50, padding: "8px 0" }}>
       <div className="d-flex align-items-center p-1" style={{ minHeight: 70 }}>
         {/* Left side - Image and Icons */}
-        <div
-          className="position-relative d-flex align-items-center justify-content-center"
+        <div className="position-relative d-flex align-items-center justify-content-center"
           style={{
             width: "100px",
             height: "100px",
@@ -213,8 +231,7 @@ const HorizontalMenuCard = ({
             borderRadius: 0,
             flexShrink: 0,
             overflow: "hidden",
-          }}
-        >
+          }}>
           {/* Fork & Knife icon as background */}
           <i
             className="fa-solid fa-utensils"
@@ -232,15 +249,7 @@ const HorizontalMenuCard = ({
               pointerEvents: "none",
             }}
           ></i>
-          {/* Image on top if present */}
-          {/* {image && (
-            <img
-              src={image}
-              alt={title}
-              className="rounded-3 w-100 h-100"
-              style={{ objectFit: "cover", position: "relative", zIndex: 2 }}
-            />
-          )} */}
+          
           {/* Veg/Nonveg/Vegan/Egg icon in bottom-left */}
           {menuItem.menuFoodType && (
             <span
@@ -254,10 +263,11 @@ const HorizontalMenuCard = ({
               <FoodTypeIcon foodType={menuItem.menuFoodType} />
             </span>
           )}
-          {/* Heart icon in bottom-right */}
+          
+          {/* Updated favorite icon */}
           <span
-            className={`favorite-icon ${isFavorite ? "active" : ""}`}
-            onClick={onFavoriteClick}
+            className={`favorite-icon ${isFavorite ? "active" : ""} ${isLoading ? "disabled" : ""}`}
+            onClick={handleFavoriteToggle}
             style={{
               position: "absolute",
               right: 2,
@@ -271,12 +281,13 @@ const HorizontalMenuCard = ({
               justifyContent: "center",
               boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
               border: "1.5px solid #fff",
-              cursor: "pointer",
+              cursor: isLoading ? "not-allowed" : "pointer",
               zIndex: 3,
+              pointerEvents: isLoading ? "none" : "auto",
             }}
           >
             <i
-              className="fa fa-heart"
+              className={`fa-${isFavorite ? "solid" : "regular"} fa-heart`}
               style={{ color: isFavorite ? "#e74c3c" : "#ccc", fontSize: 12 }}
             ></i>
           </span>
@@ -324,49 +335,14 @@ const HorizontalMenuCard = ({
               {menuItem.categoryName}
             </div>
           )}
-          {/* Spicy index with icon */}
-          {typeof menuItem.spicyIndex !== "undefined" && (
-            <span className="me-1">
-              {[...Array(3)].map((_, index) => {
-                const spicyIndex = Number(menuItem.spicyIndex);
-                let color = "#E0E0E0"; // default: white/grey
-                if (spicyIndex === 1) {
-                  color = index === 0 ? "#22A45D" : "#E0E0E0"; // green, rest white
-                } else if (spicyIndex === 2) {
-                  color = index < 2 ? "#FFA500" : "#E0E0E0"; // orange, last white
-                } else if (spicyIndex === 3) {
-                  color = "#FF2D2D"; // all red
-                }
-                return (
-                  <i
-                    key={index}
-                    className="fa-solid fa-pepper-hot"
-                    style={{
-                      color,
-                      fontSize: 12,
-                      marginRight: 0,
-                    }}
-                  ></i>
-                );
-              })}
-            </span>
-          )}
           {/* Price Section */}
           <div className="d-flex align-items-center mb-1">
             <h6
               className="mb-0 me-1"
               style={{ color: "#2d9cdb", fontSize: 14, fontWeight: 600 }}
             >
-              <span className="fw-bold">₹{price}</span>
+              <span className="fw-bold">₹{currentPrice}</span>
             </h6>
-            {originalPriceCalculated && (
-              <del
-                className="text-muted"
-                style={{ fontSize: 12, marginLeft: 2 }}
-              >
-                ₹{originalPriceCalculated}
-              </del>
-            )}
           </div>
         </div>
       </div>
@@ -375,15 +351,12 @@ const HorizontalMenuCard = ({
 };
 
 HorizontalMenuCard.propTypes = {
-  image: PropTypes.string,
   title: PropTypes.string,
   currentPrice: PropTypes.number,
-  originalPrice: PropTypes.number,
   discount: PropTypes.string,
   menuItem: PropTypes.object,
-  onFavoriteClick: PropTypes.func,
   isFavorite: PropTypes.bool,
-  productUrl: PropTypes.string,
+  onFavoriteUpdate: PropTypes.func.isRequired,
 };
 
 export default HorizontalMenuCard;
