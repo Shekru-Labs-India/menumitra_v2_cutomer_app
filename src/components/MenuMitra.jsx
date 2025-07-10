@@ -1,6 +1,7 @@
 import React from 'react';
 // Adjust the path below to where your logo is actually stored
 import logo from '../assets/logo.png';
+import logo2 from '../assets/mm-logo.png';
 
 const SOCIAL_LINKS = [
   {
@@ -30,7 +31,7 @@ const MenuMitra = () => {
     <div className="d-flex flex-column align-items-center mb-4">
       <a href="/" className="text-decoration-none d-flex align-items-center">
         <img 
-          src={logo} 
+          src={logo2} 
           alt="MenuMitra Logo" 
           width="32" 
           height="32"
