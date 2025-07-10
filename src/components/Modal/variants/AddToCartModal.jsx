@@ -301,15 +301,9 @@ export const AddToCartModal = () => {
     if (portions.length === 0) {
       return (
         <div
-          className="form-control d-flex justify-content-between align-items-center"
+          className="form-control d-flex justify-content-between align-items-center border border-2 rounded-3 p-3 fs-6 text-dark disabled"
           style={{
-            border: "1.5px solid #e9ecef",
-            borderRadius: "12px",
-            padding: "12px 16px",
-            fontSize: "14px",
-            backgroundColor: "#f8f9fa",
-            color: "#6c757d",
-            cursor: "not-allowed",
+            cursor: "not-allowed"
           }}
         >
           <span>No portion sizes available</span>
@@ -320,47 +314,30 @@ export const AddToCartModal = () => {
     return (
       <div className="position-relative">
         <div
-          className="form-control d-flex justify-content-between align-items-center"
+          className="form-control d-flex justify-content-between align-items-center rounded-3 p-3 fs-6 bg-white text-dark user-select-none"
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           style={{
             border: "1.5px solid #e9ecef",
-            borderRadius: "12px",
-            padding: "12px 16px",
-            fontSize: "14px",
-            cursor: "pointer",
-            backgroundColor: "white",
-            color: "#212529",
-            userSelect: "none",
+            cursor: "pointer"
           }}
         >
           <span>
             {selectedPortion && portions.length > 0
-              ? `${
-                  portions.find((p) => p.portion_id === selectedPortion)
-                    ?.portion_name
-                } - ₹${
-                  portions.find((p) => p.portion_id === selectedPortion)?.price
-                } (${
-                  portions.find((p) => p.portion_id === selectedPortion)
-                    ?.unit_value
-                })`
+              ? `${portions.find((p) => p.portion_id === selectedPortion)?.portion_name} - ₹${portions.find((p) => p.portion_id === selectedPortion)?.price} (${portions.find((p) => p.portion_id === selectedPortion)?.unit_value})`
               : "Select a portion size"}
           </span>
           <i
-            className={`fas fa-chevron-${isDropdownOpen ? "up" : "down"}`}
-            style={{ color: "#6c757d" }}
+            className={`fas fa-chevron-${isDropdownOpen ? "up" : "down"} text-secondary`}
           ></i>
         </div>
 
         {isDropdownOpen && portions.length > 0 && (
           <div
-            className="position-absolute w-100 mt-1 shadow-sm"
+            className="position-absolute w-100 mt-1 shadow-sm bg-white rounded-3 border"
             style={{
-              backgroundColor: "white",
-              borderRadius: "12px",
               border: "1.5px solid #e9ecef",
               zIndex: 1000,
-              overflow: "hidden",
+              overflow: "hidden"
             }}
           >
             {portions.map((portion) => (
@@ -370,34 +347,25 @@ export const AddToCartModal = () => {
                   handlePortionChange(portion.portion_id);
                   setIsDropdownOpen(false);
                 }}
-                className="d-flex justify-content-between align-items-center"
+                className={`d-flex justify-content-between align-items-center p-3 border-bottom ${
+                  selectedPortion === portion.portion_id ? "bg-light" : "bg-white"
+                }`}
                 style={{
-                  padding: "12px 16px",
                   cursor: "pointer",
-                  backgroundColor:
-                    selectedPortion === portion.portion_id
-                      ? "#f8fff8"
-                      : "white",
-                  borderBottom: "1px solid #e9ecef",
-                  transition: "all 0.2s ease",
+                  transition: "all 0.2s ease"
                 }}
               >
                 <div className="d-flex flex-column">
                   <span
-                    style={{
-                      fontSize: "14px",
-                      color: "#212529",
-                      fontWeight:
-                        selectedPortion === portion.portion_id
-                          ? "500"
-                          : "normal",
-                    }}
+                    className={`fs-6 text-dark ${
+                      selectedPortion === portion.portion_id ? "fw-medium" : "fw-normal"
+                    }`}
                   >
                     {`${portion.portion_name} - ₹${portion.price} (${portion.unit_value})`}
                   </span>
                 </div>
                 {selectedPortion === portion.portion_id && (
-                  <i className="fas fa-check" style={{ color: "#28a745" }}></i>
+                  <i className="fas fa-check text-success"></i>
                 )}
               </div>
             ))}
@@ -501,7 +469,13 @@ export const AddToCartModal = () => {
             </span>
           </div>
           <textarea
-            className="form-control"
+            className={`form-control rounded-3 p-3 fs-6 bg-light ${
+              comments[selectedPortion]?.length < 5 && comments[selectedPortion]?.length > 0
+                ? "border-danger"
+                : comments[selectedPortion]?.length > 50
+                ? "border-danger"
+                : "border-light"
+            }`}
             value={comments[selectedPortion] || ""}
             onChange={(e) => handleCommentChange(e.target.value)}
             placeholder={`Add instructions for ${
@@ -510,23 +484,11 @@ export const AddToCartModal = () => {
               )?.portion_name
             } portion...`}
             style={{
-              border: `1.5px solid ${
-                comments[selectedPortion]?.length < 5 &&
-                comments[selectedPortion]?.length > 0
-                  ? "#dc3545"
-                  : comments[selectedPortion]?.length > 50
-                  ? "#dc3545"
-                  : "#e9ecef"
-              }`,
-              borderRadius: "12px",
-              padding: "12px",
               paddingRight: "60px",
-              fontSize: "14px",
               minHeight: "60px",
               maxHeight: "120px",
               resize: "vertical",
-              backgroundColor: "#f8f9fa",
-              transition: "all 0.2s ease",
+              transition: "all 0.2s ease"
             }}
             onFocus={(e) => {
               if (comments[selectedPortion]?.length <= 50) {
@@ -542,23 +504,13 @@ export const AddToCartModal = () => {
             }}
           />
 
-          {/* Clear button */}
           {comments[selectedPortion] && (
             <button
               onClick={() => handleCommentChange("")}
-              className="d-flex align-items-center gap-1"
+              className="position-absolute end-0 top-0 mt-2 me-2 btn btn-light btn-sm rounded-pill"
               style={{
-                position: "absolute",
-                right: "12px",
-                top: "12px",
-                background: "#f1f3f5",
-                border: "1px solid #e9ecef",
-                borderRadius: "16px",
-                padding: "4px 8px",
-                color: "#6c757d",
-                cursor: "pointer",
                 fontSize: "12px",
-                zIndex: 2,
+                zIndex: 2
               }}
             >
               Clear
