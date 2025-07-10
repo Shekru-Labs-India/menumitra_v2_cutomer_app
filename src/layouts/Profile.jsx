@@ -18,7 +18,7 @@ function Profile() {
   const { openModal } = useModal();
 
   const iconStyle = {
-    color: "#000",
+    // color: "#000",
     opacity: "0.7",
     minWidth: "20px",
   };
@@ -187,10 +187,10 @@ function Profile() {
             <div className="account-section mt-4">
               <h5 className="mb-3">Account</h5>
               <ul>
-                <li>
+                <li className="text-dark">
                   <Link to="/edit-profile">
-                    <i className="fa-solid fa-user me-2" style={iconStyle} />
-                    Edit Profile
+                    <i className="fa-solid fa-user me-2 text-dark" style={iconStyle} />
+                    <span className="text-dark">Edit Profile</span>
                   </Link>
                 </li>
               </ul>
@@ -214,8 +214,8 @@ function Profile() {
               marginBottom: 8,
             }}
           >
-            <i className="fa-solid fa-power-off" style={{ fontSize: 16 }} />
-            Logout
+            <i className="fa-solid fa-power-off text-dark" style={{ fontSize: 16 }} />
+            <span className="text-dark">Logout</span>
           </a>
         )}
         <MenuMitra />
