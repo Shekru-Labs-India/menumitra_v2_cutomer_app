@@ -621,7 +621,9 @@ function Checkout() {
         // Main checkout view
         <div
           className="page-content"
-          style={{ background: "#f7f8fa", minHeight: "100vh" }}
+          style={{ 
+            // background: "#f7f8fa",
+             minHeight: "100vh" }}
         >
           <div
             className="container bottom-content"
@@ -670,8 +672,9 @@ function Checkout() {
                       onClick={() => navigate(`/product-detail/${item.menuId}`)}
                     >
                       <div
-                        className="bg-white rounded-4 shadow-sm position-relative p-3 border-0"
+                        className="rounded-4 shadow-lg position-relative p-3 border-3"
                         style={{ minHeight: 90 }}
+                        
                       >
                         {/* Remove button in top right */}
                         <button
@@ -812,7 +815,7 @@ function Checkout() {
             {cartItems.length > 0 && (
               <>
                 <div
-                  className="bg-white rounded-4 shadow-sm p-3 mb-3"
+                  className="rounded-4 shadow-sm p-3 mb-3"
                   style={{ border: "1px solid #e0e0e0", marginTop: 24 }}
                 >
                   <div className="d-flex justify-content-between align-items-center mb-2">
