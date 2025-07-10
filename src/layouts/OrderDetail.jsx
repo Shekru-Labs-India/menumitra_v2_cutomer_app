@@ -732,7 +732,7 @@ function OrderDetail() {
               <hr className="opacity-15" />
               <div className="bg-transparent">
                 <div className="d-flex justify-content-between px-0 border-0">
-                  <h6 className="mb-0 text-primary fw-bold">Grand Total</h6>
+                  <h6 className="mb-0 text-dark fw-bold">Grand Total</h6>
                   <h6 className="mb-0 text-primary fw-bold">
                     ₹
                     {Number(
