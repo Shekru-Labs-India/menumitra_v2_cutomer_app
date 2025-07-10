@@ -518,16 +518,15 @@ function OrderDetail() {
       <Header />
       <div
         className="page-content bottom-content"
-        style={{ backgroundColor: "var(--bs-gray-100)" }}
+        // Remove the inline background style since theme-dark will handle it
       >
         <div className="container pb-4">
-          {/* Order Header Card */}
-          <div className="card dz-card">
+          {/* Order Header Card - Add dark theme compatible classes */}
+          <div className="card">
             <div className="card-body">
               <div className="d-flex align-items-center justify-content-between mb-2">
                 <div>
-                  {/* <span className="text-soft mb-2 d-block">Order ID</span> */}
-                  <h5 className="mb-0">
+                  <h5 className="mb-0 text-primary">
                     #{orderDetails.order_details.order_number}
                   </h5>
                 </div>
@@ -555,18 +554,18 @@ function OrderDetail() {
             </div>
           </div>
 
-          {/* Order Items */}
-          <div className="card dz-card mt-3">
-            <div className="card-header border-0 pb-0">
-              <h5 className="card-title">
+          {/* Order Items Card */}
+          <div className="card mt-3">
+            <div className="card-header border-0">
+              <h5 className="card-title text-primary">
                 Order Items ({orderDetails.order_details.menu_count})
               </h5>
             </div>
-            <div className="card-body pt-3">
+            <div className="card-body">
               {orderDetails.menu_details.map((menu, index) => (
                 <div
                   key={index}
-                  className="dz-order-item d-flex align-items-center justify-content-between py-3"
+                  className="d-flex align-items-center justify-content-between py-3"
                   style={{
                     borderBottom:
                       index !== orderDetails.menu_details.length - 1
@@ -584,7 +583,7 @@ function OrderDetail() {
                     </div>
                     <div>
                       <div className="d-flex align-items-center gap-2">
-                        <h6 className="mb-1">{menu.menu_name}</h6>
+                        <h6 className="mb-1 text-primary">{menu.menu_name}</h6>
                         {menu.is_favourite === 1 && (
                           <i className="fa-solid fa-heart text-danger"></i>
                         )}
@@ -592,7 +591,7 @@ function OrderDetail() {
                       <p className="mb-0 text-soft">
                         Qty: {menu.quantity} × ₹{menu.price}
                         {menu.comment && (
-                          <span className="ms-2">• {menu.comment}</span>
+                          <span className="ms-2 text-soft">• {menu.comment}</span>
                         )}
                       </p>
                       {menu.offer > 0 && (
@@ -603,51 +602,34 @@ function OrderDetail() {
                     </div>
                   </div>
                   <div className="text-end">
-                    <h6 className="mb-0">₹{menu.net_price}</h6>
+                    <h6 className="mb-0 text-primary">₹{menu.net_price}</h6>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Bill Details */}
-          <div className="card dz-card mt-3" style={{ padding: "12px 0" }}>
-            <div
-              className="card-header border-0 pb-0 d-flex justify-content-between align-items-center"
-              style={{ paddingBottom: 4, paddingTop: 8 }}
-            >
-              <h5
-                className="card-title"
-                style={{ fontSize: 16, marginBottom: 0 }}
-              >
-                Payment Details
-              </h5>
+          {/* Bill Details Card */}
+          <div className="card mt-3">
+            <div className="card-header border-0 d-flex justify-content-between align-items-center">
+              <h5 className="card-title text-primary mb-0">Payment Details</h5>
               {orderDetails.order_details.payment_method && (
                 <span className="badge bg-primary-light text-primary">
                   {orderDetails.order_details.payment_method}
                 </span>
               )}
             </div>
-            <div
-              className="card-body pt-3"
-              style={{ paddingTop: 8, paddingBottom: 8 }}
-            >
-              <ul className="list-group list-group-flush">
-                <li
-                  className="list-group-item d-flex justify-content-between px-0"
-                  style={{ paddingTop: 4, paddingBottom: 4, marginBottom: 0 }}
-                >
-                  <span>Total</span>
-                  <strong>
-                    ₹
-                    {Number(
-                      orderDetails.order_details.total_bill_amount
-                    ).toFixed(2)}
+            <div className="card-body">
+              <div className="bg-transparent">
+                <div className="d-flex justify-content-between px-0 border-0">
+                  <span className="text-soft">Total</span>
+                  <strong className="text-primary">
+                    ₹{Number(orderDetails.order_details.total_bill_amount).toFixed(2)}
                   </strong>
-                </li>
+                </div>
                 {orderDetails.order_details.discount_amount > 0 && (
-                  <li
-                    className="list-group-item d-flex justify-content-between px-0"
+                  <div
+                    className="d-flex justify-content-between px-0"
                     style={{ paddingTop: 4, paddingBottom: 4, marginBottom: 0 }}
                   >
                     <span>
@@ -662,11 +644,11 @@ function OrderDetail() {
                         orderDetails.order_details.discount_amount
                       ).toFixed(2)}
                     </strong>
-                  </li>
+                  </div>
                 )}
                 {orderDetails.order_details.special_discount > 0 && (
-                  <li
-                    className="list-group-item d-flex justify-content-between px-0"
+                  <div
+                    className="d-flex justify-content-between px-0"
                     style={{ paddingTop: 4, paddingBottom: 4, marginBottom: 0 }}
                   >
                     <span>Special Discount</span>
@@ -676,21 +658,21 @@ function OrderDetail() {
                         orderDetails.order_details.special_discount
                       ).toFixed(2)}
                     </strong>
-                  </li>
+                  </div>
                 )}
                 {orderDetails.order_details.charges > 0 && (
-                  <li
-                    className="list-group-item d-flex justify-content-between px-0"
+                  <div
+                    className="d-flex justify-content-between px-0"
                     style={{ paddingTop: 4, paddingBottom: 4, marginBottom: 0 }}
                   >
                     <span>Extra Charges</span>
                     <strong style={{ color: "#22A45D" }}>
                       +₹{Number(orderDetails.order_details.charges).toFixed(2)}
                     </strong>
-                  </li>
+                  </div>
                 )}
-                <li
-                  className="list-group-item d-flex justify-content-between px-0"
+                <div
+                  className="d-flex justify-content-between px-0"
                   style={{ paddingTop: 4, paddingBottom: 4, marginBottom: 0 }}
                 >
                   <span style={{ fontWeight: 700 }}>Subtotal</span>
@@ -705,10 +687,10 @@ function OrderDetail() {
                       Number(orderDetails.order_details.charges || 0)
                     ).toFixed(2)}
                   </span>
-                </li>
+                </div>
                 {orderDetails.order_details.service_charges_amount > 0 && (
-                  <li
-                    className="list-group-item d-flex justify-content-between px-0"
+                  <div
+                    className="d-flex justify-content-between px-0"
                     style={{ paddingTop: 4, paddingBottom: 4, marginBottom: 0 }}
                   >
                     <span>
@@ -721,11 +703,11 @@ function OrderDetail() {
                         orderDetails.order_details.service_charges_amount
                       ).toFixed(2)}
                     </strong>
-                  </li>
+                  </div>
                 )}
                 {orderDetails.order_details.gst_amount > 0 && (
-                  <li
-                    className="list-group-item d-flex justify-content-between px-0"
+                  <div
+                    className="d-flex justify-content-between px-0"
                     style={{ paddingTop: 4, paddingBottom: 4, marginBottom: 0 }}
                   >
                     <span>GST ({orderDetails.order_details.gst_percent}%)</span>
@@ -733,35 +715,32 @@ function OrderDetail() {
                       +₹
                       {Number(orderDetails.order_details.gst_amount).toFixed(2)}
                     </strong>
-                  </li>
+                  </div>
                 )}
                 {orderDetails.order_details.tip > 0 && (
-                  <li
-                    className="list-group-item d-flex justify-content-between px-0"
+                  <div
+                    className="d-flex justify-content-between px-0"
                     style={{ paddingTop: 4, paddingBottom: 4, marginBottom: 0 }}
                   >
                     <span>Tip</span>
                     <strong style={{ color: "#22A45D" }}>
                       +₹{Number(orderDetails.order_details.tip).toFixed(2)}
                     </strong>
-                  </li>
+                  </div>
                 )}
-              </ul>
-              <hr style={{ margin: "8px 0" }} />
-              <ul className="list-group list-group-flush">
-                <li
-                  className="list-group-item d-flex justify-content-between px-0 border-0"
-                  style={{ paddingTop: 4, paddingBottom: 4, marginBottom: 0 }}
-                >
-                  <h6 className="mb-0 fw-bold">Grand Total</h6>
-                  <h6 className="mb-0 fw-bold">
+              </div>
+              <hr className="opacity-15" />
+              <div className="bg-transparent">
+                <div className="d-flex justify-content-between px-0 border-0">
+                  <h6 className="mb-0 text-primary fw-bold">Grand Total</h6>
+                  <h6 className="mb-0 text-primary fw-bold">
                     ₹
                     {Number(
                       orderDetails.order_details.final_grand_total
                     ).toFixed(2)}
                   </h6>
-                </li>
-              </ul>
+                </div>
+              </div>
 
               {orderDetails.order_details.order_payment_settle_type &&
                 orderDetails.order_details.order_payment_settle_type !==
@@ -781,32 +760,15 @@ function OrderDetail() {
             <div>
               <FeedbackButton />
             </div>
-            {orderDetails.order_details.order_status &&
-              orderDetails.order_details.order_status.toLowerCase() ===
-                "paid" && (
-                <button
-                  className="d-flex align-items-center"
-                  style={{
-                    background: "#F5F5F5",
-                    border: "1px solid #E0E0E0",
-                    borderRadius: "24px",
-                    color: "#222",
-                    fontWeight: 500,
-                    fontSize: "13px",
-                    padding: "3px 12px",
-                    boxShadow: "none",
-                    outline: "none",
-                    transition: "background 0.2s",
-                  }}
-                  onClick={handleDownloadInvoice}
-                >
-                  <i
-                    className="fa-solid fa-download me-2"
-                    style={{ fontSize: 16 }}
-                  ></i>
-                  Invoice
-                </button>
-              )}
+            {orderDetails.order_details.order_status?.toLowerCase() === "paid" && (
+              <button
+                className="btn btn-light btn-sm d-flex align-items-center"
+                onClick={handleDownloadInvoice}
+              >
+                <i className="fa-solid fa-download me-2"></i>
+                Invoice
+              </button>
+            )}
           </div>
 
           {/* Table Information */}
