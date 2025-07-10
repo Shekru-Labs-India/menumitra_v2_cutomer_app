@@ -314,7 +314,7 @@ export const AddToCartModal = () => {
     return (
       <div className="position-relative">
         <div
-          className="form-control d-flex justify-content-between align-items-center rounded-3 p-3 fs-6 bg-white text-dark user-select-none"
+          className="form-control d-flex justify-content-between align-items-center rounded-3 p-3 fs-6 text-dark user-select-none"
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           style={{
             border: "1.5px solid #e9ecef",
@@ -333,7 +333,7 @@ export const AddToCartModal = () => {
 
         {isDropdownOpen && portions.length > 0 && (
           <div
-            className="position-absolute w-100 mt-1 shadow-sm bg-white rounded-3 border"
+            className="position-absolute w-100 mt-1 shadow-sm bg-transparent rounded-3 border"
             style={{
               border: "1.5px solid #e9ecef",
               zIndex: 1000,
@@ -347,9 +347,7 @@ export const AddToCartModal = () => {
                   handlePortionChange(portion.portion_id);
                   setIsDropdownOpen(false);
                 }}
-                className={`d-flex justify-content-between align-items-center p-3 border-bottom ${
-                  selectedPortion === portion.portion_id ? "bg-light" : "bg-white"
-                }`}
+                className={`d-flex justify-content-between align-items-center p-3 border-bottom bg-light`}
                 style={{
                   cursor: "pointer",
                   transition: "all 0.2s ease"
@@ -357,7 +355,10 @@ export const AddToCartModal = () => {
               >
                 <div className="d-flex flex-column">
                   <span
-                    className={`fs-6 text-dark ${
+                    style={{
+                      color: "#212529"
+                    }}
+                    className={`fs-6  ${
                       selectedPortion === portion.portion_id ? "fw-medium" : "fw-normal"
                     }`}
                   >
@@ -469,7 +470,7 @@ export const AddToCartModal = () => {
             </span>
           </div>
           <textarea
-            className={`form-control rounded-3 p-3 fs-6 bg-light ${
+            className={`form-control rounded-3 p-3 fs-6 ${
               comments[selectedPortion]?.length < 5 && comments[selectedPortion]?.length > 0
                 ? "border-danger"
                 : comments[selectedPortion]?.length > 50
