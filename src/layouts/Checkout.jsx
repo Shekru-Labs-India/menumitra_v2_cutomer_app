@@ -92,6 +92,7 @@ function Checkout() {
   const [couponCode, setCouponCode] = useState("");
   const [couponStatus, setCouponStatus] = useState(null);
   const [couponLoading, setCouponLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   // Keep all your handlers and effects here
   const handleLogin = () => {
@@ -125,10 +126,10 @@ function Checkout() {
     }));
   };
 
-  // Replace fetchCheckoutDetails with TanStack Query
+  // React Query for checkout details
   const { 
     data: checkoutDetails,
-    isLoading: loading,
+    isLoading: detailsLoading,
     error: checkoutError
   } = useQuery({
     queryKey: ['checkout', outletId, cartItems],
@@ -137,8 +138,8 @@ function Checkout() {
       orderItems: getOrderItems()
     }),
     enabled: !!outletId && cartItems.length > 0,
-    staleTime: 30000, // Consider data fresh for 30 seconds
-    cacheTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    staleTime: 30000,
+    cacheTime: 5 * 60 * 1000,
     retry: 2,
     onError: (err) => {
       if (err.response?.status === 401) {
@@ -207,7 +208,7 @@ function Checkout() {
       }
     }
     try {
-      setLoading(true);
+      setCheckoutLoading(true);
 
       const auth = JSON.parse(localStorage.getItem("auth"));
       const accessToken = auth?.accessToken;
@@ -226,7 +227,7 @@ function Checkout() {
           isOpen: true,
           orderDetails: {
             ...existingOrder,
-            order_id: existingOrder.order_id, // Ensure order_id is set correctly
+            order_id: existingOrder.order_id,
           },
         });
         return;
@@ -243,7 +244,7 @@ function Checkout() {
         toast.error("Failed to create order. Please try again.");
       }
     } finally {
-      setLoading(false);
+      setCheckoutLoading(false);
     }
   };
 
@@ -314,7 +315,7 @@ function Checkout() {
 
   const handleCancelExisting = async () => {
     try {
-      setLoading(true);
+      setCheckoutLoading(true);
       const auth = JSON.parse(localStorage.getItem("auth"));
       const accessToken = auth?.accessToken;
       const userId = auth?.userId;
@@ -365,14 +366,14 @@ function Checkout() {
       console.error("Error cancelling order:", error);
       toast.error("Failed to cancel existing order and create new one");
     } finally {
-      setLoading(false);
+      setCheckoutLoading(false);
       handleModalClose();
     }
   };
 
   const handleAddToExisting = async () => {
     try {
-      setLoading(true);
+      setCheckoutLoading(true);
       const auth = JSON.parse(localStorage.getItem("auth"));
       const accessToken = auth?.accessToken;
       const userId = auth?.userId;
@@ -417,7 +418,7 @@ function Checkout() {
       console.error("Error adding to existing order:", error);
       toast.error("Failed to add to existing order");
     } finally {
-      setLoading(false);
+      setCheckoutLoading(false);
       handleModalClose();
     }
   };
@@ -789,7 +790,7 @@ function Checkout() {
               <>
                 <div className="rounded-4 shadow-sm p-3 mb-3" 
                      style={{ border: "1px solid #e0e0e0", marginTop: 24 }}>
-                  {loading ? (
+                  {detailsLoading ? (
                     <div className="text-center py-3">
                       <div className="spinner-border text-primary" role="status">
                         <span className="visually-hidden">Loading...</span>
@@ -876,10 +877,10 @@ function Checkout() {
                       boxShadow: "0 2px 8px rgba(25,185,85,0.15)",
                     }}
                     onClick={handleCheckout}
-                    disabled={loading || cartItems.length === 0}
+                    disabled={detailsLoading || checkoutLoading || cartItems.length === 0}
                   >
-                    {loading ? (
-                      <span>Loading...</span>
+                    {checkoutLoading ? (
+                      <span>Processing...</span>
                     ) : (
                       <>
                         Place Order{" "}
@@ -948,10 +949,10 @@ function Checkout() {
         isOpen={existingOrderModal.isOpen}
         onClose={handleModalClose}
         orderNumber={existingOrderModal.orderDetails?.order_number}
-        orderStatus={existingOrderModal.orderDetails?.order_status} // <-- add this line
+        orderStatus={existingOrderModal.orderDetails?.order_status}
         onCancelExisting={handleCancelExisting}
         onAddToExisting={handleAddToExisting}
-        isLoading={loading}
+        isLoading={checkoutLoading}
       />
 
       <Footer />
