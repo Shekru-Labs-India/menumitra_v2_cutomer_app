@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useOutlet } from '../contexts/OutletContext';
-import { useCacheData } from '../contexts/CacheDataContext';
-import { useAuth } from '../contexts/AuthContext'; // Add this import
+import { useAuth } from '../contexts/AuthContext';
+import apiService from '../api/apiService';
 
 export const useMenuItems = () => {
   const [menuCategories, setMenuCategories] = useState([]);
@@ -9,8 +9,7 @@ export const useMenuItems = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const { outletId } = useOutlet();
-  const { fetchData } = useCacheData();
-  const { getUserId } = useAuth(); // Add this line to get the getUserId function
+  const { getUserId } = useAuth();
 
   const fetchMenusByCategory = async () => {
     if (!outletId) {
@@ -20,28 +19,20 @@ export const useMenuItems = () => {
 
     console.log('🔄 Fetching menu items for outlet:', outletId);
     try {
-      // Get user ID from AuthContext
-      const userId = getUserId() || null;
-      
-      // Use caching system instead of direct fetch
-      const data = await fetchData('get_all_menu_list_by_category', {
-        outlet_id: outletId,
-        user_id: userId, // Add the user_id parameter
-        app_source: "user_app",
-      });
+      const data = await apiService.common.getAllMenuListByCategory({ outletId });
       
       console.log('✅ Menu API Response:', data);
 
-      if (data.detail) {
+      if (data) {
         // Update categories
-        const categories = data.detail.category?.map(category => ({
+        const categories = data.category?.map(category => ({
           menuCatId: category.menu_cat_id,
           categoryName: category.category_name,
           menuCount: category.menu_count
         })) || [];
 
         // Update menu items
-        const menus = data.detail.menus?.map(menu => ({
+        const menus = data.menus?.map(menu => ({
           menuId: menu.menu_id,
           menuName: menu.menu_name,
           menuFoodType: menu.menu_food_type,
@@ -54,7 +45,7 @@ export const useMenuItems = () => {
           rating: menu.rating,
           offer: menu.offer,
           isSpecial: menu.is_special,
-          isFavourite: menu.is_favourite === 1, // Ensure boolean conversion
+          isFavourite: menu.is_favourite === 1,
           isActive: menu.is_active,
           image: menu.image
         })) || [];
@@ -75,7 +66,7 @@ export const useMenuItems = () => {
       console.log('🏁 OutletId changed, fetching menu data...');
       fetchMenusByCategory();
     }
-  }, [outletId, getUserId]); // Added getUserId as dependency
+  }, [outletId]);
 
   return {
     menuCategories,

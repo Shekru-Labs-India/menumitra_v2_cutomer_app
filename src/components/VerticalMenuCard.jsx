@@ -7,6 +7,7 @@ import { useCart } from "../contexts/CartContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useOutlet } from "../contexts/OutletContext";
 import { useCacheData } from "../contexts/CacheDataContext"; // Add this import
+import apiService from '../api/apiService';
 
 // FoodTypeIcon component
 const FoodTypeIcon = ({ foodType }) => {
@@ -164,7 +165,6 @@ const VerticalMenuCard = ({
   const handleFavoriteToggle = async (e) => {
     e.preventDefault();
 
-    // Check if user is authenticated
     if (!user) {
       setShowAuthOffcanvas(true);
       return;
@@ -175,7 +175,6 @@ const VerticalMenuCard = ({
     try {
       setIsLoading(true);
 
-      // Get auth data from localStorage
       const authData = localStorage.getItem("auth");
       const auth = authData ? JSON.parse(authData) : null;
 
@@ -184,58 +183,25 @@ const VerticalMenuCard = ({
         return;
       }
 
-      // Choose API endpoint based on current favorite status
-      const apiUrl = isFavoriteBoolean
-        ? "https://men4u.xyz/v2/user/remove_favourite_menu"
-        : "https://men4u.xyz/v2/user/save_favourite_menu";
-
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${auth.accessToken}`,
-        },
-        body: JSON.stringify({
-          outlet_id: outletId,
-          menu_id: menuItem.menuId,
-          user_id: auth.userId || null,
-          app_source: "user_app",
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // Clear cache for both menu list and special menu list APIs
-        const menuListCacheKey = generateCacheKey("get_all_menu_list_by_category", {
-          outlet_id: outletId,
-          user_id: auth.userId,
+      if (isFavoriteBoolean) {
+        await apiService.favorites.remove({
+          outletId,
+          userId: auth.userId,
+          menuId: menuItem.menuId
         });
-        const specialMenuCacheKey = generateCacheKey("get_special_menu_list", {
-          outlet_id: outletId,
-          user_id: auth.userId,
-        });
-        
-        clearCacheItem(menuListCacheKey);
-        clearCacheItem(specialMenuCacheKey);
-        
-        onFavoriteUpdate(menuItem.menuId, !isFavoriteBoolean);
       } else {
-        console.error("Failed to update favorite status:", data.detail);
-        if (data.detail === "Menu already in favorites") {
-          onFavoriteUpdate(menuItem.menuId, true);
-          window.alert("Menu is already in your favorites.");
-        } else {
-          openModal("ERROR", {
-            message: data.detail || "Failed to update favorite status",
-          });
-        }
+        await apiService.favorites.add({
+          outletId,
+          userId: auth.userId,
+          menuId: menuItem.menuId
+        });
       }
+
+      onFavoriteUpdate(menuItem.menuId, !isFavoriteBoolean);
     } catch (error) {
       console.error("Error updating favorite status:", error);
       openModal("ERROR", {
-        message: "Failed to connect to the server",
+        message: error.message || "Failed to update favorite status",
       });
     } finally {
       setIsLoading(false);

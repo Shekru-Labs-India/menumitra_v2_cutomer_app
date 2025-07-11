@@ -16,35 +16,14 @@ import { OrderTypeModal } from "../components/Modal/variants/OrderTypeModal";
 import { useModal } from "../contexts/ModalContext";
 import OutletInfoBanner from "../components/OutletInfoBanner";
 import SearchBar from "../components/SearchBar";
-import axios from "axios";
+import apiService from '../api/apiService';
 import OfferBanner from "./OfferBanner";
-import { useCacheData } from '../contexts/CacheDataContext';
-
-const API_BASE_URL = "https://men4u.xyz/v2";
-
-// Create axios instance with default config
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-  },
-});
 
 // Helper function to get auth data
 const getAuthData = () => {
   const authData = localStorage.getItem("auth");
   return authData ? JSON.parse(authData) : null;
 };
-
-// Add request interceptor to handle auth token
-api.interceptors.request.use((config) => {
-  const userData = getAuthData();
-  if (userData?.accessToken) {
-    config.headers.Authorization = `Bearer ${userData.accessToken}`;
-  }
-  return config;
-});
 
 // Helper to extract outlet params from the path
 function extractOutletParamsFromPath(pathname) {
@@ -78,7 +57,6 @@ function Home() {
 
   const { outletId } = useOutlet();
   const { openModal } = useModal();
-  const { fetchData, getCachedData, generateCacheKey } = useCacheData();
 
   const [filteredMenuItems, setFilteredMenuItems] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -164,198 +142,43 @@ function Home() {
     return cartItem ? cartItem.quantity : 0;
   };
 
-  // Refactored fetchSpecialMenuItems to use caching system
+  // Update fetchSpecialMenuItems to use direct API call
   const fetchSpecialMenuItems = async () => {
     console.log("🔄 Fetching special menu items...");
     try {
-      // Get user ID from AuthContext instead of local storage
       const userId = getUserId() || null;
       console.log("📦 Using outlet ID:", outletId);
 
-      // Add a guard clause
       if (!outletId) {
         console.log("❌ No outletId available, skipping special menu fetch");
         return;
       }
 
-      // Use the caching system instead of direct API call
-      const data = await fetchData("get_special_menu_list", {
-        user_id: userId,
-        outlet_id: outletId,
-        app_source: "user_app",
+      const data = await apiService.menus.getSpecialMenus({ 
+        outletId, 
+        userId 
       });
 
-      if (data.detail && data.detail.special_menu_list) {
-        console.log(
-          "✨ Setting special menu items:",
-          data.detail.special_menu_list
-        );
-        setSpecialMenuItems(data.detail.special_menu_list);
+      if (data && data.special_menu_list) {
+        console.log("✨ Setting special menu items:", data.special_menu_list);
+        setSpecialMenuItems(data.special_menu_list);
       }
     } catch (error) {
-      console.error(
-        "❌ Error fetching special menu items:",
-        error.response?.data || error.message
-      );
+      console.error("❌ Error fetching special menu items:", error);
     }
   };
 
-  // Add this function to handle favorite updates
-  const handleFavoriteUpdate = (menuId, isFavorite) => {
-    setFavoriteMenuIds((prevIds) => {
-      const newIds = new Set(prevIds);
-      if (isFavorite) {
-        newIds.add(menuId);
-      } else {
-        newIds.delete(menuId);
-      }
-      return newIds;
-    });
-    
-    // Update filteredMenuItems so is_favourite persists
-    setFilteredMenuItems((prev) =>
-      prev.map((item) =>
-        item.menuId === menuId || item.menu_id === menuId
-          ? { ...item, is_favourite: isFavorite ? 1 : 0, isFavourite: isFavorite ? 1 : 0 }
-          : item
-      )
-    );
-
-    // Refetch special menu list to get updated data
-    fetchSpecialMenuItems();
-  };
-
-  const outletParams = extractOutletParamsFromPath(location.pathname);
-
-  useEffect(() => {
-    if (outletParams) {
-      console.log("Extracted outlet params:", outletParams);
-      // You can use outletParams.outletCode, etc. for your API calls here
-      // Optionally, update context or localStorage if needed
-    } else {
-      console.log("No outlet params found in path:", location.pathname);
-    }
-  }, [location.pathname]);
-
-  // Only show modal on outlet-only URL if no order type is set
-  useEffect(() => {
-    if (isOutletOnlyUrl && !orderSettings.order_type) {
-      openModal("orderType");
-    }
-  }, [isOutletOnlyUrl, orderSettings.order_type]);
-
-  // Add this handler function
-  const handleSearch = (searchResults) => {
-    setIsSearching(searchResults.length > 0);
-    setFilteredMenuItems(searchResults);
-  };
-
-  // Update the fetchMenuListByCategory function in Home.jsx
+  // Update fetchMenuListByCategory to use direct API call
   const fetchMenuListByCategory = async () => {
     try {
-      // Get user ID from AuthContext
-      const userId = getUserId() || null;
-      
-      // Use caching system instead of axios
-      const data = await fetchData("get_all_menu_list_by_category", {
-        outlet_id: outletId,
-        user_id: userId,
-        app_source: "user_app",
-      });
+      const data = await apiService.common.getAllMenuListByCategory({ outletId });
 
-      if (data.detail) {
-        // Transform the data into a more usable format
-        const menusByCategory = {};
-        let totalMenuCount = 0; // Initialize total menu count
-
-        if (data.detail.menus) {
-          data.detail.menus.forEach((menu) => {
-            if (!menusByCategory[menu.menu_cat_id]) {
-              menusByCategory[menu.menu_cat_id] = [];
-            }
-            menusByCategory[menu.menu_cat_id].push({
-              menuId: menu.menu_id,
-              menuName: menu.menu_name,
-              menuFoodType: menu.menu_food_type,
-              menuCatId: menu.menu_cat_id,
-              categoryName: menu.category_name,
-              spicyIndex: menu.spicy_index,
-              portions: menu.portions,
-              rating: menu.rating,
-              price: menu.price,
-              offer: menu.offer,
-              isSpecial: menu.is_special,
-              is_favourite: menu.is_favourite,  // Keep original property
-              isFavourite: menu.is_favourite === 1,  // Add transformed property
-              isActive: menu.is_active,
-              image:
-                Array.isArray(menu.images) && menu.images.length > 0
-                  ? menu.images[0].image
-                  : null,
-              imageId:
-                Array.isArray(menu.images) && menu.images.length > 0
-                  ? menu.images[0].image_id
-                  : null,
-            });
-            totalMenuCount++; // Increment total count for each menu item
-          });
-        }
-
-        // Transform categories data
-        const categories = data.detail.category.map((cat) => ({
-          menuCatId: cat.menu_cat_id,
-          categoryName: cat.category_name,
-          menuCount: cat.menu_count,
-        }));
-
-        // Add "All" category at the beginning
-        const allCategory = {
-          menuCatId: "all",
-          categoryName: "All",
-          menuCount: totalMenuCount,
-        };
-        categories.unshift(allCategory);
-
-        setCategoriesData({
-          categories: categories,
-          menusByCategory: menusByCategory,
-        });
-
-        // Set initial filtered menu items to all menus from all categories
-        setFilteredMenuItems(data.detail.menus || []);
-      }
-    } catch (error) {
-      console.error(
-        "❌ Error fetching menu list by category:",
-        error.response?.data || error.message
-      );
-    }
-  };
-
-  // Add this effect to fetch menu list when outletId changes
-  useEffect(() => {
-    if (outletId) {
-      // Only fetch if we have an outletId
-      const userId = getUserId() || null;
-      const cacheKey = generateCacheKey("get_all_menu_list_by_category", {
-        outlet_id: outletId,
-        user_id: userId,
-        app_source: "user_app",
-      });
-      
-      // Check if we have valid cached data
-      const cachedData = getCachedData(cacheKey);
-      if (!cachedData) {
-        console.log("No valid cached data found, fetching fresh data...");
-        fetchMenuListByCategory();
-      } else {
-        console.log("Using cached menu list data");
-        // Process the cached data
+      if (data) {
         const menusByCategory = {};
         let totalMenuCount = 0;
 
-        if (cachedData.detail.menus) {
-          cachedData.detail.menus.forEach((menu) => {
+        if (data.menus) {
+          data.menus.forEach((menu) => {
             if (!menusByCategory[menu.menu_cat_id]) {
               menusByCategory[menu.menu_cat_id] = [];
             }
@@ -374,14 +197,20 @@ function Home() {
               is_favourite: menu.is_favourite,
               isFavourite: menu.is_favourite === 1,
               isActive: menu.is_active,
-              image: Array.isArray(menu.images) && menu.images.length > 0 ? menu.images[0].image : null,
-              imageId: Array.isArray(menu.images) && menu.images.length > 0 ? menu.images[0].image_id : null,
+              image:
+                Array.isArray(menu.images) && menu.images.length > 0
+                  ? menu.images[0].image
+                  : null,
+              imageId:
+                Array.isArray(menu.images) && menu.images.length > 0
+                  ? menu.images[0].image_id
+                  : null,
             });
             totalMenuCount++;
           });
         }
 
-        const categories = cachedData.detail.category.map((cat) => ({
+        const categories = data.category.map((cat) => ({
           menuCatId: cat.menu_cat_id,
           categoryName: cat.category_name,
           menuCount: cat.menu_count,
@@ -399,34 +228,29 @@ function Home() {
           menusByCategory: menusByCategory,
         });
 
-        setFilteredMenuItems(cachedData.detail.menus || []);
+        setFilteredMenuItems(data.menus || []);
       }
+    } catch (error) {
+      console.error(
+        "❌ Error fetching menu list by category:",
+        error
+      );
     }
-  }, [outletId, getUserId]);
+  };
 
-  // Instead, only use the effect that depends on outletId for special menu items
+  // Update the useEffect for fetching menu list
   useEffect(() => {
     if (outletId) {
-      const userId = getUserId() || null;
-      const cacheKey = generateCacheKey("get_special_menu_list", {
-        user_id: userId,
-        outlet_id: outletId,
-        app_source: "user_app",
-      });
-      
-      // Check if we have valid cached data
-      const cachedData = getCachedData(cacheKey);
-      if (!cachedData) {
-        console.log("No valid cached special menu data found, fetching fresh data...");
-        fetchSpecialMenuItems();
-      } else {
-        console.log("Using cached special menu data");
-        if (cachedData.detail && cachedData.detail.special_menu_list) {
-          setSpecialMenuItems(cachedData.detail.special_menu_list);
-        }
-      }
+      fetchMenuListByCategory();
     }
-  }, [outletId, getUserId]);
+  }, [outletId]);
+
+  // Update the useEffect for special menu items
+  useEffect(() => {
+    if (outletId) {
+      fetchSpecialMenuItems();
+    }
+  }, [outletId]);
 
   // Filter menu items based on selected category
   useEffect(() => {
@@ -462,6 +286,31 @@ function Home() {
       return filteredMenuItems.filter((item) => Number(item.offer) > 0);
     }
     return filteredMenuItems;
+  };
+
+  const outletParams = extractOutletParamsFromPath(location.pathname);
+
+  useEffect(() => {
+    if (outletParams) {
+      console.log("Extracted outlet params:", outletParams);
+      // You can use outletParams.outletCode, etc. for your API calls here
+      // Optionally, update context or localStorage if needed
+    } else {
+      console.log("No outlet params found in path:", location.pathname);
+    }
+  }, [location.pathname]);
+
+  // Only show modal on outlet-only URL if no order type is set
+  useEffect(() => {
+    if (isOutletOnlyUrl && !orderSettings.order_type) {
+      openModal("orderType");
+    }
+  }, [isOutletOnlyUrl, orderSettings.order_type]);
+
+  // Add this handler function
+  const handleSearch = (searchResults) => {
+    setIsSearching(searchResults.length > 0);
+    setFilteredMenuItems(searchResults);
   };
 
   return (
@@ -633,7 +482,7 @@ function Home() {
                             menuItem.offer > 0 ? `${menuItem.offer}%` : null
                           }
                           menuItem={menuItem}
-                          onFavoriteUpdate={handleFavoriteUpdate}
+                          onFavoriteUpdate={handleFavoriteClick}
                         />
                       </div>
                     ))
@@ -666,7 +515,7 @@ function Home() {
                           menuItem.offer > 0 ? `${menuItem.offer}%` : null
                         }
                         menuItem={menuItem}
-                        onFavoriteUpdate={handleFavoriteUpdate}
+                        onFavoriteUpdate={handleFavoriteClick}
                       />
                     </div>
                   ))

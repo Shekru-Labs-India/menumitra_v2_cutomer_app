@@ -39,7 +39,7 @@ export const apiService = {
       };
     },
     getSpecialMenus: async ({ outletId, userId }) => {
-      const response = await axiosInstance.post('get_special_menu_list', {
+      const response = await axiosInstance.post(`/${API_VERSION}/user/get_special_menu_list`, {
         outlet_id: outletId,
         user_id: userId,
         app_source: "user_app"
