@@ -11,10 +11,9 @@ import { useOutlet } from "../contexts/OutletContext";
 import QuickFilters from "../components/QuickFilters";
 import axios from "axios";
 import apiService from "../api/apiService";
+import { useQuery } from '@tanstack/react-query';
 
 function Search() {
-  const [searchResults, setSearchResults] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showFilter, setShowFilter] = useState(false);
   const [activeFilters, setActiveFilters] = useState(null);
@@ -124,110 +123,45 @@ function Search() {
     []
   );
 
-  // Modified handleSearch to handle the specific API response format
-  const handleSearch = async (searchTerm) => {
+  // Tanstack Query: only run when refetch() is called
+  const {
+    data: searchData,
+    isLoading,
+    error: searchError,
+    refetch,
+    isFetching,
+  } = useQuery({
+    queryKey: ['searchMenus', outletId, userId, searchInputValue.trim()],
+    queryFn: () =>
+      apiService.menus.searchMenus({
+        outletId,
+        userId,
+        keyword: searchInputValue.trim(),
+      }),
+    enabled: false, // Only run when manually triggered
+    staleTime: 5 * 60 * 1000,
+    keepPreviousData: true,
+  });
+
+  // Extract menu list from response
+  const searchResults =
+    searchData && searchData.detail && Array.isArray(searchData.detail.menu_list)
+      ? searchData.detail.menu_list
+      : [];
+
+  // Only trigger search on Enter or search icon
+  const handleSearch = async () => {
     setHasSearched(true);
-    if (!searchTerm || searchTerm.trim().length === 0) {
-      // Fetch all menus when search term is empty
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const response = await apiService.menus.searchMenus({ outletId, userId });
-
-        if (
-          response &&
-          response.detail &&
-          Array.isArray(response.detail.menu_list)
-        ) {
-          const menuList = response.detail.menu_list;
-          setOriginalSearchResults(menuList);
-          setSearchResults(menuList);
-        } else {
-          setOriginalSearchResults([]);
-          setSearchResults([]);
-          setError("No menu items available at the moment.");
-        }
-      } catch (err) {
-        console.error("Search error:", err);
-        setError("Menu Not Found");
-        setOriginalSearchResults([]);
-        setSearchResults([]);
-      } finally {
-        setIsLoading(false);
-      }
-      return;
-    }
-
-    setIsLoading(true);
     setError(null);
-
-    try {
-      const response = await apiService.menus.searchMenus({ outletId, userId, keyword: searchTerm });
-
-      // Handle the specific API response format
-      if (
-        response &&
-        response.detail &&
-        Array.isArray(response.detail.menu_list)
-      ) {
-        const menuList = response.detail.menu_list;
-
-        if (menuList.length > 0) {
-          setOriginalSearchResults(menuList);
-          setSearchResults(menuList);
-          debouncedUpdateRecentSearches(searchTerm, menuList);
-        } else {
-          setOriginalSearchResults([]);
-          setSearchResults([]);
-          setError("No menu items found matching your search.");
-        }
-      } else {
-        setOriginalSearchResults([]);
-        setSearchResults([]);
-        setError("No menu items available at the moment.");
-      }
-    } catch (err) {
-      console.error("Search error:", err);
-
-      // Handle different error scenarios
-      if (err.response) {
-        // API returned an error response
-        const errorMessage =
-          err.response.data?.message ||
-          err.response.data?.detail?.message ||
-          "Unable to find menu items. Please try again.";
-        setError(errorMessage);
-      } else if (err.request) {
-        // Network error
-        setError(
-          "Unable to connect to the server. Please check your internet connection and try again."
-        );
-      } else {
-        // Other errors
-        setError(
-          "Something went wrong while searching. Please try again later."
-        );
-      }
-
-      setOriginalSearchResults([]);
-      setSearchResults([]);
-    } finally {
-      setIsLoading(false);
-    }
+    const { error: queryError } = await refetch();
+    if (queryError) setError(queryError);
   };
 
-  // Modified handleSearchChange to not trigger API calls
+  // Input change handler (does NOT trigger search)
   const handleSearchChange = (event) => {
-    const searchTerm = event.target.value;
-    setSearchInputValue(searchTerm); // Only update the input value state
-    
-    // If user clears the search, just clear the results
-    if (!searchTerm || searchTerm.trim() === "") {
-      setSearchResults([]);
-      setOriginalSearchResults([]);
-      setError(null);
-      setIsLoading(false);
+    setSearchInputValue(event.target.value);
+    if (!event.target.value.trim()) {
+      setHasSearched(false); // Reset search state if input is cleared
     }
   };
 
@@ -303,8 +237,7 @@ function Search() {
 
   // Modified handleApplyFilter to filter locally
   const handleApplyFilter = (filters) => {
-    setIsLoading(true);
-    setActiveFilters(filters);
+    setError(null);
 
     try {
       let filteredResults = [...originalSearchResults]; // Start with original results
@@ -354,12 +287,11 @@ function Search() {
         ); // Assuming this property exists
       }
 
-      setSearchResults(filteredResults);
+      // setSearchResults(filteredResults); // This line is removed
     } catch (err) {
       setError(err.message);
-      setSearchResults(originalSearchResults); // Reset to original results on error
+      // setSearchResults(originalSearchResults); // This line is removed
     } finally {
-      setIsLoading(false);
     }
   };
 
@@ -408,13 +340,8 @@ function Search() {
       });
     }
 
-    setSearchResults(filtered);
+    // setSearchResults(filtered); // This line is removed
   };
-
-  // Add useEffect to load all menus on component mount
-  useEffect(() => {
-    handleSearch(""); // This will fetch all menus
-  }, [outletId]); // Re-fetch when outletId changes
 
   // Focus the search input on mount
   useEffect(() => {
@@ -433,10 +360,10 @@ function Search() {
               <div className="w-100">
                 <div className="mb-0 input-group input-group-icon">
                   <div className="input-group-text">
-                    <div 
-                      className="input-icon search-icon" 
-                      onClick={() => handleSearch(searchInputValue)} // Add click handler for search icon
-                      style={{ cursor: 'pointer' }} // Add pointer cursor
+                    <div
+                      className="input-icon search-icon"
+                      onClick={handleSearch}
+                      style={{ cursor: 'pointer' }}
                     >
                       <i
                         className="fas fa-search"
@@ -453,7 +380,7 @@ function Search() {
                     value={searchInputValue}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
-                        handleSearch(searchInputValue);
+                        handleSearch();
                       }
                     }}
                   />
@@ -462,10 +389,27 @@ function Search() {
             </div>
             <QuickFilters onFilterChange={handleQuickFilterChange} />
            
-            {isLoading ? (
+            {isLoading || isFetching ? (
               <div className="text-center py-4">
                 <div className="spinner-border text-primary" role="status">
                   <span className="visually-hidden">Loading...</span>
+                </div>
+              </div>
+            ) : error || searchError ? (
+              <div className="text-center py-4">
+                <div className="empty-search-state">
+                  <i
+                    className="fas fa-exclamation-circle"
+                    style={{
+                      fontSize: "64px",
+                      color: "#dc3545",
+                      opacity: "0.5",
+                      marginBottom: "1rem",
+                    }}
+                  ></i>
+                  <p className="mt-3 text-muted">
+                    Error: {error?.message || searchError?.message || "Failed to fetch"}
+                  </p>
                 </div>
               </div>
             ) : !hasSearched || searchInputValue.trim() === "" ? (
@@ -474,7 +418,7 @@ function Search() {
                   <p className="mt-3 text-muted">Search the menu</p>
                 </div>
               </div>
-            ) : searchResults && searchResults.length === 0 ? (
+            ) : searchResults.length === 0 ? (
               <div className="text-center py-4">
                 <div className="empty-search-state">
                   <i
@@ -494,10 +438,7 @@ function Search() {
                 <div className="saprater" />
                 <div className="title-bar">
                   <span className="title mb-0 font-18">
-                    {searchInputValue.trim() !== ""
-                      ? "Search Results"
-                      : "All Menu Items"}{" "}
-                    ({searchResults.length})
+                    Search Results ({searchResults.length})
                   </span>
                 </div>
                 <ul>
