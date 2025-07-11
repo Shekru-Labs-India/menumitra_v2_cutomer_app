@@ -189,22 +189,22 @@ function Home() {
               menuCatId: menu.menu_cat_id,
               categoryName: menu.category_name,
               spicyIndex: menu.spicy_index,
-              portions: menu.portions,
+              portions: menu.portion_data?.map(portion => ({
+                portion_id: portion.portion_id || Math.random().toString(36).substr(2, 9),
+                portion_name: portion.portion_name,
+                price: portion.price,
+                unit_value: portion.unit_value,
+                unit_type: portion.unit_type
+              })),
               rating: menu.rating,
-              price: menu.price,
+              price: menu.portion_data?.[0]?.price ?? 0,
               offer: menu.offer,
               isSpecial: menu.is_special,
               is_favourite: menu.is_favourite,
               isFavourite: menu.is_favourite === 1,
               isActive: menu.is_active,
-              image:
-                Array.isArray(menu.images) && menu.images.length > 0
-                  ? menu.images[0].image
-                  : null,
-              imageId:
-                Array.isArray(menu.images) && menu.images.length > 0
-                  ? menu.images[0].image_id
-                  : null,
+              image: menu.images?.[0]?.image,
+              imageId: menu.images?.[0]?.image_id
             });
             totalMenuCount++;
           });
