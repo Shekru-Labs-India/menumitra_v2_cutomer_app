@@ -4,28 +4,39 @@ import axiosInstance from './axios';
 const API_VERSION = 'v2';
 
 export const apiService = {
-  // Categories
-  categories: {
-    getList: async ({ outletId }) => {
+  // Common API calls that return different data shapes
+  common: {
+    getAllMenuListByCategory: async ({ outletId }) => {
       const response = await axiosInstance.post(`/${API_VERSION}/common/get_all_menu_list_by_category`, {
         outlet_id: outletId,
         app_source: "customer_app"
       });
       
-      // Return only the categories array from the response
-      return response?.data?.detail?.category || [];
+      return response?.data?.detail || {};
     },
   },
 
-  // Menu Items
+  // Categories - uses common API but returns only categories
+  categories: {
+    getList: async ({ outletId }) => {
+      const data = await apiService.common.getAllMenuListByCategory({ outletId });
+      return data.category || [];
+    },
+  },
+
+  // Menu Items - uses common API but returns filtered data
   menus: {
-    getByCategory: async ({ outletId, userId }) => {
-      const response = await axiosInstance.post('get_all_menu_list_by_category', {
-        outlet_id: outletId,
-        user_id: userId,
-        app_source: "user_app"
-      });
-      return response?.data?.detail || {};
+    getByCategory: async ({ outletId, categoryId }) => {
+      const data = await apiService.common.getAllMenuListByCategory({ outletId });
+      
+      return {
+        category: data.category?.find(cat => 
+          cat.menu_cat_id.toString() === categoryId.toString()
+        ),
+        menus: data.menus?.filter(menu => 
+          menu.menu_cat_id.toString() === categoryId.toString()
+        ) || []
+      };
     },
     getSpecialMenus: async ({ outletId, userId }) => {
       const response = await axiosInstance.post('get_special_menu_list', {

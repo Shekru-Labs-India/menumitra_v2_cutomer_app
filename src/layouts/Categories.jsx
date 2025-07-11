@@ -214,7 +214,7 @@ function Categories() {
           
           <QueryErrorBoundary>
             {/* Optional: Add refresh button */}
-            <div className="d-flex justify-content-between align-items-center mb-4">
+            {/* <div className="d-flex justify-content-between align-items-center mb-4">
               <ViewToggle />
               {!isLoading && (
                 <button 
@@ -225,7 +225,7 @@ function Categories() {
                   Refresh
                 </button>
               )}
-            </div>
+            </div> */}
 
             {/* Categories display */}
             <div className="row">

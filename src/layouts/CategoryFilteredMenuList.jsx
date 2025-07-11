@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useParams, useLocation } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import VerticalMenuCard from '../components/VerticalMenuCard';
 import { useOutlet } from '../contexts/OutletContext';
-import { useCacheData } from '../contexts/CacheDataContext';
-import { useAuth } from '../contexts/AuthContext'; // Add this import
+import { useAuth } from '../contexts/AuthContext';
+import apiService from '../api/apiService';
 
 const DEFAULT_IMAGE = '';
 
@@ -15,71 +16,60 @@ function CategoryFilteredMenuList() {
   const categoryName = location.state?.categoryName;
   const menuCount = location.state?.menuCount;
   const { outletId } = useOutlet();
-  const { fetchData } = useCacheData();
-  const { getUserId } = useAuth(); // Add this line to get the getUserId function
+  const { getUserId } = useAuth();
+  const queryClient = useQueryClient();
+  const userId = getUserId();
 
-  const [categoryData, setCategoryData] = useState({
-    category: null,
-    menus: []
+  // Fetch menu data using TanStack Query
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['menusByCategory', outletId, categoryId],
+    queryFn: () => apiService.menus.getByCategory({ 
+      outletId, 
+      categoryId 
+    }),
+    enabled: !!outletId && !!categoryId
   });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchMenusByCategory = async () => {
-      if (!categoryId) {
-        console.log('⚠️ No category ID available');
-        return;
-      }
-
-      console.log('🔄 Fetching menus for category:', categoryId);
-      try {
-        console.log('📦 Using outlet ID:', outletId);
-        
-        // Get user ID from AuthContext
-        const userId = getUserId() || null;
-
-        // Use caching system instead of direct fetch
-        const data = await fetchData('get_all_menu_list_by_category', {
-          outlet_id: outletId,
-          user_id: userId, // Add the user_id parameter
-          app_source: "user_app"
-        });
-
-        console.log('✅ API Response:', data);
-        
-        if (data.detail) {
-          const filteredMenus = data.detail.menus.filter(
-            menu => menu.menu_cat_id.toString() === categoryId
-          );
-
-          console.log('✨ Filtered menus:', filteredMenus);
-
-          setCategoryData({
-            category: {
-              menu_cat_id: categoryId,
-              category_name: categoryName || data.detail.category.find(cat => 
-                cat.menu_cat_id.toString() === categoryId
-              )?.category_name,
-              menu_count: menuCount
-            },
-            menus: filteredMenus
-          });
-        }
-      } catch (err) {
-        console.error('❌ Error fetching menu data:', err);
-        setError('Failed to load menu items');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (outletId && categoryId) {
-      fetchMenusByCategory();
+  // Mutations for favorite functionality
+  const addToFavorites = useMutation({
+    mutationFn: (menuId) => apiService.favorites.add({ 
+      outletId, 
+      userId, 
+      menuId 
+    }),
+    onSuccess: () => {
+      // Invalidate relevant queries to refetch data
+      queryClient.invalidateQueries(['menusByCategory', outletId, categoryId]);
     }
-  }, [categoryId, categoryName, menuCount, outletId, fetchData, getUserId]); // Added getUserId as dependency
+  });
 
-  if (loading) {
+  const removeFromFavorites = useMutation({
+    mutationFn: (menuId) => apiService.favorites.remove({ 
+      outletId, 
+      userId, 
+      menuId 
+    }),
+    onSuccess: () => {
+      // Invalidate relevant queries to refetch data
+      queryClient.invalidateQueries(['menusByCategory', outletId, categoryId]);
+    }
+  });
+
+  const handleFavoriteClick = async (isFavorite, menuId) => {
+    if (!userId) return; // Handle unauthenticated users
+
+    try {
+      if (isFavorite) {
+        await addToFavorites.mutateAsync(menuId);
+      } else {
+        await removeFromFavorites.mutateAsync(menuId);
+      }
+    } catch (err) {
+      console.error('Failed to update favorite status:', err);
+    }
+  };
+
+  if (isLoading) {
     return (
       <>
         <Header />
@@ -99,7 +89,9 @@ function CategoryFilteredMenuList() {
         <Header />
         <div className="page-content">
           <div className="container">
-            <div className="alert alert-danger">{error}</div>
+            <div className="alert alert-danger">
+              {error.message || 'Failed to load menu items'}
+            </div>
           </div>
         </div>
         <Footer />
@@ -107,24 +99,28 @@ function CategoryFilteredMenuList() {
     );
   }
 
+  const { category, menus } = data || { category: null, menus: [] };
+
   return (
     <>
       <Header />
       <div className="page-content">
         <div className="container p-b80">
-          {categoryData.category && (
+          {category && (
             <div className="category-header mb-4">
-              <h4 className="title mb-1">{categoryData.category.category_name}</h4>
-              {categoryData.category.menu_count && (
+              <h4 className="title mb-1">
+                {categoryName || category.category_name}
+              </h4>
+              {menuCount && (
                 <small className="text-muted">
-                  {categoryData.category.menu_count} Items Available
+                  {menuCount} Items Available
                 </small>
               )}
             </div>
           )}
           
           <div className="row g-3">
-            {categoryData.menus.map((menu) => (
+            {menus.map((menu) => (
               <div key={menu.menu_id} className="col-12">
                 <VerticalMenuCard
                   image={menu.images?.[0]?.image || DEFAULT_IMAGE}
@@ -148,21 +144,12 @@ function CategoryFilteredMenuList() {
                     isActive: menu.is_active,
                     image: menu.images?.[0]?.image || DEFAULT_IMAGE
                   }}
-                  onFavoriteClick={(isFavorite, menuId) => {
-                    setCategoryData(prevData => ({
-                      ...prevData,
-                      menus: prevData.menus.map(m => 
-                        m.menu_id === menuId 
-                          ? { ...m, is_favourite: isFavorite ? 1 : 0 }
-                          : m
-                      )
-                    }));
-                  }}
+                  onFavoriteClick={handleFavoriteClick}
                 />
               </div>
             ))}
             
-            {categoryData.menus.length === 0 && (
+            {menus.length === 0 && (
               <div className="col-12">
                 <div className="alert alert-info">
                   No menu items found in this category.
