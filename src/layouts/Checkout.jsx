@@ -163,39 +163,6 @@ function Checkout() {
     localStorage.setItem("cart", JSON.stringify(updatedCart));
   };
 
-  const checkExistingOrder = async (userId, outletId) => {
-    try {
-      const auth = JSON.parse(localStorage.getItem("auth"));
-      const accessToken = auth?.accessToken;
-
-      const response = await axios.post(
-        "https://men4u.xyz/v2/user/check_order_exist",
-        {
-          user_id: userId,
-          outlet_id: outletId,
-            app_source: "user_app",
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        }
-      );
-
-      if (response.data?.detail) {
-        console.log("Existing order found:", response.data.detail);
-        return response.data.detail;
-      }
-      return null;
-    } catch (error) {
-      // If no order exists, API might return an error - this is expected
-      console.log("No existing order found");
-      return null;
-    }
-  };
-
   const handleCheckout = async () => {
     // Validate comments
     for (const item of cartItems) {
@@ -219,8 +186,11 @@ function Checkout() {
         return;
       }
 
-      // First check for existing order
-      const existingOrder = await checkExistingOrder(userId, outletId);
+      // Use the new service method
+      const existingOrder = await apiService.checkout.checkExistingOrder({
+        userId,
+        outletId
+      });
 
       if (existingOrder) {
         setExistingOrderModal({

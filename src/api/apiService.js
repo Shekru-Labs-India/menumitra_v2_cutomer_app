@@ -103,6 +103,23 @@ export const apiService = {
       });
       return response?.data?.detail || {};
     },
+    
+    // Add check existing order endpoint
+    checkExistingOrder: async ({ userId, outletId }) => {
+      try {
+        const response = await axiosInstance.post(`/${API_VERSION}/user/check_order_exist`, {
+          user_id: userId,
+          outlet_id: outletId,
+          app_source: "user_app"
+        });
+        
+        return response.data?.detail || null;
+      } catch (error) {
+        // If no order exists, API returns error - this is expected behavior
+        console.log("No existing order found");
+        return null;
+      }
+    },
   },
 
   // ... other API endpoints grouped by feature
