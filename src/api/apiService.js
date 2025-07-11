@@ -104,7 +104,6 @@ export const apiService = {
       return response?.data?.detail || {};
     },
     
-    // Add check existing order endpoint
     checkExistingOrder: async ({ userId, outletId }) => {
       try {
         const response = await axiosInstance.post(`/${API_VERSION}/user/check_order_exist`, {
@@ -120,6 +119,42 @@ export const apiService = {
         return null;
       }
     },
+
+    addToExistingOrder: async ({ orderId, userId, outletId, orderItems }) => {
+      const response = await axiosInstance.post(`/${API_VERSION}/user/add_to_existing_order`, {
+        order_id: orderId.toString(),
+        user_id: userId.toString(),
+        outlet_id: outletId.toString(),
+        app_source: "user_app",
+        order_items: orderItems
+      });
+      return response.data?.detail || null;
+    },
+
+    cancelExistingAndCreateNew: async ({ 
+      orderId, 
+      userId, 
+      outletId, 
+      sectionId, 
+      tableId, 
+      orderItems 
+    }) => {
+      const response = await axiosInstance.post(
+        `/${API_VERSION}/user/complete_or_cancel_existing_order_create_new_order`,
+        {
+          order_id: orderId.toString(),
+          user_id: userId,
+          order_status: "cancelled",
+          outlet_id: outletId.toString(),
+          section_id: sectionId.toString(),
+          order_type: "dine-in",
+          app_source: "user_app",
+          table_id: tableId.toString(),
+          order_items: orderItems
+        }
+      );
+      return response.data?.detail || null;
+    }
   },
 
   // ... other API endpoints grouped by feature

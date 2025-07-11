@@ -10,7 +10,7 @@ import OrderExistsModal from "../components/Modal/variants/OrderExistsModal";
 import toast, { Toaster } from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
 import LazyImage from "../components/Shared/LazyImage";
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import apiService from '../api/apiService';
 
 const FooterSummary = React.memo(function FooterSummary({ checkoutDetails }) {
@@ -163,6 +163,44 @@ function Checkout() {
     localStorage.setItem("cart", JSON.stringify(updatedCart));
   };
 
+  // Add to existing order mutation
+  const addToExistingMutation = useMutation({
+    mutationFn: async (variables) => {
+      const result = await apiService.checkout.addToExistingOrder(variables);
+      return result;
+    },
+    onSuccess: () => {
+      clearCart();
+      localStorage.removeItem("cart");
+      toast.success("Items added to existing order successfully!");
+      navigate("/orders");
+      handleModalClose();
+    },
+    onError: (error) => {
+      console.error("Error adding to existing order:", error);
+      toast.error(error.message || "Failed to add to existing order");
+    }
+  });
+
+  // Cancel existing and create new order mutation
+  const cancelAndCreateNewMutation = useMutation({
+    mutationFn: async (variables) => {
+      const result = await apiService.checkout.cancelExistingAndCreateNew(variables);
+      return result;
+    },
+    onSuccess: () => {
+      clearCart();
+      localStorage.removeItem("cart");
+      toast.success("Order cancelled and new order created successfully!");
+      navigate("/orders");
+      handleModalClose();
+    },
+    onError: (error) => {
+      console.error("Error cancelling order:", error);
+      toast.error(error.message || "Failed to cancel existing order and create new one");
+    }
+  });
+
   const handleCheckout = async () => {
     // Validate comments
     for (const item of cartItems) {
@@ -285,12 +323,10 @@ function Checkout() {
 
   const handleCancelExisting = async () => {
     try {
-      setCheckoutLoading(true);
       const auth = JSON.parse(localStorage.getItem("auth"));
-      const accessToken = auth?.accessToken;
       const userId = auth?.userId;
 
-      if (!accessToken || !userId) {
+      if (!userId) {
         toast.error("Authentication required");
         return;
       }
@@ -299,56 +335,27 @@ function Checkout() {
         menu_id: item.menuId.toString(),
         quantity: item.quantity,
         portion_name: item.portionName.toLowerCase(),
-        // comment: item.comment || "",
       }));
 
-      // Use order_id instead of order_number
-      const response = await axios.post(
-        "https://men4u.xyz/v2/user/complete_or_cancel_existing_order_create_new_order",
-        {
-          order_id: existingOrderModal.orderDetails.order_id.toString(),
-          user_id: userId,
-          order_status: "cancelled",
-          outlet_id: outletId.toString(),
-          section_id: sectionId.toString(),
-          order_type: "dine-in",
-          app_source: "user_app",
-          table_id: localStorage.getItem("tableId").toString(), // Add this line
-
-          order_items: orderItems,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        }
-      );
-
-      if (response.data?.detail?.order_id) {
-        clearCart();
-        localStorage.removeItem("cart");
-        toast.success("Order cancelled and new order created successfully!");
-        navigate("/orders");
-      }
+      await cancelAndCreateNewMutation.mutateAsync({
+        orderId: existingOrderModal.orderDetails.order_id,
+        userId,
+        outletId,
+        sectionId,
+        tableId: localStorage.getItem("tableId"),
+        orderItems
+      });
     } catch (error) {
-      console.error("Error cancelling order:", error);
-      toast.error("Failed to cancel existing order and create new one");
-    } finally {
-      setCheckoutLoading(false);
-      handleModalClose();
+      console.error("Cancel existing order error:", error);
     }
   };
 
   const handleAddToExisting = async () => {
     try {
-      setCheckoutLoading(true);
       const auth = JSON.parse(localStorage.getItem("auth"));
-      const accessToken = auth?.accessToken;
       const userId = auth?.userId;
 
-      if (!accessToken || !userId) {
+      if (!userId) {
         toast.error("Authentication required");
         return;
       }
@@ -360,36 +367,14 @@ function Checkout() {
         comment: item.comment || "",
       }));
 
-      const response = await axios.post(
-        "https://men4u.xyz/v2/user/add_to_existing_order",
-        {
-          order_id: existingOrderModal.orderDetails.order_id.toString(),
-          user_id: userId.toString(),
-          outlet_id: outletId.toString(),
-          app_source: "user_app",
-          order_items: orderItems,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        }
-      );
-
-      if (response.data?.detail?.order_id) {
-        clearCart();
-        localStorage.removeItem("cart");
-        toast.success("Items added to existing order successfully!");
-        navigate("/orders");
-      }
+      await addToExistingMutation.mutateAsync({
+        orderId: existingOrderModal.orderDetails.order_id,
+        userId: userId.toString(),
+        outletId: outletId.toString(),
+        orderItems
+      });
     } catch (error) {
-      console.error("Error adding to existing order:", error);
-      toast.error("Failed to add to existing order");
-    } finally {
-      setCheckoutLoading(false);
-      handleModalClose();
+      console.error("Add to existing order error:", error);
     }
   };
 
@@ -922,7 +907,7 @@ function Checkout() {
         orderStatus={existingOrderModal.orderDetails?.order_status}
         onCancelExisting={handleCancelExisting}
         onAddToExisting={handleAddToExisting}
-        isLoading={checkoutLoading}
+        isLoading={addToExistingMutation.isPending || cancelAndCreateNewMutation.isPending}
       />
 
       <Footer />
