@@ -13,24 +13,29 @@ const axiosInstance = axios.create({
   }
 });
 
-// Helper function to get auth data
-const getAuthData = () => {
-  try {
-    const authData = localStorage.getItem('auth');
-    return authData ? JSON.parse(authData) : null;
-  } catch (error) {
-    console.error('Error parsing auth data:', error);
-    return null;
+// Update the request interceptor to properly add 'Bearer' prefix
+axiosInstance.interceptors.request.use(
+  (config) => {
+    try {
+      const authData = localStorage.getItem('auth');
+      if (authData) {
+        const { accessToken } = JSON.parse(authData);
+        if (accessToken) {
+          // Set the exact format as seen in the working requests
+          config.headers.Authorization = `Bearer ${accessToken}`;
+          // Add other common headers if needed
+          config.headers['Accept'] = 'application/json';
+        }
+      }
+      return config;
+    } catch (error) {
+      console.error('Error setting auth header:', error);
+      return config;
+    }
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-};
-
-// Add request interceptor to handle auth token
-axiosInstance.interceptors.request.use((config) => {
-  const userData = getAuthData();
-  if (userData?.accessToken) {
-    config.headers.Authorization = `Bearer ${userData.accessToken}`;
-  }
-  return config;
-});
+);
 
 export default axiosInstance; 

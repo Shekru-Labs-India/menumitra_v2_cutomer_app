@@ -16,7 +16,7 @@ function Favourite() {
   const queryClient = useQueryClient();
   const userId = getUserId();
 
-  // Replace loadFavorites with useQuery
+  // Update the query to transform the data properly
   const { data: favoriteMenus = [], isLoading } = useQuery({
     queryKey: ['favorites', outletId, userId],
     queryFn: async () => {
@@ -27,15 +27,19 @@ function Favourite() {
         userId 
       });
 
+      // Transform the response into the format we need
       const allMenus = [];
       if (response) {
+        // response is an object with outlet names as keys
         Object.entries(response).forEach(([outletName, menus]) => {
-          menus.forEach((menu) => {
-            allMenus.push({
-              ...menu,
-              outlet_name: outletName,
+          if (Array.isArray(menus)) {
+            menus.forEach((menu) => {
+              allMenus.push({
+                ...menu,
+                outlet_name: outletName,
+              });
             });
-          });
+          }
         });
       }
       return allMenus;
@@ -43,36 +47,24 @@ function Favourite() {
     enabled: !!userId && !!outletId,
   });
 
-  // Replace toggleFavorite with useMutation
   const removeFavorite = useMutation({
     mutationFn: ({ menuId }) => 
       apiService.favorites.remove({ outletId, userId, menuId }),
     onMutate: async ({ menuId }) => {
-      // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['favorites', outletId, userId] });
-
-      // Snapshot the previous value
       const previousFavorites = queryClient.getQueryData(['favorites', outletId, userId]);
-
-      // Optimistically remove the favorite
       queryClient.setQueryData(['favorites', outletId, userId], old => 
-        old.filter(menu => menu.menu_id !== menuId)
+        old?.filter(menu => menu.menu_id !== menuId) || []
       );
-
       return { previousFavorites };
     },
     onError: (err, variables, context) => {
-      // If the mutation fails, use the context we saved to roll back
       queryClient.setQueryData(['favorites', outletId, userId], context.previousFavorites);
-    },
-    onSettled: () => {
-      // Always refetch after error or success
-      queryClient.invalidateQueries(['favorites', outletId, userId]);
     },
   });
 
   const handleFavoriteUpdate = async (menuId, isFavorite) => {
-    if (!isFavorite) {
+    if (!isFavorite && !removeFavorite.isLoading) {
       try {
         await removeFavorite.mutateAsync({ menuId });
       } catch (error) {
@@ -82,8 +74,13 @@ function Favourite() {
   };
 
   const groupByOutlet = (menus) => {
+    // Add safety check for menus array
+    if (!Array.isArray(menus)) return {};
+    
     return menus.reduce((acc, menu) => {
-      if (!acc[menu.outlet_name]) acc[menu.outlet_name] = [];
+      if (!acc[menu.outlet_name]) {
+        acc[menu.outlet_name] = [];
+      }
       acc[menu.outlet_name].push(menu);
       return acc;
     }, {});
@@ -130,7 +127,10 @@ function Favourite() {
                   <p className="text-muted mb-4">
                     Login to view and manage your favorite menus
                   </p>
-                  <button className="btn btn-primary" onClick={navigateToLogin}>
+                  <button 
+                    className="btn btn-primary" 
+                    onClick={navigateToLogin}
+                  >
                     Login Now
                   </button>
                 </div>
@@ -156,11 +156,8 @@ function Favourite() {
                 <div className="text-center p-5">Loading...</div>
               ) : (
                 (() => {
-                  // Sort outlet groups so current outlet is first
                   const entries = Object.entries(groupedMenus)
-                    .filter(
-                      ([outletName]) => outletName && outletName !== "undefined"
-                    )
+                    .filter(([outletName]) => outletName && outletName !== "undefined")
                     .sort(([, aMenus], [, bMenus]) => {
                       const aOutletId = aMenus[0]?.outlet_id;
                       const bOutletId = bMenus[0]?.outlet_id;
@@ -168,79 +165,86 @@ function Favourite() {
                       if (String(bOutletId) === String(outletId)) return 1;
                       return 0;
                     });
-                  return entries.map(([outletName, menus]) => (
-                    <div key={outletName} className="mb-4">
-                      <div
-                        className="fw-bold text-uppercase mb-2 d-flex align-items-center justify-content-between"
-                        style={{ fontSize: 16, cursor: "pointer" }}
-                        onClick={() =>
-                          setExpandedOutlet((prev) => ({
-                            ...prev,
-                            [outletName]: !prev[outletName],
-                          }))
-                        }
-                      >
-                        <span>
-                          <i className="fa-solid fa-store me-2"></i>
-                          {outletName}
-                        </span>
-                        <span
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            width: 28,
-                            height: 28,
-                            borderRadius: "50%",
-                            background: "#f5f5f5",
-                          }}
+
+                  return entries.length > 0 ? (
+                    entries.map(([outletName, menus]) => (
+                      <div key={outletName} className="mb-4">
+                        <div
+                          className="fw-bold text-uppercase mb-2 d-flex align-items-center justify-content-between"
+                          style={{ fontSize: 16, cursor: "pointer" }}
+                          onClick={() =>
+                            setExpandedOutlet((prev) => ({
+                              ...prev,
+                              [outletName]: !prev[outletName],
+                            }))
+                          }
                         >
-                          <i
-                            className={`fa-solid fa-chevron-${
-                              expandedOutlet[outletName] ? "up" : "down"
-                            }`}
-                            style={{ fontSize: 18, color: "#888" }}
-                          ></i>
-                        </span>
-                      </div>
-                      {expandedOutlet[outletName] && (
-                        <div className="mt-2">
-                          {menus.map((menu) => (
-                            <div className="mb-2" key={menu.menu_id}>
-                              <HorizontalMenuCard
-                                image={menu.image && Array.isArray(menu.image) && menu.image.length > 0 ? menu.image[0].image : null}
-                                title={menu.menu_name}
-                                currentPrice={menu.portions?.[0]?.price || 0}
-                                reviewCount={menu.rating ? parseFloat(menu.rating) : null}
-                                isFavorite={true}
-                                discount={menu.offer > 0 ? `${menu.offer}%` : null}
-                                menuItem={{
-                                  menuId: menu.menu_id,
-                                  menuCatId: menu.menu_cat_id,
-                                  menuName: menu.menu_name,
-                                  menuFoodType: menu.menu_food_type,
-                                  categoryName: menu.category_name,
-                                  spicyIndex: menu.spicy_index,
-                                  portions: menu.portions,
-                                  rating: menu.rating,
-                                  offer: menu.offer,
-                                  isSpecial: menu.is_special,
-                                  isFavourite: true,
-                                  isActive: true,
-                                  image: menu.image && Array.isArray(menu.image) && menu.image.length > 0 
-                                    ? menu.image[0].image 
-                                    : null,
-                                  outletName: menu.outlet_name,
-                                  outletId: menu.outlet_id,
-                                }}
-                                onFavoriteUpdate={handleFavoriteUpdate}
-                              />
-                            </div>
-                          ))}
+                          <span>
+                            <i className="fa-solid fa-store me-2"></i>
+                            {outletName}
+                          </span>
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              width: 28,
+                              height: 28,
+                              borderRadius: "50%",
+                              background: "#f5f5f5",
+                            }}
+                          >
+                            <i
+                              className={`fa-solid fa-chevron-${
+                                expandedOutlet[outletName] ? "up" : "down"
+                              }`}
+                              style={{ fontSize: 18, color: "#888" }}
+                            ></i>
+                          </span>
                         </div>
-                      )}
+                        {expandedOutlet[outletName] && (
+                          <div className="mt-2">
+                            {menus.map((menu) => (
+                              <div className="mb-2" key={menu.menu_id}>
+                                <HorizontalMenuCard
+                                  image={menu.image && Array.isArray(menu.image) && menu.image.length > 0 ? menu.image[0].image : null}
+                                  title={menu.menu_name}
+                                  currentPrice={menu.portions?.[0]?.price || 0}
+                                  reviewCount={menu.rating ? parseFloat(menu.rating) : null}
+                                  isFavorite={true}
+                                  discount={menu.offer > 0 ? `${menu.offer}%` : null}
+                                  menuItem={{
+                                    menuId: menu.menu_id,
+                                    menuCatId: menu.menu_cat_id,
+                                    menuName: menu.menu_name,
+                                    menuFoodType: menu.menu_food_type,
+                                    categoryName: menu.category_name,
+                                    spicyIndex: menu.spicy_index,
+                                    portions: menu.portions,
+                                    rating: menu.rating,
+                                    offer: menu.offer,
+                                    isSpecial: menu.is_special,
+                                    isFavourite: true,
+                                    isActive: true,
+                                    image: menu.image && Array.isArray(menu.image) && menu.image.length > 0 
+                                      ? menu.image[0].image 
+                                      : null,
+                                    outletName: menu.outlet_name,
+                                    outletId: menu.outlet_id,
+                                  }}
+                                  onFavoriteUpdate={handleFavoriteUpdate}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center p-5">
+                      <p className="text-muted">No favorite items found</p>
                     </div>
-                  ));
+                  );
                 })()
               )}
             </div>

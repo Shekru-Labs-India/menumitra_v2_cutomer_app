@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { useModal } from "../contexts/ModalContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useOutlet } from "../contexts/OutletContext";
-import { useCacheData } from "../contexts/CacheDataContext";
+import apiService from "../api/apiService";
 import "./HorizontalMenuCard.css"; // We'll create this CSS file next
 
 // FoodTypeIcon component
@@ -131,15 +131,14 @@ const HorizontalMenuCard = ({
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { openModal } = useModal();
-  const { user, setShowAuthOffcanvas } = useAuth();
+  const { user, setShowAuthOffcanvas, getUserId } = useAuth();
   const { outletId } = useOutlet();
-  const { clearCacheItem, generateCacheKey } = useCacheData();
+  const userId = getUserId();
 
-  // Convert isFavorite to boolean if it's a number - add this line
+  // Convert isFavorite to boolean if it's a number
   const isFavoriteBoolean = typeof isFavorite === 'number' ? isFavorite === 1 : Boolean(isFavorite);
 
   // Check if this menu item belongs to the current outlet
-  // const isCurrentOutlet = menuItem?.outletId === outletId;
   const isCurrentOutlet = true;
 
   const handleFavoriteToggle = async (e) => {
@@ -155,65 +154,26 @@ const HorizontalMenuCard = ({
 
     try {
       setIsLoading(true);
-
-      const authData = localStorage.getItem("auth");
-      const auth = authData ? JSON.parse(authData) : null;
-
-      if (!auth || !auth.userId || !auth.accessToken) {
-        openModal("LOGIN_REQUIRED");
-        return;
-      }
-
-      const apiUrl = isFavoriteBoolean
-        ? "https://men4u.xyz/v2/user/remove_favourite_menu"
-        : "https://men4u.xyz/v2/user/save_favourite_menu";
-
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${auth.accessToken}`,
-        },
-        body: JSON.stringify({
-          outlet_id: outletId,
-          menu_id: menuItem.menuId,
-          user_id: auth.userId || null,
-          app_source: "user_app",
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        const menuListCacheKey = generateCacheKey("get_all_menu_list_by_category", {
-          outlet_id: outletId,
-          user_id: auth.userId,
+      
+      if (isFavoriteBoolean) {
+        await apiService.favorites.remove({
+          outletId,
+          userId,
+          menuId: menuItem.menuId
         });
-        const specialMenuCacheKey = generateCacheKey("get_special_menu_list", {
-          outlet_id: outletId,
-          user_id: auth.userId,
-        });
-        
-        clearCacheItem(menuListCacheKey);
-        clearCacheItem(specialMenuCacheKey);
-        
-        onFavoriteUpdate(menuItem.menuId, !isFavoriteBoolean);
       } else {
-        console.error("Failed to update favorite status:", data.detail);
-        if (data.detail === "Menu already in favorites") {
-          onFavoriteUpdate(menuItem.menuId, true);
-          window.alert("Menu is already in your favorites.");
-        } else {
-          openModal("ERROR", {
-            message: data.detail || "Failed to update favorite status",
-          });
-        }
+        await apiService.favorites.add({
+          outletId,
+          userId,
+          menuId: menuItem.menuId
+        });
       }
+      
+      onFavoriteUpdate(menuItem.menuId, !isFavoriteBoolean);
     } catch (error) {
       console.error("Error updating favorite status:", error);
       openModal("ERROR", {
-        message: "Failed to connect to the server",
+        message: error.message || "Failed to update favorite status",
       });
     } finally {
       setIsLoading(false);
@@ -308,9 +268,8 @@ const HorizontalMenuCard = ({
           
           {/* Updated favorite icon - only show for current outlet */}
           {isCurrentOutlet && (
-            <a
-              href="javascript:void(0);"
-              className={`${isLoading ? "disabled" : ""}`}
+            <button
+              className={`favorite-btn ${isLoading ? "disabled" : ""}`}
               onClick={handleFavoriteToggle}
               style={{
                 position: "absolute",
@@ -318,7 +277,9 @@ const HorizontalMenuCard = ({
                 bottom: 2,
                 pointerEvents: isLoading ? "none" : "auto",
                 cursor: "pointer",
-                textDecoration: "none",
+                background: "none",
+                border: "none",
+                padding: 0,
                 zIndex: 3,
               }}
             >
@@ -337,7 +298,7 @@ const HorizontalMenuCard = ({
                   }}
                 />
               </div>
-            </a>
+            </button>
           )}
         </div>
         {/* Right side - Content */}

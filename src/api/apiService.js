@@ -9,7 +9,7 @@ export const apiService = {
     getAllMenuListByCategory: async ({ outletId }) => {
       const response = await axiosInstance.post(`/${API_VERSION}/common/get_all_menu_list_by_category`, {
         outlet_id: outletId,
-        app_source: "customer_app"
+        app_source: "user_app"
       });
       
       return response?.data?.detail || {};
@@ -69,7 +69,7 @@ export const apiService = {
       const response = await axiosInstance.post(`/${API_VERSION}/user/get_favourite_list`, {
         outlet_id: outletId,
         user_id: userId,
-        app_source: "customer_app"
+        app_source: "user_app"
       });
       return response?.data?.detail?.lists || {};
     },
@@ -78,7 +78,7 @@ export const apiService = {
         outlet_id: outletId,
         user_id: userId,
         menu_id: menuId,
-        app_source: "customer_app"
+        app_source: "user_app"
       });
       return response.data;
     },
@@ -87,7 +87,7 @@ export const apiService = {
         outlet_id: outletId,
         user_id: userId,
         menu_id: menuId,
-        app_source: "customer_app"
+        app_source: "user_app"
       });
       return response.data;
     },
