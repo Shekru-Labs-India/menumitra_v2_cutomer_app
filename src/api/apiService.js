@@ -66,28 +66,28 @@ export const apiService = {
   // Favorites
   favorites: {
     getList: async ({ outletId, userId }) => {
-      const response = await axiosInstance.post('get_favourite_list', {
+      const response = await axiosInstance.post(`/${API_VERSION}/user/get_favourite_list`, {
         outlet_id: outletId,
         user_id: userId,
-        app_source: "user_app"
+        app_source: "customer_app"
       });
       return response?.data?.detail?.lists || {};
     },
     add: async ({ outletId, userId, menuId }) => {
-      const response = await axiosInstance.post('user/save_favourite_menu', {
+      const response = await axiosInstance.post(`/${API_VERSION}/user/save_favourite_menu`, {
         outlet_id: outletId,
         user_id: userId,
         menu_id: menuId,
-        app_source: "user_app"
+        app_source: "customer_app"
       });
       return response.data;
     },
     remove: async ({ outletId, userId, menuId }) => {
-      const response = await axiosInstance.post('user/remove_favourite_menu', {
+      const response = await axiosInstance.post(`/${API_VERSION}/user/remove_favourite_menu`, {
         outlet_id: outletId,
         user_id: userId,
         menu_id: menuId,
-        app_source: "user_app"
+        app_source: "customer_app"
       });
       return response.data;
     },
