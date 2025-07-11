@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
-import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
 import { useCart } from "../contexts/CartContext";
 import { useModal } from "../contexts/ModalContext";
 import { useOutlet } from "../contexts/OutletContext";
 import { useAuth } from "../contexts/AuthContext";
 import LazyImage from "../components/Shared/LazyImage";
+import apiService from "../api/apiService";
 
 // Import Swiper styles
 import "swiper/css";
@@ -130,42 +131,24 @@ const FoodTypeIcon = ({ foodType }) => {
 
 function ProductDetail() {
   const { menuId, menuCatId } = useParams();
-  const [menuDetails, setMenuDetails] = useState(null);
   const { openModal } = useModal();
   const { cartItems, removeFromCart, updateQuantity } = useCart();
   const { outletId } = useOutlet();
-  const { user, setShowAuthOffcanvas } = useAuth();
+  const { user, getUserId, setShowAuthOffcanvas } = useAuth();
   const navigate = useNavigate();
+  const userId = getUserId();
 
-  useEffect(() => {
-    const fetchMenuDetails = async () => {
-      try {
-        const auth = JSON.parse(localStorage.getItem("auth") || "{}");
-        const user_id = auth.userId;
-
-        const response = await axios.post(
-          "https://men4u.xyz/v2/user/get_menu_details",
-          {
-            outlet_id: outletId,
-            menu_id: Number(menuId),
-            menu_cat_id: Number(menuCatId),
-            user_id: Number(user_id) || null,
-            app_source: "user_app",
-          }
-        );
-
-        setMenuDetails({
-          ...response.data.details,
-          images:
-            response.data.details.menu_images?.map((img) => img.image) || [],
-        });
-      } catch (error) {
-        console.error("Error fetching menu details:", error);
-      }
-    };
-
-    fetchMenuDetails();
-  }, [menuId, menuCatId, outletId]);
+  // Replace useEffect with useQuery
+  const { data: menuDetails, isLoading, error } = useQuery({
+    queryKey: ['menuDetails', outletId, menuId, menuCatId, userId],
+    queryFn: () => apiService.menus.getDetails({ 
+      outletId, 
+      menuId: Number(menuId), 
+      menuCatId: Number(menuCatId),
+      userId 
+    }),
+    enabled: !!outletId && !!menuId && !!menuCatId,
+  });
 
   // Check if item exists in cart with proper menuId comparison
   const cartItem = cartItems.find(
@@ -199,7 +182,37 @@ function ProductDetail() {
     openModal("addToCart", formattedMenuDetails);
   };
 
-  if (!menuDetails) return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+      <>
+        <Header />
+        <div className="page-content">
+          <div className="container">
+            <div className="text-center p-5">Loading...</div>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <>
+        <Header />
+        <div className="page-content">
+          <div className="container">
+            <div className="alert alert-danger">
+              {error.message || 'Failed to load menu details'}
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  if (!menuDetails) return null;
 
   return (
     <>
@@ -224,14 +237,8 @@ function ProductDetail() {
                   <SwiperSlide
                     key={index}
                     role="group"
-                    aria-label={`${index + 1} / ${
-                      menuDetails.images?.length || 1
-                    }`}
-                    className={
-                      index === 0
-                        ? "swiper-slide-visible swiper-slide-active"
-                        : ""
-                    }
+                    aria-label={`${index + 1} / ${menuDetails.images?.length || 1}`}
+                    className={index === 0 ? "swiper-slide-visible swiper-slide-active" : ""}
                   >
                     <div className="dz-banner-heading">
                       <div className="overlay-black-light">
@@ -259,11 +266,7 @@ function ProductDetail() {
               <div className="swiper-btn">
                 <div className="swiper-pagination style-2 flex-1"></div>
               </div>
-              <span
-                className="swiper-notification"
-                aria-live="assertive"
-                aria-atomic="true"
-              ></span>
+              <span className="swiper-notification" aria-live="assertive" aria-atomic="true"></span>
             </Swiper>
           </div>
 

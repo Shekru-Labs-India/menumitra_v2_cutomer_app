@@ -46,6 +46,21 @@ export const apiService = {
       });
       return response?.data?.detail || {};
     },
+    getDetails: async ({ outletId, menuId, menuCatId, userId }) => {
+      const response = await axiosInstance.post(`/${API_VERSION}/user/get_menu_details`, {
+        outlet_id: outletId,
+        menu_id: Number(menuId),
+        menu_cat_id: Number(menuCatId),
+        user_id: userId ? Number(userId) : null,
+        app_source: "customer_app"
+      });
+      
+      const details = response?.data?.details;
+      return {
+        ...details,
+        images: details?.menu_images?.map(img => img.image) || []
+      };
+    }
   },
 
   // Favorites
