@@ -44,7 +44,7 @@ function extractOutletParamsFromPath(pathname) {
 }
 
 function Home() {
-  const { menuItems, isLoading } = useMenuItems();
+  const { menuItems, menuCategories, isLoading } = useMenuItems();
   const { cartItems } = useCart();
   const { orderSettings, isOutletOnlyUrl } = useOutlet();
   const [specialMenuItems, setSpecialMenuItems] = useState([]);
@@ -168,82 +168,36 @@ function Home() {
     }
   };
 
-  // Update fetchMenuListByCategory to use direct API call
-  const fetchMenuListByCategory = async () => {
-    try {
-      const data = await apiService.common.getAllMenuListByCategory({ outletId });
-
-      if (data) {
-        const menusByCategory = {};
-        let totalMenuCount = 0;
-
-        if (data.menus) {
-          data.menus.forEach((menu) => {
-            if (!menusByCategory[menu.menu_cat_id]) {
-              menusByCategory[menu.menu_cat_id] = [];
-            }
-            menusByCategory[menu.menu_cat_id].push({
-              menuId: menu.menu_id,
-              menuName: menu.menu_name,
-              menuFoodType: menu.menu_food_type,
-              menuCatId: menu.menu_cat_id,
-              categoryName: menu.category_name,
-              spicyIndex: menu.spicy_index,
-              portions: menu.portion_data?.map(portion => ({
-                portion_id: portion.portion_id || Math.random().toString(36).substr(2, 9),
-                portion_name: portion.portion_name,
-                price: portion.price,
-                unit_value: portion.unit_value,
-                unit_type: portion.unit_type
-              })),
-              rating: menu.rating,
-              price: menu.portion_data?.[0]?.price ?? 0,
-              offer: menu.offer,
-              isSpecial: menu.is_special,
-              is_favourite: menu.is_favourite,
-              isFavourite: menu.is_favourite === 1,
-              isActive: menu.is_active,
-              image: menu.images?.[0]?.image,
-              imageId: menu.images?.[0]?.image_id
-            });
-            totalMenuCount++;
-          });
-        }
-
-        const categories = data.category.map((cat) => ({
-          menuCatId: cat.menu_cat_id,
-          categoryName: cat.category_name,
-          menuCount: cat.menu_count,
-        }));
-
-        const allCategory = {
-          menuCatId: "all",
-          categoryName: "All",
-          menuCount: totalMenuCount,
-        };
-        categories.unshift(allCategory);
-
-        setCategoriesData({
-          categories: categories,
-          menusByCategory: menusByCategory,
-        });
-
-        setFilteredMenuItems(data.menus || []);
-      }
-    } catch (error) {
-      console.error(
-        "❌ Error fetching menu list by category:",
-        error
-      );
-    }
-  };
-
-  // Update the useEffect for fetching menu list
+  // Replace the direct API call with the hook
   useEffect(() => {
-    if (outletId) {
-      fetchMenuListByCategory();
+    if (menuItems && menuCategories) {
+      const menusByCategory = {};
+      let totalMenuCount = 0;
+
+      menuItems.forEach((menu) => {
+        if (!menusByCategory[menu.menuCatId]) {
+          menusByCategory[menu.menuCatId] = [];
+        }
+        menusByCategory[menu.menuCatId].push(menu);
+        totalMenuCount++;
+      });
+
+      const allCategory = {
+        menuCatId: "all",
+        categoryName: "All",
+        menuCount: totalMenuCount,
+      };
+      
+      const categories = [allCategory, ...menuCategories];
+
+      setCategoriesData({
+        categories,
+        menusByCategory,
+      });
+
+      setFilteredMenuItems(menuItems);
     }
-  }, [outletId]);
+  }, [menuItems, menuCategories]);
 
   // Update the useEffect for special menu items
   useEffect(() => {
