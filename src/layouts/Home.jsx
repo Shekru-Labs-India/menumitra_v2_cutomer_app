@@ -18,6 +18,7 @@ import OutletInfoBanner from "../components/OutletInfoBanner";
 import SearchBar from "../components/SearchBar";
 import apiService from '../api/apiService';
 import OfferBanner from "./OfferBanner";
+import { useQuery } from '@tanstack/react-query';
 
 // Helper function to get auth data
 const getAuthData = () => {
@@ -47,7 +48,6 @@ function Home() {
   const { menuItems, menuCategories, isLoading } = useMenuItems();
   const { cartItems } = useCart();
   const { orderSettings, isOutletOnlyUrl } = useOutlet();
-  const [specialMenuItems, setSpecialMenuItems] = useState([]);
   const navigate = useNavigate();
   const [favoriteMenuIds, setFavoriteMenuIds] = useState(new Set());
   const location = useLocation();
@@ -142,69 +142,52 @@ function Home() {
     return cartItem ? cartItem.quantity : 0;
   };
 
-  // Update fetchSpecialMenuItems to use direct API call
-  const fetchSpecialMenuItems = async () => {
-    console.log("🔄 Fetching special menu items...");
-    try {
-      const userId = getUserId() || null;
-      console.log("📦 Using outlet ID:", outletId);
+  const userId = getUserId() || null;
 
-      if (!outletId) {
-        console.log("❌ No outletId available, skipping special menu fetch");
-        return;
-      }
-
-      const data = await apiService.menus.getSpecialMenus({ 
-        outletId, 
-        userId 
-      });
-
-      if (data && data.special_menu_list) {
-        console.log("✨ Setting special menu items:", data.special_menu_list);
-        setSpecialMenuItems(data.special_menu_list);
-      }
-    } catch (error) {
-      console.error("❌ Error fetching special menu items:", error);
-    }
-  };
+  const {
+    data: specialMenuItems = [],
+    isLoading: isSpecialMenusLoading,
+    error: specialMenusError,
+  } = useQuery({
+    queryKey: ['specialMenus', outletId, userId],
+    queryFn: async () => {
+      if (!outletId) return [];
+      const data = await apiService.menus.getSpecialMenus({ outletId, userId });
+      return data?.special_menu_list || [];
+    },
+    enabled: !!outletId,
+  });
 
   // Replace the direct API call with the hook
   useEffect(() => {
     if (menuItems && menuCategories) {
-      const menusByCategory = {};
-      let totalMenuCount = 0;
+        const menusByCategory = {};
+        let totalMenuCount = 0;
 
       menuItems.forEach((menu) => {
         if (!menusByCategory[menu.menuCatId]) {
           menusByCategory[menu.menuCatId] = [];
-        }
+            }
         menusByCategory[menu.menuCatId].push(menu);
-        totalMenuCount++;
-      });
+            totalMenuCount++;
+          });
 
-      const allCategory = {
-        menuCatId: "all",
-        categoryName: "All",
-        menuCount: totalMenuCount,
-      };
+        const allCategory = {
+          menuCatId: "all",
+          categoryName: "All",
+          menuCount: totalMenuCount,
+        };
       
       const categories = [allCategory, ...menuCategories];
 
-      setCategoriesData({
+        setCategoriesData({
         categories,
         menusByCategory,
-      });
+        });
 
       setFilteredMenuItems(menuItems);
-    }
+      }
   }, [menuItems, menuCategories]);
-
-  // Update the useEffect for special menu items
-  useEffect(() => {
-    if (outletId) {
-      fetchSpecialMenuItems();
-    }
-  }, [outletId]);
 
   // Filter menu items based on selected category
   useEffect(() => {
@@ -506,7 +489,7 @@ function Home() {
 
               {/* Special Menus Section */}
               {(specialMenuItems && specialMenuItems.length > 0) ||
-              isLoading ? (
+              isSpecialMenusLoading ? (
                 <>
                   <div className="title-bar mt-4">
                     <span className="title mb-0 font-18">Special Menus</span>
@@ -571,7 +554,7 @@ function Home() {
                           </div>
                         ))}
                       </div>
-                    ) : isLoading ? (
+                    ) : isSpecialMenusLoading ? (
                       // Skeleton loader with horizontal scrolling
                       <div className="horizontal-menu-container">
                         {[...Array(4)].map((_, index) => (
