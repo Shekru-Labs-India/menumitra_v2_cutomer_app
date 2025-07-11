@@ -15,6 +15,6 @@ export const useCategories = () => {
       userId: getUserId() 
     }),
     enabled: !!outletId,
-    staleTime: 5 * 60 * 1000
+    // staleTime: 5 * 60 * 1000
   });
 };

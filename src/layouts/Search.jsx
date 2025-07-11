@@ -139,7 +139,7 @@ function Search() {
         keyword: searchInputValue.trim(),
       }),
     enabled: false, // Only run when manually triggered
-    staleTime: 5 * 60 * 1000,
+    // staleTime: 5 * 60 * 1000,
     keepPreviousData: true,
   });
 
