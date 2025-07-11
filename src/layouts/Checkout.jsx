@@ -10,6 +10,8 @@ import OrderExistsModal from "../components/Modal/variants/OrderExistsModal";
 import toast, { Toaster } from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
 import LazyImage from "../components/Shared/LazyImage";
+import { useQuery } from '@tanstack/react-query';
+import apiService from '../api/apiService';
 
 const FooterSummary = React.memo(function FooterSummary({ checkoutDetails }) {
   // Fallback to zeros if no data yet
@@ -82,8 +84,6 @@ function Checkout() {
   } = useCart();
   const { outletId, sectionId, outletDetails } = useOutlet();
   const { user, setShowAuthOffcanvas, getAccessToken } = useAuth();
-  const [checkoutDetails, setCheckoutDetails] = useState(null);
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [existingOrderModal, setExistingOrderModal] = useState({
     isOpen: false,
@@ -116,65 +116,38 @@ function Checkout() {
     }
   };
 
-  const fetchCheckoutDetails = async () => {
-    try {
-      setLoading(true);
+  // Transform cart items for API
+  const getOrderItems = () => {
+    return cartItems.map((item) => ({
+      menu_id: item.menuId,
+      portion_id: item.portionId,
+      quantity: item.quantity,
+    }));
+  };
 
-      const auth = JSON.parse(localStorage.getItem("auth"));
-      const accessToken = auth?.accessToken;
-
-      if (!accessToken) {
-        toast.error("Authentication required");
-        return;
-      }
-
-      // Transform cart items to required format
-      const orderItems = cartItems.map((item) => ({
-        menu_id: item.menuId,
-        portion_id: item.portionId,
-        quantity: item.quantity,
-      }));
-
-      const response = await axios.post(
-        "https://men4u.xyz/v2/user/get_checkout_detail",
-        {
-          outlet_id: outletId,
-          order_items: orderItems,
-            app_source: "user_app",
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        }
-      );
-
-      setCheckoutDetails((prev) => ({
-        ...prev,
-        ...response.data.detail,
-      }));
-    } catch (err) {
-      console.error("Checkout details error:", err);
+  // Replace fetchCheckoutDetails with TanStack Query
+  const { 
+    data: checkoutDetails,
+    isLoading: loading,
+    error: checkoutError
+  } = useQuery({
+    queryKey: ['checkout', outletId, cartItems],
+    queryFn: () => apiService.checkout.getDetails({
+      outletId,
+      orderItems: getOrderItems()
+    }),
+    enabled: !!outletId && cartItems.length > 0,
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    cacheTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    retry: 2,
+    onError: (err) => {
       if (err.response?.status === 401) {
         toast.error("Session expired. Please login again.");
       } else {
         toast.error("Failed to fetch checkout details");
       }
-    } finally {
-      setLoading(false);
     }
-  };
-
-  // Fetch checkout details when cart items change
-  useEffect(() => {
-    if (cartItems.length > 0) {
-      fetchCheckoutDetails();
-    } else {
-      setCheckoutDetails(null);
-    }
-  }, [cartItems]);
+  });
 
   // Remove item handler
   const handleRemoveItem = (menuId, portionId) => {
@@ -811,72 +784,84 @@ function Checkout() {
                 )}
               </ul>
             </div>
-            {/* Summary Card - now at the top */}
+            {/* Summary Card - updated to handle loading state */}
             {cartItems.length > 0 && (
               <>
-                <div
-                  className="rounded-4 shadow-sm p-3 mb-3"
-                  style={{ border: "1px solid #e0e0e0", marginTop: 24 }}
-                >
-                  <div className="d-flex justify-content-between align-items-center mb-2">
-                    <span className="fw-bold" style={{ fontSize: 18 }}>
-                      Total
-                    </span>
-                    <span className="fw-bold" style={{ fontSize: 18 }}>
-                      ₹{checkoutDetails?.total_bill_amount || "0.00"}
-                    </span>
-                  </div>
-                  <hr className="my-2" style={{ borderColor: "#e0e0e0" }} />
-                  <div
-                    className="d-flex justify-content-between align-items-center mb-1"
-                    style={{ color: "#b0b3b8" }}
-                  >
-                    <span>
-                      Discount ({checkoutDetails?.discount_percent || 0}%)
-                    </span>
-                    <span>-₹{checkoutDetails?.discount_amount || "0.00"}</span>
-                  </div>
-                  <div
-                    className="d-flex justify-content-between align-items-center mb-1"
-                    style={{ color: "#b0b3b8" }}
-                  >
-                    <span>Subtotal</span>
-                    <span>
-                      ₹
-                      {(
-                        parseFloat(checkoutDetails?.total_bill_amount || 0) -
-                        parseFloat(checkoutDetails?.discount_amount || 0)
-                      ).toFixed(2)}
-                    </span>
-                  </div>
-                  <div
-                    className="d-flex justify-content-between align-items-center mb-1"
-                    style={{ color: "#b0b3b8" }}
-                  >
-                    <span>
-                      Service Charges (
-                      {checkoutDetails?.service_charges_percent || 0}%)
-                    </span>
-                    <span>
-                      +₹{checkoutDetails?.service_charges_amount || "0.00"}
-                    </span>
-                  </div>
-                  <div
-                    className="d-flex justify-content-between align-items-center mb-1"
-                    style={{ color: "#b0b3b8" }}
-                  >
-                    <span>GST ({checkoutDetails?.gst_percent || 0}%)</span>
-                    <span>+₹{checkoutDetails?.gst_amount || "0.00"}</span>
-                  </div>
-                  <hr className="my-2" style={{ borderColor: "#e0e0e0" }} />
-                  <div className="d-flex justify-content-between align-items-center">
-                    <span className="fw-bold" style={{ fontSize: 18 }}>
-                      Grand Total
-                    </span>
-                    <span className="fw-bold" style={{ fontSize: 18 }}>
-                      ₹{checkoutDetails?.final_grand_total || "0.00"}
-                    </span>
-                  </div>
+                <div className="rounded-4 shadow-sm p-3 mb-3" 
+                     style={{ border: "1px solid #e0e0e0", marginTop: 24 }}>
+                  {loading ? (
+                    <div className="text-center py-3">
+                      <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                      </div>
+                    </div>
+                  ) : checkoutError ? (
+                    <div className="text-center text-danger py-3">
+                      Failed to load checkout details. Please try again.
+                    </div>
+                  ) : (
+                    <>
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <span className="fw-bold" style={{ fontSize: 18 }}>
+                          Total
+                        </span>
+                        <span className="fw-bold" style={{ fontSize: 18 }}>
+                          ₹{checkoutDetails?.total_bill_amount || "0.00"}
+                        </span>
+                      </div>
+                      <hr className="my-2" style={{ borderColor: "#e0e0e0" }} />
+                      <div
+                        className="d-flex justify-content-between align-items-center mb-1"
+                        style={{ color: "#b0b3b8" }}
+                      >
+                        <span>
+                          Discount ({checkoutDetails?.discount_percent || 0}%)
+                        </span>
+                        <span>-₹{checkoutDetails?.discount_amount || "0.00"}</span>
+                      </div>
+                      <div
+                        className="d-flex justify-content-between align-items-center mb-1"
+                        style={{ color: "#b0b3b8" }}
+                      >
+                        <span>Subtotal</span>
+                        <span>
+                          ₹
+                          {(
+                            parseFloat(checkoutDetails?.total_bill_amount || 0) -
+                            parseFloat(checkoutDetails?.discount_amount || 0)
+                          ).toFixed(2)}
+                        </span>
+                      </div>
+                      <div
+                        className="d-flex justify-content-between align-items-center mb-1"
+                        style={{ color: "#b0b3b8" }}
+                      >
+                        <span>
+                          Service Charges (
+                          {checkoutDetails?.service_charges_percent || 0}%)
+                        </span>
+                        <span>
+                          +₹{checkoutDetails?.service_charges_amount || "0.00"}
+                        </span>
+                      </div>
+                      <div
+                        className="d-flex justify-content-between align-items-center mb-1"
+                        style={{ color: "#b0b3b8" }}
+                      >
+                        <span>GST ({checkoutDetails?.gst_percent || 0}%)</span>
+                        <span>+₹{checkoutDetails?.gst_amount || "0.00"}</span>
+                      </div>
+                      <hr className="my-2" style={{ borderColor: "#e0e0e0" }} />
+                      <div className="d-flex justify-content-between align-items-center">
+                        <span className="fw-bold" style={{ fontSize: 18 }}>
+                          Grand Total
+                        </span>
+                        <span className="fw-bold" style={{ fontSize: 18 }}>
+                          ₹{checkoutDetails?.final_grand_total || "0.00"}
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
                 <div className="d-flex justify-content-center mb-4">
                   <button
@@ -891,19 +876,23 @@ function Checkout() {
                       boxShadow: "0 2px 8px rgba(25,185,85,0.15)",
                     }}
                     onClick={handleCheckout}
-                    disabled={cartItems.length === 0 || loading}
+                    disabled={loading || cartItems.length === 0}
                   >
-                    Place Order{" "}
-                    <span
-                      style={{
-                        color: "#b6f5d1",
-                        fontSize: 16,
-                        fontWeight: 500,
-                        marginLeft: 4,
-                      }}
-                    >
-                      ({getCartCount()} Items)
-                    </span>
+                    {loading ? (
+                      <span>Loading...</span>
+                    ) : (
+                      <>
+                        Place Order{" "}
+                        <span style={{
+                          color: "#b6f5d1",
+                          fontSize: 16,
+                          fontWeight: 500,
+                          marginLeft: 4,
+                        }}>
+                          ({getCartCount()} Items)
+                        </span>
+                      </>
+                    )}
                   </button>
                 </div>
 

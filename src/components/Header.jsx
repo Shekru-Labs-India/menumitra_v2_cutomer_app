@@ -69,7 +69,7 @@ function Header() {
   const getHeaderTitle = () => {
     const path = location.pathname;
     if (path === "/") return "MenuMitra";
-    if (path.startsWith("/checkout")) return "Cart";
+    if (path.startsWith("/checkout")) return "Checkout";
     if (path.startsWith("/profile")) return "Profile";
     if (path.startsWith("/search")) return "Search";
     if (path.startsWith("/orders")) return "Orders";

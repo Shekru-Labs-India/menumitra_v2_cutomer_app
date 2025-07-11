@@ -93,6 +93,18 @@ export const apiService = {
     },
   },
 
+  // Add a new section for checkout related APIs
+  checkout: {
+    getDetails: async ({ outletId, orderItems }) => {
+      const response = await axiosInstance.post(`/${API_VERSION}/user/get_checkout_detail`, {
+        outlet_id: outletId,
+        order_items: orderItems,
+        app_source: "user_app"
+      });
+      return response?.data?.detail || {};
+    },
+  },
+
   // ... other API endpoints grouped by feature
 };
 
