@@ -166,6 +166,15 @@ export const apiService = {
       });
       return response?.data?.detail || {};
     },
+    
+    getAllRestaurants: async () => {
+      const response = await axiosInstance.get(`/${API_VERSION}/user/get_all_restaurants`, {
+        headers: {
+          app_source: "customer_app"
+        }
+      });
+      return response?.data?.detail?.outlets || [];
+    },
   },
 
   // ... other API endpoints grouped by feature
