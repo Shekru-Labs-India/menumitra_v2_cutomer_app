@@ -3,6 +3,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import AuthOffcanvas from "../components/Auth/AuthOffcanvas";
 import { useAuth } from "../contexts/AuthContext";
+import apiService from '../api/apiService';
 
 function CustomerSavings() {
   const [savingsData, setSavingsData] = useState(null);
@@ -10,10 +11,33 @@ function CustomerSavings() {
   const [error, setError] = useState(null);
   const { user, showAuthOffcanvas, setShowAuthOffcanvas } = useAuth();
 
+  useEffect(() => {
+    const fetchSavingsData = async () => {
+      try {
+        // Get userId from localStorage auth
+        const auth = JSON.parse(localStorage.getItem('auth')) || {};
+        const userId = auth.userId;
+        
+        if (!userId) {
+          throw new Error("User ID not found");
+        }
+
+        const data = await apiService.customer.getSavings({ userId });
+        setSavingsData(data);
+      } catch (error) {
+        console.error("Error fetching savings data:", error);
+        setError(error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSavingsData();
+  }, []); // Remove user from dependency since we're using localStorage
+
   // Handler to open AuthOffcanvas
   const handleLogin = () => setShowAuthOffcanvas(true);
 
-  // If not logged in, show AuthOffcanvas and login prompt
   if (!user) {
     return (
       <>
@@ -40,55 +64,6 @@ function CustomerSavings() {
       </>
     );
   }
-
-  useEffect(() => {
-    const fetchSavingsData = async () => {
-      try {
-        // Get auth data from localStorage
-        const auth = JSON.parse(localStorage.getItem("auth")) || {};
-        const accessToken = auth.accessToken;
-        const userId = auth.userId || "73";
-
-        if (!accessToken) {
-          throw new Error("Authentication token not found");
-        }
-
-        const response = await fetch(
-          "https://men4u.xyz/v2/user/get_user_count",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify({
-              user_id: parseInt(userId),
-              app_source: "user_app",
-            }),
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch savings data");
-        }
-
-        const data = await response.json();
-
-        if (data.detail) {
-          setSavingsData(data.detail);
-        } else {
-          throw new Error("Invalid response format");
-        }
-      } catch (error) {
-        console.error("Error fetching savings data:", error);
-        setError(error.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchSavingsData();
-  }, []);
 
   if (isLoading) {
     return (

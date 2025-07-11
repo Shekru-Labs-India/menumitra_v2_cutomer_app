@@ -157,6 +157,17 @@ export const apiService = {
     }
   },
 
+  // Customer related APIs
+  customer: {
+    getSavings: async ({ userId }) => {
+      const response = await axiosInstance.post(`/${API_VERSION}/user/get_user_count`, {
+        user_id: parseInt(userId),
+        app_source: "user_app"
+      });
+      return response?.data?.detail || {};
+    },
+  },
+
   // ... other API endpoints grouped by feature
 };
 
