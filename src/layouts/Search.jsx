@@ -10,6 +10,7 @@ import { debounce } from "lodash"; // Make sure to install lodash
 import { useOutlet } from "../contexts/OutletContext";
 import QuickFilters from "../components/QuickFilters";
 import axios from "axios";
+import apiService from "../api/apiService";
 
 function Search() {
   const [searchResults, setSearchResults] = useState([]);
@@ -132,31 +133,14 @@ function Search() {
       setError(null);
 
       try {
-        const payload = {
-          outlet_id: outletId,
-          app_source: "user_app",
-        };
-
-        if (userId) {
-          payload.user_id = userId;
-        
-        }
-
-        const response = await axios({
-          method: "POST",
-          url: "https://men4u.xyz/v2/user/search_menu",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          data: payload,
-        });
+        const response = await apiService.menus.searchMenus({ outletId, userId });
 
         if (
-          response.data &&
-          response.data.detail &&
-          Array.isArray(response.data.detail.menu_list)
+          response &&
+          response.detail &&
+          Array.isArray(response.detail.menu_list)
         ) {
-          const menuList = response.data.detail.menu_list;
+          const menuList = response.detail.menu_list;
           setOriginalSearchResults(menuList);
           setSearchResults(menuList);
         } else {
@@ -179,32 +163,15 @@ function Search() {
     setError(null);
 
     try {
-      const payload = {
-        outlet_id: outletId,
-        keyword: searchTerm.trim(),
-        app_source: "user_app",
-      };
-
-      if (userId) {
-        payload.user_id = userId;
-      }
-
-      const response = await axios({
-        method: "POST",
-        url: "https://men4u.xyz/v2/user/search_menu",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        data: payload,
-      });
+      const response = await apiService.menus.searchMenus({ outletId, userId, keyword: searchTerm });
 
       // Handle the specific API response format
       if (
-        response.data &&
-        response.data.detail &&
-        Array.isArray(response.data.detail.menu_list)
+        response &&
+        response.detail &&
+        Array.isArray(response.detail.menu_list)
       ) {
-        const menuList = response.data.detail.menu_list;
+        const menuList = response.detail.menu_list;
 
         if (menuList.length > 0) {
           setOriginalSearchResults(menuList);

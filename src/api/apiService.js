@@ -60,7 +60,21 @@ export const apiService = {
         ...details,
         images: details?.menu_images?.map(img => img.image) || []
       };
-    }
+    },
+    searchMenus: async ({ outletId, userId, keyword }) => {
+      const payload = {
+        outlet_id: outletId,
+        app_source: "user_app",
+      };
+      if (userId) payload.user_id = userId;
+      if (keyword !== undefined && keyword !== null && keyword.trim() !== "") {
+        payload.keyword = keyword.trim();
+      }
+      const response = await axiosInstance.post(`/v2/user/search_menu`, payload, {
+        headers: { "Content-Type": "application/json" },
+      });
+      return response?.data;
+    },
   },
 
   // Favorites
