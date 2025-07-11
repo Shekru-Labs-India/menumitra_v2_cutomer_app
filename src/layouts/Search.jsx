@@ -504,7 +504,11 @@ function Search() {
                   {searchResults.map((menu) => (
                     <li key={menu.menu_id}>
                       <HorizontalMenuCard
-                        image={menu.image || null} // The image is already a URL string, no need for array check
+                        image={
+                          menu.images && Array.isArray(menu.images) && menu.images.length > 0
+                            ? menu.images[0].image
+                            : menu.image || null
+                        }
                         title={menu.menu_name}
                         currentPrice={menu.portions?.[0]?.price || 0}
                         originalPrice={
@@ -526,7 +530,10 @@ function Search() {
                               unit_value: portion.unit_value,
                               unit_type: portion.unit_type,
                             })) || [],
-                          image: menu.image, // Pass the image URL directly
+                          image:
+                            menu.images && Array.isArray(menu.images) && menu.images.length > 0
+                              ? menu.images[0].image
+                              : menu.image || null,
                           menuFoodType: menu.menu_food_type,
                           category: menu.category_name,
                           rating: menu.rating,
