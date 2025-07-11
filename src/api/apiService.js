@@ -1,15 +1,19 @@
 import axiosInstance from './axios';
 
+// API version constant
+const API_VERSION = 'v2';
+
 export const apiService = {
   // Categories
   categories: {
-    getList: async ({ outletId, userId }) => {
-      const response = await axiosInstance.post('get_category_list', {
+    getList: async ({ outletId }) => {
+      const response = await axiosInstance.post(`/${API_VERSION}/common/get_all_menu_list_by_category`, {
         outlet_id: outletId,
-        user_id: userId,
-        app_source: "user_app"
+        app_source: "customer_app"
       });
-      return response?.data?.detail?.menu_list || [];
+      
+      // Return only the categories array from the response
+      return response?.data?.detail?.category || [];
     },
   },
 
