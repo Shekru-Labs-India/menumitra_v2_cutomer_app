@@ -34,6 +34,7 @@ import CacheStatus from "./components/CacheStatus";
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { queryClient } from './lib/react-query/queryClient';
+import QueryTestWrapper from "./components/QueryTestWrapper";
 
 function App() {
   const [shouldClearCart, setShouldClearCart] = useState(false);
@@ -84,6 +85,7 @@ function App() {
                             element={<OutletDetails />}
                           />
                           <Route path="/notfound" element={<OutletNotFound />} />
+                          <Route path="/query-test" element={<QueryTestWrapper />} />
                         </Routes>
                         <Sidebar />
                       </SidebarProvider>
