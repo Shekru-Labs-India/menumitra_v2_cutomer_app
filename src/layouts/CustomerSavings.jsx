@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
+import { useQuery } from '@tanstack/react-query';
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import AuthOffcanvas from "../components/Auth/AuthOffcanvas";
@@ -6,36 +7,23 @@ import { useAuth } from "../contexts/AuthContext";
 import apiService from '../api/apiService';
 
 function CustomerSavings() {
-  const [savingsData, setSavingsData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
   const { user, showAuthOffcanvas, setShowAuthOffcanvas } = useAuth();
+  
+  // Get userId from localStorage
+  const auth = JSON.parse(localStorage.getItem('auth')) || {};
+  const userId = auth.userId;
 
-  useEffect(() => {
-    const fetchSavingsData = async () => {
-      try {
-        // Get userId from localStorage auth
-        const auth = JSON.parse(localStorage.getItem('auth')) || {};
-        const userId = auth.userId;
-        
-        if (!userId) {
-          throw new Error("User ID not found");
-        }
+  // Replace useState and useEffect with useQuery
+  const { 
+    data: savingsData,
+    isLoading,
+    error 
+  } = useQuery({
+    queryKey: ['savings', userId],
+    queryFn: () => apiService.customer.getSavings({ userId }),
+    enabled: !!userId,
+  });
 
-        const data = await apiService.customer.getSavings({ userId });
-        setSavingsData(data);
-      } catch (error) {
-        console.error("Error fetching savings data:", error);
-        setError(error.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchSavingsData();
-  }, []); // Remove user from dependency since we're using localStorage
-
-  // Handler to open AuthOffcanvas
   const handleLogin = () => setShowAuthOffcanvas(true);
 
   if (!user) {
@@ -65,41 +53,9 @@ function CustomerSavings() {
     );
   }
 
-  if (isLoading) {
-    return (
-      <>
-        <Header />
-        <div className="page-content bottom-content">
-          <div className="container">Loading...</div>
-        </div>
-        <Footer />
-      </>
-    );
-  }
-
-  if (error) {
-    return (
-      <>
-        <Header />
-        <div className="page-content bottom-content">
-          <div className="container">Error: {error}</div>
-        </div>
-        <Footer />
-      </>
-    );
-  }
-
-  if (!savingsData) {
-    return (
-      <>
-        <Header />
-        <div className="page-content bottom-content">
-          <div className="container">No savings data available</div>
-        </div>
-        <Footer />
-      </>
-    );
-  }
+  if (isLoading) return <> <Header /> <div className="page-content bottom-content"><div className="container">Loading...</div></div> <Footer /> </>;
+  if (error) return <> <Header /> <div className="page-content bottom-content"><div className="container">Error: {error.message}</div></div> <Footer /> </>;
+  if (!savingsData) return <> <Header /> <div className="page-content bottom-content"><div className="container">No savings data available</div></div> <Footer /> </>;
 
   return (
     <>
