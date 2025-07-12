@@ -740,7 +740,7 @@ function Checkout() {
                 )}
               </ul>
             </div>
-            {/* Summary Card - updated to handle loading state */}
+            {/* Summary Card */}
             {cartItems.length > 0 && (
               <>
                 <div className="rounded-4 shadow-sm p-3 mb-3" 
@@ -766,6 +766,7 @@ function Checkout() {
                         </span>
                       </div>
                       <hr className="my-2" style={{ borderColor: "#e0e0e0" }} />
+                      {/* Regular Discount */}
                       <div
                         className="d-flex justify-content-between align-items-center mb-1"
                         style={{ color: "#b0b3b8" }}
@@ -775,6 +776,23 @@ function Checkout() {
                         </span>
                         <span>-₹{checkoutDetails?.discount_amount || "0.00"}</span>
                       </div>
+                      
+                      {/* Add Coupon Discount Line - Only show when coupon is successfully applied */}
+                      {couponStatus?.success && (
+                        <div
+                          className="d-flex justify-content-between align-items-center mb-1"
+                          style={{ color: "#b0b3b8" }}
+                        >
+                          <span>
+                            Coupon Discount ({couponStatus.couponDetails.code})
+                          </span>
+                          <span>
+                            -₹{couponStatus.couponDetails.value.toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Rest of the summary remains same */}
                       <div
                         className="d-flex justify-content-between align-items-center mb-1"
                         style={{ color: "#b0b3b8" }}
@@ -784,21 +802,21 @@ function Checkout() {
                           ₹
                           {(
                             parseFloat(checkoutDetails?.total_bill_amount || 0) -
-                            parseFloat(checkoutDetails?.discount_amount || 0)
+                            parseFloat(checkoutDetails?.discount_amount || 0) -
+                            (couponStatus?.success ? parseFloat(couponStatus.couponDetails.value) : 0)
                           ).toFixed(2)}
                         </span>
                       </div>
+                      
+                      {/* Service Charges and GST sections remain the same */}
                       <div
                         className="d-flex justify-content-between align-items-center mb-1"
                         style={{ color: "#b0b3b8" }}
                       >
                         <span>
-                          Service Charges (
-                          {checkoutDetails?.service_charges_percent || 0}%)
+                          Service Charges ({checkoutDetails?.service_charges_percent || 0}%)
                         </span>
-                        <span>
-                          +₹{checkoutDetails?.service_charges_amount || "0.00"}
-                        </span>
+                        <span>+₹{checkoutDetails?.service_charges_amount || "0.00"}</span>
                       </div>
                       <div
                         className="d-flex justify-content-between align-items-center mb-1"
