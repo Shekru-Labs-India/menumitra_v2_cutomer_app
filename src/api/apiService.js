@@ -7,7 +7,7 @@ export const apiService = {
   // Common API calls that return different data shapes
   common: {
     getAllMenuListByCategory: async ({ outletId }) => {
-      const response = await axiosInstance.post(`/${API_VERSION}/common/get_all_menu_list_by_category`, {
+      const response = await axiosInstance.post(`/${API_VERSION}/user/get_all_menu_list_by_category`, {
         outlet_id: outletId,
         app_source: "user_app"
       });
