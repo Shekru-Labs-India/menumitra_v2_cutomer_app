@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
@@ -45,41 +45,110 @@ function extractOutletParamsFromPath(pathname) {
 }
 
 function Home() {
+  // Keep core hooks and context values
   const { menuItems, menuCategories, isLoading } = useMenuItems();
   const { cartItems } = useCart();
-  const { orderSettings, isOutletOnlyUrl } = useOutlet();
-  const navigate = useNavigate();
-  const [favoriteMenuIds, setFavoriteMenuIds] = useState(new Set());
-  const location = useLocation();
-  
-  // Add getUserId from AuthContext
+  const { orderSettings, isOutletOnlyUrl, outletId } = useOutlet();
   const { getUserId } = useAuth();
-
-  const { outletId } = useOutlet();
   const { openModal } = useModal();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const [filteredMenuItems, setFilteredMenuItems] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
+  // Essential state that can't be derived
+  const [favoriteMenuIds, setFavoriteMenuIds] = useState(new Set());
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
-
-  const [categoriesData, setCategoriesData] = useState({
-    categories: [],
-    menusByCategory: {},
-  });
-
-  const [activeMenuFilter, setActiveMenuFilter] = useState("all"); // "all", "special", "offer"
-
-  // Add state for lazy loading
   const [visibleMenuCount, setVisibleMenuCount] = useState(10);
+  const [activeMenuFilter, setActiveMenuFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState(""); // New: track search query
+  const [isSearching, setIsSearching] = useState(false);
 
-  // Reset visibleMenuCount when filters/search/category changes
+  // Get userId for API calls
+  const userId = getUserId() || null;
+
+  // IMPROVEMENT: Use useMemo for categoriesData instead of useState + useEffect
+  // This prevents unnecessary recalculations and removes a source of render loops
+  const categoriesData = useMemo(() => {
+    if (!menuItems || !menuCategories) {
+      return { categories: [], menusByCategory: {} };
+    }
+
+    const menusByCategory = {};
+    let totalMenuCount = 0;
+
+    menuItems.forEach((menu) => {
+      if (!menusByCategory[menu.menuCatId]) {
+        menusByCategory[menu.menuCatId] = [];
+      }
+      menusByCategory[menu.menuCatId].push(menu);
+      totalMenuCount++;
+    });
+
+    const allCategory = {
+      menuCatId: "all",
+      categoryName: "All",
+      menuCount: totalMenuCount,
+    };
+
+    return {
+      categories: [allCategory, ...menuCategories],
+      menusByCategory,
+    };
+  }, [menuItems, menuCategories]); // Only recompute when menu data changes
+
+  // IMPROVEMENT: Use useMemo for filtered menus instead of useState + useEffect
+  // This eliminates the need for filteredMenuItems state and its update effects
+  const filteredMenus = useMemo(() => {
+    if (!menuItems) return [];
+
+    // First apply category filter
+    let filtered = selectedCategoryId === "all" || !selectedCategoryId
+      ? menuItems
+      : (categoriesData.menusByCategory[selectedCategoryId] || []);
+
+    // Then apply search if active
+    if (isSearching && searchQuery) {
+      filtered = filtered.filter(item => 
+        item.menuName.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Finally apply special/offer filter
+    if (activeMenuFilter === "special") {
+      filtered = filtered.filter(item => item.isSpecial === true || item.isSpecial === 1);
+    } else if (activeMenuFilter === "offer") {
+      filtered = filtered.filter(item => Number(item.offer) > 0);
+    }
+
+    return filtered;
+  }, [
+    menuItems,
+    selectedCategoryId,
+    searchQuery,
+    isSearching,
+    activeMenuFilter,
+    categoriesData.menusByCategory
+  ]);
+
+  // IMPROVEMENT: Use useMemo for visible menus to prevent recalculation on every render
+  const visibleMenus = useMemo(() => {
+    return filteredMenus.slice(0, visibleMenuCount);
+  }, [filteredMenus, visibleMenuCount]);
+
+  // One-time effect to set default category
+  useEffect(() => {
+    if (categoriesData.categories.length > 0 && selectedCategoryId === null) {
+      setSelectedCategoryId("all");
+    }
+  }, [categoriesData.categories.length]);
+
+  // Reset visible count when filters change
   useEffect(() => {
     setVisibleMenuCount(10);
-  }, [filteredMenuItems, isSearching, selectedCategoryId, activeMenuFilter]);
+  }, [selectedCategoryId, activeMenuFilter, searchQuery]);
 
   // Helper for lazy loading
   const getVisibleMenus = () => {
-    return getFilteredMenus().slice(0, visibleMenuCount);
+    return filteredMenus.slice(0, visibleMenuCount);
   };
 
   const handleLoadMoreMenus = () => {
@@ -142,8 +211,7 @@ function Home() {
     return cartItem ? cartItem.quantity : 0;
   };
 
-  const userId = getUserId() || null;
-
+  // Special menus query remains unchanged
   const {
     data: specialMenuItems = [],
     isLoading: isSpecialMenusLoading,
@@ -158,85 +226,6 @@ function Home() {
     enabled: !!outletId,
   });
 
-  // Replace the direct API call with the hook
-  useEffect(() => {
-    if (menuItems && menuCategories) {
-        const menusByCategory = {};
-        let totalMenuCount = 0;
-
-      menuItems.forEach((menu) => {
-        if (!menusByCategory[menu.menuCatId]) {
-          menusByCategory[menu.menuCatId] = [];
-            }
-        menusByCategory[menu.menuCatId].push(menu);
-            totalMenuCount++;
-          });
-
-        const allCategory = {
-          menuCatId: "all",
-          categoryName: "All",
-          menuCount: totalMenuCount,
-        };
-      
-      const categories = [allCategory, ...menuCategories];
-
-        setCategoriesData({
-        categories,
-        menusByCategory,
-        });
-
-      setFilteredMenuItems(menuItems);
-      }
-  }, [menuItems, menuCategories]);
-
-  // Filter menu items based on selected category
-  useEffect(() => {
-    if (selectedCategoryId === "all") {
-      // Display all menus if "All" is selected
-      const allMenus = Object.values(categoriesData.menusByCategory).flat();
-      setFilteredMenuItems(allMenus);
-    } else if (selectedCategoryId) {
-      // Display menus for the selected category
-      setFilteredMenuItems(
-        categoriesData.menusByCategory[selectedCategoryId] || []
-      );
-    } else if (
-      categoriesData.categories.length > 0 &&
-      selectedCategoryId === null
-    ) {
-      // If no category is selected initially, default to "All" (first category)
-      setSelectedCategoryId("all");
-    }
-  }, [
-    selectedCategoryId,
-    categoriesData.menusByCategory,
-    categoriesData.categories,
-  ]);
-
-  const getFilteredMenus = () => {
-    if (activeMenuFilter === "special") {
-      return filteredMenuItems.filter(
-        (item) => item.isSpecial === true || item.isSpecial === 1
-      );
-    }
-    if (activeMenuFilter === "offer") {
-      return filteredMenuItems.filter((item) => Number(item.offer) > 0);
-    }
-    return filteredMenuItems;
-  };
-
-  const outletParams = extractOutletParamsFromPath(location.pathname);
-
-  useEffect(() => {
-    if (outletParams) {
-      console.log("Extracted outlet params:", outletParams);
-      // You can use outletParams.outletCode, etc. for your API calls here
-      // Optionally, update context or localStorage if needed
-    } else {
-      console.log("No outlet params found in path:", location.pathname);
-    }
-  }, [location.pathname]);
-
   // Only show modal on outlet-only URL if no order type is set
   useEffect(() => {
     if (isOutletOnlyUrl && !orderSettings.order_type) {
@@ -244,10 +233,10 @@ function Home() {
     }
   }, [isOutletOnlyUrl, orderSettings.order_type]);
 
-  // Add this handler function
+  // Handler functions remain the same but are simplified
   const handleSearch = (searchResults) => {
-    setIsSearching(searchResults.length > 0);
-    setFilteredMenuItems(searchResults);
+    setSearchQuery(searchResults.query || ""); // Store the query
+    setIsSearching(!!searchResults.length);
   };
 
   return (
@@ -398,8 +387,8 @@ function Home() {
                     </div>
                   ))
                 ) : isSearching ? (
-                  filteredMenuItems.length > 0 ? (
-                    getVisibleMenus().map((menuItem) => (
+                  filteredMenus.length > 0 ? (
+                    visibleMenus.map((menuItem) => (
                       <div className="col-6" key={menuItem.menuId}>
                         <VerticalMenuCard
                           image={
@@ -429,7 +418,7 @@ function Home() {
                     </div>
                   )
                 ) : (
-                  getVisibleMenus().map((menuItem) => (
+                  visibleMenus.map((menuItem) => (
                     <div className="col-6" key={menuItem.menuId}>
                       <VerticalMenuCard
                         image={
@@ -459,7 +448,7 @@ function Home() {
                 )}
               </div>
               {/* Lazy Load Button */}
-              {getFilteredMenus().length > visibleMenuCount && (
+              {filteredMenus.length > visibleMenuCount && (
                 <div className="text-center mb-4">
                   <button
                     className="btn btn-outline-primary px-4 py-2"
