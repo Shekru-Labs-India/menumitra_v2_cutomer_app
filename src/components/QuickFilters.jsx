@@ -231,7 +231,9 @@ const QuickFilters = ({ onFilterChange }) => {
   // Modify the getButtonLabel function
   const getButtonLabel = (type, options, activeValue) => {
     if (!activeValue || activeValue === "all") {
-      return type;
+      // Return "All" instead of the type name when "all" is selected
+      const allOption = options.find(opt => opt.id === "all");
+      return allOption?.label || type;
     }
     const selectedOption = options.find((opt) => opt.id === activeValue);
     // Use buttonLabel if available, otherwise fall back to label
