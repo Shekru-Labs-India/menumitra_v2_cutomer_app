@@ -1,11 +1,75 @@
 import React, { useState, useRef, useEffect } from "react";
 
-const QuickFilters = ({ onFilterChange }) => {
+const QuickFilters = ({ onFilterChange, menuList }) => {
   const [activeFilters, setActiveFilters] = useState({
     type: null,
     price: null,
     spicy: null,
   });
+
+  // Add this effect to handle initial filtering
+  useEffect(() => {
+    if (menuList && menuList.length > 0) {
+      filterMenus(activeFilters);
+    }
+  }, [menuList]); // Re-run when menuList changes
+
+  // Separate the filtering logic into its own function
+  const filterMenus = (filters) => {
+    if (!menuList) return [];
+    
+    let filtered = [...menuList];
+
+    // Type filter - check menu_food_type
+    if (filters.type && filters.type !== "all") {
+      filtered = filtered.filter(
+        (menu) => menu.menu_food_type.toLowerCase() === filters.type.toLowerCase()
+      );
+    }
+
+    // Price filter - use first portion's price
+    if (filters.price && filters.price !== "all") {
+      filtered = filtered.filter((menu) => {
+        // Get the first portion's price
+        const price = menu.portions[0]?.price || 0;
+        
+        switch (filters.price) {
+          case "50":
+            return price <= 50;
+          case "100":
+            return price <= 100;
+          case "200":
+            return price <= 200;
+          case "500":
+            return price <= 500;
+          case "1000":
+            return price <= 1000;
+          case "above1000":
+            return price > 1000;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Spicy filter - check spicy_index
+    if (filters.spicy && filters.spicy !== "all") {
+      filtered = filtered.filter((menu) => {
+        switch (filters.spicy) {
+          case "low":
+            return menu.spicy_index === "1";
+          case "medium":
+            return menu.spicy_index === "2";
+          case "high":
+            return menu.spicy_index === "3";
+          default:
+            return true;
+        }
+      });
+    }
+
+    return filtered;
+  };
 
   // Add state to track which dropdown is open
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -190,14 +254,17 @@ const QuickFilters = ({ onFilterChange }) => {
     },
   ];
 
+  // Modify handleFilterClick to use the new filtering function
   const handleFilterClick = (filterType, value) => {
     const newFilters = {
       ...activeFilters,
       [filterType]: activeFilters[filterType] === value ? null : value,
     };
     setActiveFilters(newFilters);
-    onFilterChange(newFilters);
-    setOpenDropdown(null); // Close dropdown after selection
+
+    // Apply filters and send results back to parent
+    const filteredResults = filterMenus(newFilters);
+    onFilterChange(filteredResults);
   };
 
   const getButtonIcon = (type) => {

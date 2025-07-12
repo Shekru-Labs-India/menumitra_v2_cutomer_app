@@ -29,6 +29,8 @@ function Search() {
   const [searchInputValue, setSearchInputValue] = useState("");
   const [originalSearchResults, setOriginalSearchResults] = useState([]);
   const [hasSearched, setHasSearched] = useState(false);
+  const [searchResults, setSearchResults] = useState([]); // Keep this state
+  const [filteredResults, setFilteredResults] = useState([]); // Add this state ONCE
 
   const searchInputRef = useRef(null);
 
@@ -151,11 +153,13 @@ function Search() {
     keepPreviousData: true,
   });
 
-  // Extract menu list from response
-  const searchResults =
-    searchData && searchData.detail && Array.isArray(searchData.detail.menu_list)
-      ? searchData.detail.menu_list
-      : [];
+  // Update searchResults when searchData changes
+  useEffect(() => {
+    if (searchData?.detail?.menu_list) {
+      setSearchResults(searchData.detail.menu_list);
+      setFilteredResults([]); // Reset filtered results when new search happens
+    }
+  }, [searchData]);
 
   // Only trigger search on Enter or search icon
   const handleSearch = async () => {
@@ -309,46 +313,9 @@ function Search() {
     return "all";
   };
 
-  // Add handler for quick filter changes
-  const handleQuickFilterChange = (filters) => {
-    setQuickFilters(filters);
-
-    // Filter the results based on the quick filters
-    let filtered = [...originalSearchResults];
-
-    if (filters.type) {
-      filtered = filtered.filter((item) => {
-        if (filters.type === "all") return true;
-        return item.menu_food_type.toLowerCase() === filters.type.toLowerCase();
-      });
-    }
-
-    if (filters.price) {
-      filtered = filtered.filter((item) => {
-        const price = item.portions?.[0]?.price || 0;
-        const priceMap = {
-          50: 50,
-          100: 100,
-          200: 200,
-          500: 500,
-          1000: 1000,
-          above1000: 1001,
-        };
-
-        if (filters.price === "all") return true;
-        if (filters.price === "above1000") return price >= 1000;
-        return price <= priceMap[filters.price];
-      });
-    }
-
-    if (filters.spicy) {
-      filtered = filtered.filter((item) => {
-        if (filters.spicy === "all") return true;
-        return item.spicy_level === filters.spicy;
-      });
-    }
-
-    // setSearchResults(filtered); // This line is removed
+  // Handle quick filter changes
+  const handleQuickFilterChange = (filtered) => {
+    setFilteredResults(filtered);
   };
 
   // Focus the search input on mount
@@ -357,6 +324,9 @@ function Search() {
       searchInputRef.current.focus();
     }
   }, []);
+
+  // Use filteredResults if available, otherwise use searchResults
+  const displayResults = filteredResults.length > 0 ? filteredResults : searchResults;
 
   return (
     <>
@@ -398,7 +368,10 @@ function Search() {
                 </div>
               </div>
             </div>
-            <QuickFilters onFilterChange={handleQuickFilterChange} />
+            <QuickFilters 
+              onFilterChange={handleQuickFilterChange} 
+              menuList={searchResults} // Pass the original search results
+            />
            
             {isLoading || isFetching ? (
               <div className="text-center py-4">
@@ -429,7 +402,7 @@ function Search() {
                   <p className="mt-3 text-muted">Search the menu</p>
                 </div>
               </div>
-            ) : searchResults.length === 0 ? (
+            ) : displayResults.length === 0 ? (
               <div className="text-center py-4">
                 <div className="empty-search-state">
                   <i
@@ -453,7 +426,7 @@ function Search() {
                   </span>
                 </div> */}
                 <ul>
-                  {searchResults.map((menu) => (
+                  {displayResults.map((menu) => (
                     <li key={menu.menu_id}>
                       <HorizontalMenuCard
                         image={
