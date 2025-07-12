@@ -207,7 +207,7 @@ function ProductDetail() {
       toggleFavorite(
         {
           menuId: Number(menuId),
-          isFavorite: menuDetails?.is_favorite === 1,
+          isFavorite: menuDetails?.is_favourite === 1, // Changed from is_favorite to is_favourite
           userId: auth.userId
         },
         {
@@ -340,12 +340,12 @@ function ProductDetail() {
                           textDecoration: "none",
                         }}
                       >
-                        <div className={`like-button ${menuDetails?.is_favorite === 1 ? "active" : ""}`}>
+                        <div className={`like-button ${menuDetails?.is_favourite === 1 ? "active" : ""}`}>
                           <i
-                            className={`fa-${menuDetails?.is_favorite === 1 ? "solid" : "regular"} fa-heart`}
+                            className={`fa-${menuDetails?.is_favourite === 1 ? "solid" : "regular"} fa-heart`}
                             style={{
                               fontSize: "20px",
-                              color: menuDetails?.is_favorite === 1 ? "#dc3545" : "#6c757d",
+                              color: menuDetails?.is_favourite === 1 ? "#dc3545" : "#6c757d",
                               lineHeight: 1,
                             }}
                           />
