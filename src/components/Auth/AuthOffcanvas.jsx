@@ -35,6 +35,28 @@ const AuthOffcanvas = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const { isDarkMode } = useTheme();
+  const [timer, setTimer] = useState(0);
+  const [isResendDisabled, setIsResendDisabled] = useState(false);
+
+  useEffect(() => {
+    if (currentStep === STEPS.OTP) {
+      setTimer(20);
+      setIsResendDisabled(true);
+      
+      const interval = setInterval(() => {
+        setTimer((prevTimer) => {
+          if (prevTimer <= 1) {
+            setIsResendDisabled(false);
+            clearInterval(interval);
+            return 0;
+          }
+          return prevTimer - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [currentStep]);
 
   useEffect(() => {
     if (currentStep === STEPS.OTP) {
@@ -266,6 +288,8 @@ const AuthOffcanvas = () => {
   const handleResendOTP = async () => {
     setError("");
     setIsLoading(true);
+    setTimer(20);
+    setIsResendDisabled(true);
 
     try {
       const { data } = await api.post("/common/resend_otp", {
@@ -308,7 +332,7 @@ const AuthOffcanvas = () => {
 
   const renderLoginStep = () => (
     <div className="px-1">
-      <h6 className="title font-w600 mb-4">Login to MenuMitra</h6>
+      <h6 className="title font-w600 mb-2">Login to MenuMitra</h6>
       {error && (
         <div
           className={`alert ${
@@ -437,7 +461,7 @@ const AuthOffcanvas = () => {
 
   const renderSignupStep = () => (
     <div className="px-1">
-      <h6 className="title font-w600 mb-4">Create Account</h6>
+      <h6 className="title font-w600 mb-2">Create Account</h6>
       {error && (
         <div
           className={`alert ${
@@ -538,9 +562,9 @@ const AuthOffcanvas = () => {
           type="button"
           className="btn btn-link text-decoration-none"
           onClick={handleResendOTP}
-          disabled={isLoading}
+          disabled={isLoading || isResendDisabled}
         >
-          Resend OTP
+          {isResendDisabled ? `Resend OTP in ${timer}s` : 'Resend OTP'}
         </button>
       </div>
     );
@@ -548,7 +572,7 @@ const AuthOffcanvas = () => {
 
   const renderOTPStep = () => (
     <div className="px-1">
-      <h6 className="title font-w600 mb-4">Verify OTP</h6>
+      <h6 className="title font-w600 mb-2">Verify OTP</h6>
       {error && (
         <div
           className={`alert ${
@@ -559,8 +583,8 @@ const AuthOffcanvas = () => {
         </div>
       )}
       <p className="text-muted mb-4">
-        Enter the verification code sent to{" "}
-        <span className="fw-bold">+91 {phoneNumber}</span>
+        Enter the verification code sent to{" "} <br/>
+        <span className="fw-bold fs-6">+91 {phoneNumber}</span>
       </p>
       <form onSubmit={handleOTPSubmit}>
         <div className="mb-4">
