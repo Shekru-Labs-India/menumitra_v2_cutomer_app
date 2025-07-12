@@ -121,13 +121,36 @@ const FoodTypeIcon = ({ foodType }) => {
 };
 
 const HorizontalMenuCard = ({
-  title = "Fresh Tomatoes",
-  currentPrice = 5.0,
-  discount = "10%Off",
+  title = "",
+  currentPrice = 0,
+  discount = "",
   menuItem = {},
   isFavorite = false,
   onFavoriteUpdate,
-  image, // Add image prop
+  image,
+  // Add new props for customization
+  imageSize = {
+    width: "100px",
+    height: "100px"
+  },
+  colors = {
+    primary: "#2d9cdb",
+    success: "#27ae60",
+    danger: "#dc3545",
+    secondary: "#6c757d",
+    discountGradient: ["#ffe066", "#ffd700"],
+    discountText: "#5a5a00"
+  },
+  fontSizes = {
+    title: "15px",
+    category: "11px",
+    price: "14px",
+    discount: "10px"
+  },
+  icons = {
+    category: "fa fa-cutlery",
+    placeholder: "fa-solid fa-utensils"
+  }
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { openModal } = useModal();
@@ -192,23 +215,24 @@ const HorizontalMenuCard = ({
       style={{ 
         minHeight: 50, 
         padding: "8px 0",
-        width: "100%", // Add full width
-        overflowX: "auto", // Add horizontal scroll
-        whiteSpace: "nowrap", // Prevent content wrapping
-        WebkitOverflowScrolling: "touch", // Smooth scrolling on iOS
-        msOverflowStyle: "-ms-autohiding-scrollbar", // Better scrollbar on Windows
+        width: "100%",
+        overflowX: "auto",
+        whiteSpace: "nowrap",
+        WebkitOverflowScrolling: "touch",
+        msOverflowStyle: "-ms-autohiding-scrollbar",
       }}>
       <div 
         className="d-flex align-items-center p-1" 
         style={{ 
           minHeight: 70,
-          minWidth: "100%", // Ensure inner content takes full width
+          minWidth: "100%",
         }}>
         {/* Left side - Image and Icons */}
-        <div className="position-relative d-flex align-items-center justify-content-center"
+        <div 
+          className="position-relative d-flex align-items-center justify-content-center"
           style={{
-            width: "100px",
-            height: "100px",
+            width: imageSize.width,
+            height: imageSize.height,
             background: "#f5f5f5",
             borderRadius: 0,
             flexShrink: 0,
@@ -216,7 +240,7 @@ const HorizontalMenuCard = ({
           }}>
           {/* Background icon */}
           <i
-            className="fa-solid fa-utensils"
+            className={icons.placeholder}
             style={{
               position: "absolute",
               left: "50%",
@@ -252,7 +276,7 @@ const HorizontalMenuCard = ({
             />
           )}
           
-          {/* Veg/Nonveg/Vegan/Egg icon in bottom-left */}
+          {/* Veg/Nonveg/Vegan/Egg icon */}
           {menuItem.menuFoodType && (
             <span
               style={{
@@ -266,7 +290,7 @@ const HorizontalMenuCard = ({
             </span>
           )}
           
-          {/* Updated favorite icon - only show for current outlet */}
+          {/* Favorite icon */}
           {isCurrentOutlet && (
             <button
               className={`favorite-btn ${isLoading ? "disabled" : ""}`}
@@ -288,7 +312,7 @@ const HorizontalMenuCard = ({
                   className={`fa-${isFavoriteBoolean ? "solid" : "regular"} fa-heart`}
                   style={{
                     fontSize: "16px",
-                    color: isFavoriteBoolean ? "#dc3545" : "#6c757d",
+                    color: isFavoriteBoolean ? colors.danger : colors.secondary,
                     lineHeight: 1,
                     background: "#fff",
                     padding: "4px",
@@ -310,9 +334,9 @@ const HorizontalMenuCard = ({
                 position: "absolute",
                 top: 0,
                 left: 0,
-                background: "linear-gradient(90deg, #ffe066, #ffd700)",
-                color: "#5a5a00",
-                fontSize: 10,
+                background: `linear-gradient(90deg, ${colors.discountGradient[0]}, ${colors.discountGradient[1]})`,
+                color: colors.discountText,
+                fontSize: fontSizes.discount,
                 fontWeight: 600,
                 borderRadius: "6px 0 8px 0",
                 padding: "1px 7px",
@@ -324,7 +348,11 @@ const HorizontalMenuCard = ({
           )}
           <h5
             className="mb-1"
-            style={{ fontSize: 15, fontWeight: 700, marginBottom: 2 }}
+            style={{ 
+              fontSize: fontSizes.title, 
+              fontWeight: 700, 
+              marginBottom: 2 
+            }}
           >
             <Link to={detailPageUrl} className="text-dark text-decoration-none">
               {title}
@@ -334,13 +362,13 @@ const HorizontalMenuCard = ({
           {menuItem.categoryName && (
             <div
               style={{
-                color: "#27ae60",
-                fontSize: 11,
+                color: colors.success,
+                fontSize: fontSizes.category,
                 fontWeight: 500,
                 marginBottom: 1,
               }}
             >
-              <i className="fa fa-cutlery me-1"></i>
+              <i className={`${icons.category} me-1`}></i>
               {menuItem.categoryName}
             </div>
           )}
@@ -348,7 +376,11 @@ const HorizontalMenuCard = ({
           <div className="d-flex align-items-center mb-1">
             <h6
               className="mb-0 me-1"
-              style={{ color: "#2d9cdb", fontSize: 14, fontWeight: 600 }}
+              style={{ 
+                color: colors.primary, 
+                fontSize: fontSizes.price, 
+                fontWeight: 600 
+              }}
             >
               <span className="fw-bold">₹{currentPrice}</span>
             </h6>
@@ -366,7 +398,30 @@ HorizontalMenuCard.propTypes = {
   menuItem: PropTypes.object,
   isFavorite: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
   onFavoriteUpdate: PropTypes.func.isRequired,
-  image: PropTypes.oneOfType([PropTypes.string, PropTypes.node]), // Add image prop type
+  image: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
+  // Add new prop types
+  imageSize: PropTypes.shape({
+    width: PropTypes.string,
+    height: PropTypes.string
+  }),
+  colors: PropTypes.shape({
+    primary: PropTypes.string,
+    success: PropTypes.string,
+    danger: PropTypes.string,
+    secondary: PropTypes.string,
+    discountGradient: PropTypes.arrayOf(PropTypes.string),
+    discountText: PropTypes.string
+  }),
+  fontSizes: PropTypes.shape({
+    title: PropTypes.string,
+    category: PropTypes.string,
+    price: PropTypes.string,
+    discount: PropTypes.string
+  }),
+  icons: PropTypes.shape({
+    category: PropTypes.string,
+    placeholder: PropTypes.string
+  })
 };
 
 export default HorizontalMenuCard;
