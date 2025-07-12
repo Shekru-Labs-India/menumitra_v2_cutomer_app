@@ -595,6 +595,27 @@ const styles = `
     display: none !important;
     -webkit-appearance: none !important;
   }
+
+  /* QuickFilters styles */
+  .basic-dropdown {
+    position: relative;
+    z-index: 1050; /* Higher z-index to ensure visibility */
+  }
+
+  .basic-dropdown .dropdown-menu {
+    z-index: 1051; /* Even higher z-index for the dropdown menu */
+  }
+
+  .basic-dropdown .dropdown-menu.show {
+    display: block;
+    margin-top: 5px;
+  }
+
+  /* Ensure the search container doesn't overlap */
+  .serach-area {
+    position: relative;
+    z-index: 1;
+  }
 `;
 
 export default Search;
