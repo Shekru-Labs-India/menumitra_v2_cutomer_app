@@ -334,7 +334,15 @@ export const AddToCartModal = () => {
         >
           <span>
             {selectedPortion && portions.length > 0
-              ? `${portions.find((p) => p.portion_id === selectedPortion)?.portion_name} - ₹${portions.find((p) => p.portion_id === selectedPortion)?.price} (${portions.find((p) => p.portion_id === selectedPortion)?.unit_value})`
+              ? `${portions.find((p) => p.portion_id === selectedPortion)?.portion_name 
+                  ? `${portions.find((p) => p.portion_id === selectedPortion)?.portion_name} - ` 
+                  : ''}₹${portions.find((p) => p.portion_id === selectedPortion)?.price} (${
+                    portions.find((p) => p.portion_id === selectedPortion)?.unit_value
+                  }${
+                    portions.find((p) => p.portion_id === selectedPortion)?.unit_type 
+                      ? ` ${portions.find((p) => p.portion_id === selectedPortion)?.unit_type}` 
+                      : ''
+                  })`
               : "Select a portion size"}
           </span>
           <i
@@ -369,11 +377,13 @@ export const AddToCartModal = () => {
                     style={{
                       color: "#212529"
                     }}
-                    className={`fs-6  ${
+                    className={`fs-6 ${
                       selectedPortion === portion.portion_id ? "fw-medium" : "fw-normal"
                     }`}
                   >
-                    {`${portion.portion_name} - ₹${portion.price} (${portion.unit_value})`}
+                    {`${portion.portion_name ? `${portion.portion_name} - ` : ''}₹${portion.price} (${
+                      portion.unit_value
+                    }${portion.unit_type ? ` ${portion.unit_type}` : ''})`}
                   </span>
                 </div>
                 {selectedPortion === portion.portion_id && (
