@@ -38,6 +38,7 @@ export const useMenuItems = () => {
           rating: menu.rating,
           offer: menu.offer,
           isSpecial: menu.is_special,
+          is_favourite: menu.is_favourite, // Add this line to keep original value
           isFavourite: menu.is_favourite === 1,
           isActive: menu.is_active,
           image: menu.images?.[0]?.image
