@@ -11,6 +11,7 @@ import { useOutlet } from "../contexts/OutletContext";
 import { useAuth } from "../contexts/AuthContext";
 import LazyImage from "../components/Shared/LazyImage";
 import apiService from "../api/apiService";
+import { useMenuItems } from '../hooks/useMenuItems';
 
 // Import Swiper styles
 import "swiper/css";
@@ -137,6 +138,7 @@ function ProductDetail() {
   const { user, getUserId, setShowAuthOffcanvas } = useAuth();
   const navigate = useNavigate();
   const userId = getUserId();
+  const { toggleFavorite, isFavoriteLoading } = useMenuItems();
 
   // Replace useEffect with useQuery
   const { data: menuDetails, isLoading, error } = useQuery({
@@ -180,6 +182,52 @@ function ProductDetail() {
     };
 
     openModal("addToCart", formattedMenuDetails);
+  };
+
+  const handleFavoriteToggle = async (e) => {
+    e.preventDefault();
+
+    if (!user) {
+      setShowAuthOffcanvas(true);
+      return;
+    }
+
+    if (isFavoriteLoading || !menuId) return;
+
+    try {
+      const authData = localStorage.getItem("auth");
+      const auth = authData ? JSON.parse(authData) : null;
+
+      if (!auth || !auth.userId || !auth.accessToken) {
+        openModal("LOGIN_REQUIRED");
+        return;
+      }
+
+      // Use the mutation
+      toggleFavorite(
+        {
+          menuId: Number(menuId),
+          isFavorite: menuDetails?.is_favorite === 1,
+          userId: auth.userId
+        },
+        {
+          onSuccess: () => {
+            // The query will automatically refetch and update the UI
+          },
+          onError: (error) => {
+            console.error("Error updating favorite status:", error);
+            openModal("ERROR", {
+              message: error.message || "Failed to update favorite status",
+            });
+          }
+        }
+      );
+    } catch (error) {
+      console.error("Error updating favorite status:", error);
+      openModal("ERROR", {
+        message: error.message || "Failed to update favorite status",
+      });
+    }
   };
 
   if (isLoading) {
@@ -275,11 +323,34 @@ function ProductDetail() {
               <div className="company-detail">
                 <div className="detail-content">
                   <div className="flex-1">
-                    <h3 className="text-secondary sub-title small d-flex align-items-center">
-                      <FoodTypeIcon foodType={menuDetails.menu_food_type} />
-                      <span className="ms-2">
-                        {menuDetails.category_name?.toUpperCase()}
-                      </span>
+                    <h3 className="text-secondary sub-title small d-flex align-items-center justify-content-between">
+                      <div className="d-flex align-items-center">
+                        <FoodTypeIcon foodType={menuDetails.menu_food_type} />
+                        <span className="ms-2">
+                          {menuDetails.category_name?.toUpperCase()}
+                        </span>
+                      </div>
+                      <a
+                        href="javascript:void(0);"
+                        className={`${isFavoriteLoading ? "disabled" : ""}`}
+                        onClick={handleFavoriteToggle}
+                        style={{
+                          pointerEvents: isFavoriteLoading ? "none" : "auto",
+                          cursor: "pointer",
+                          textDecoration: "none",
+                        }}
+                      >
+                        <div className={`like-button ${menuDetails?.is_favorite === 1 ? "active" : ""}`}>
+                          <i
+                            className={`fa-${menuDetails?.is_favorite === 1 ? "solid" : "regular"} fa-heart`}
+                            style={{
+                              fontSize: "20px",
+                              color: menuDetails?.is_favorite === 1 ? "#dc3545" : "#6c757d",
+                              lineHeight: 1,
+                            }}
+                          />
+                        </div>
+                      </a>
                     </h3>
                     <h4 className="d-flex justify-content-between align-items-center">
                       {menuDetails.menu_name}
