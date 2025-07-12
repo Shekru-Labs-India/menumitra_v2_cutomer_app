@@ -102,7 +102,7 @@ const QuickFilters = ({ onFilterChange }) => {
   ];
 
   const priceOptions = [
-    { id: "all", label: "All Prices", icon: "₹" },
+    { id: "all", label: "All Prices" },
     { id: "50", label: "Under ₹50", icon: "₹" },
     { id: "100", label: "Under ₹100", icon: "₹" },
     { id: "200", label: "Under ₹200", icon: "₹" },
@@ -268,13 +268,18 @@ const QuickFilters = ({ onFilterChange }) => {
             <div className="dropdown">
               <button
                 type="button"
-                className={`btn rounded-pill d-flex align-items-center gap-1 px-3 py-2 shadow-none border-0"
-                  style={{ background: '#ededed', color: '#22A45D', fontWeight: 500 }}
-                  dropdown-toggle ${
-                    activeValue && activeValue !== "all"
-                      ? "btn-success"
-                      : "btn-outline-success"
-                  }`}
+                className={`btn rounded-pill d-flex align-items-center gap-1 px-3 py-2 shadow-none ${
+                  activeValue && activeValue !== "all"
+                    ? "bg-success text-white" // Selected state: green background with white text
+                    : "bg-light" // Unselected state: light background
+                }`}
+                style={{
+                  border: activeValue && activeValue !== "all"
+                    ? "none"
+                    : "1px solid #22A45D",
+                  fontWeight: 500,
+                  minWidth: "100px", // Ensure consistent button width
+                }}
                 data-bs-toggle="dropdown"
                 aria-expanded={openDropdown === dropdownType}
                 onClick={(e) => {
@@ -286,7 +291,11 @@ const QuickFilters = ({ onFilterChange }) => {
                 }}
               >
                 {getButtonIcon(type)}
-                <span style={{ color: "#22A45D" }}>
+                <span style={{
+                  color: activeValue && activeValue !== "all"
+                    ? "white" // Selected state: white text
+                    : "#22A45D" // Unselected state: green text
+                }}>
                   {getButtonLabel(type, options, activeValue)}
                 </span>
               </button>
