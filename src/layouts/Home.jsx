@@ -18,7 +18,7 @@ import OutletInfoBanner from "../components/OutletInfoBanner";
 import SearchBar from "../components/SearchBar";
 import apiService from '../api/apiService';
 import OfferBanner from "./OfferBanner";
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 // Helper function to get auth data
 const getAuthData = () => {
@@ -62,8 +62,47 @@ function Home() {
   const [searchQuery, setSearchQuery] = useState(""); // New: track search query
   const [isSearching, setIsSearching] = useState(false);
 
-  // Get userId for API calls
-  const userId = getUserId() || null;
+  // Add QueryClient
+  const queryClient = useQueryClient();
+  const userId = getUserId();
+
+  // Add favorite mutations with optimistic updates
+  const toggleFavorite = useMutation({
+    mutationFn: async ({ menuId, isFavorite }) => {
+      if (isFavorite) {
+        return apiService.favorites.add({ outletId, userId, menuId });
+      } else {
+        return apiService.favorites.remove({ outletId, userId, menuId });
+      }
+    },
+    onMutate: async ({ menuId, isFavorite }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries(['specialMenus', outletId, userId]);
+      
+      // Snapshot the previous value
+      const previousData = queryClient.getQueryData(['specialMenus', outletId, userId]);
+      
+      // Optimistically update the UI
+      queryClient.setQueryData(['specialMenus', outletId, userId], old => {
+        if (!old) return old;
+        return old.map(menu => 
+          menu.menu_id === menuId 
+            ? { ...menu, is_favourite: isFavorite ? 1 : 0 }
+            : menu
+        );
+      });
+      
+      return { previousData };
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      queryClient.setQueryData(['specialMenus', outletId, userId], context.previousData);
+    },
+    onSettled: () => {
+      // Refetch after error or success
+      queryClient.invalidateQueries(['specialMenus', outletId, userId]);
+    }
+  });
 
   // IMPROVEMENT: Use useMemo for categoriesData instead of useState + useEffect
   // This prevents unnecessary recalculations and removes a source of render loops
@@ -195,10 +234,18 @@ function Home() {
     // Will implement cart functionality later
   };
 
-  const handleFavoriteClick = (menuId, newFavoriteStatus) => {
-    // The UI will already be updated optimistically by the mutation
-    // This function can be simplified or even removed if not needed
-    // console.log("Favorite status updated:", menuId, newFavoriteStatus);
+  // Update the handleFavoriteClick function
+  const handleFavoriteClick = async (menuId, isFavorite) => {
+    if (!userId) {
+      // Handle unauthenticated users - maybe show login modal
+      return;
+    }
+    
+    try {
+      await toggleFavorite.mutateAsync({ menuId, isFavorite });
+    } catch (error) {
+      console.error('Failed to update favorite status:', error);
+    }
   };
 
   const handleQuantityChange = (menuId, newQuantity) => {
