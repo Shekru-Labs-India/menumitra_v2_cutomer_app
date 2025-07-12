@@ -27,14 +27,14 @@ export const useMenuItems = () => {
           menuCatId: menu.menu_cat_id,
           categoryName: menu.category_name,
           spicyIndex: menu.spicy_index,
-          portions: menu.portion_data?.map(portion => ({
+          portions: menu.portions?.map(portion => ({
             portion_id: portion.portion_id || Math.random().toString(36).substr(2, 9),
             portion_name: portion.portion_name,
             price: portion.price,
             unit_value: portion.unit_value,
             unit_type: portion.unit_type
           })),
-          price: menu.portion_data?.[0]?.price ?? 0,
+          price: menu.portions?.[0]?.price ?? 0,
           rating: menu.rating,
           offer: menu.offer,
           isSpecial: menu.is_special,
