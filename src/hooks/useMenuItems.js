@@ -1,10 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOutlet } from '../contexts/OutletContext';
 import apiService from '../api/apiService';
 
 export const useMenuItems = () => {
   const { outletId } = useOutlet();
+  const queryClient = useQueryClient();
 
+  // Main query for menu items
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['menuItems', outletId],
     queryFn: async () => {
@@ -38,7 +40,7 @@ export const useMenuItems = () => {
           rating: menu.rating,
           offer: menu.offer,
           isSpecial: menu.is_special,
-          is_favourite: menu.is_favourite, // Add this line to keep original value
+          is_favourite: menu.is_favourite,
           isFavourite: menu.is_favourite === 1,
           isActive: menu.is_active,
           image: menu.images?.[0]?.image
@@ -48,11 +50,58 @@ export const useMenuItems = () => {
     enabled: !!outletId
   });
 
+  // Add mutation for favorite toggle
+  const toggleFavoriteMutation = useMutation({
+    mutationFn: async ({ menuId, isFavorite, userId }) => {
+      if (isFavorite) {
+        return await apiService.favorites.remove({ outletId, userId, menuId });
+      } else {
+        return await apiService.favorites.add({ outletId, userId, menuId });
+      }
+    },
+    onMutate: async ({ menuId, isFavorite }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['menuItems', outletId] });
+
+      // Snapshot the previous value
+      const previousData = queryClient.getQueryData(['menuItems', outletId]);
+
+      // Optimistically update the menu item
+      queryClient.setQueryData(['menuItems', outletId], (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          menus: old.menus.map(menu => 
+            menu.menuId === menuId 
+              ? {
+                  ...menu,
+                  is_favourite: !isFavorite ? 1 : 0,
+                  isFavourite: !isFavorite
+                }
+              : menu
+          )
+        };
+      });
+
+      return { previousData };
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      queryClient.setQueryData(['menuItems', outletId], context.previousData);
+    },
+    onSettled: () => {
+      // Refetch after error or success
+      queryClient.invalidateQueries(['menuItems', outletId]);
+    }
+  });
+
   return {
     menuCategories: data?.categories || [],
     menuItems: data?.menus || [],
     isLoading,
     error,
-    refetch
+    refetch,
+    toggleFavorite: toggleFavoriteMutation.mutate,
+    isFavoriteLoading: toggleFavoriteMutation.isLoading
   };
 };

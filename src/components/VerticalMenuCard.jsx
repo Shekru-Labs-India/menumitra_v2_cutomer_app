@@ -8,6 +8,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useOutlet } from "../contexts/OutletContext";
 import { useCacheData } from "../contexts/CacheDataContext"; // Add this import
 import apiService from '../api/apiService';
+import { useMenuItems } from '../hooks/useMenuItems';
 
 // FoodTypeIcon component
 const FoodTypeIcon = ({ foodType }) => {
@@ -135,16 +136,13 @@ const VerticalMenuCard = ({
   // Convert isFavorite to boolean if it's a number
   const isFavoriteBoolean = typeof isFavorite === 'number' ? isFavorite === 1 : Boolean(isFavorite);
   
-  const [isLoading, setIsLoading] = useState(false);
+  const { toggleFavorite, isFavoriteLoading } = useMenuItems();
   const { openModal } = useModal();
-  const { cartItems, updateQuantity, removeFromCart, getCartItemComment } =
-    useCart();
+  const { cartItems, getCartItemComment } = useCart(); // Add this back
   const { user, setShowAuthOffcanvas } = useAuth();
   const { outletId } = useOutlet();
   const MAX_QUANTITY = 20;
 
-  // Add clearCacheItem from useCacheData
-  const { clearCacheItem, generateCacheKey } = useCacheData();
 
   // Generate the product URL from menuItem data with safety checks
   const detailPageUrl =
@@ -170,11 +168,9 @@ const VerticalMenuCard = ({
       return;
     }
 
-    if (isLoading || !menuItem?.menuId) return;
+    if (isFavoriteLoading || !menuItem?.menuId) return;
 
     try {
-      setIsLoading(true);
-
       const authData = localStorage.getItem("auth");
       const auth = authData ? JSON.parse(authData) : null;
 
@@ -183,28 +179,30 @@ const VerticalMenuCard = ({
         return;
       }
 
-      if (isFavoriteBoolean) {
-        await apiService.favorites.remove({
-          outletId,
-          userId: auth.userId,
-          menuId: menuItem.menuId
-        });
-      } else {
-        await apiService.favorites.add({
-          outletId,
-          userId: auth.userId,
-          menuId: menuItem.menuId
-        });
-      }
-
-      onFavoriteUpdate(menuItem.menuId, !isFavoriteBoolean);
+      // Use the mutation instead of direct API call
+      toggleFavorite(
+        {
+          menuId: menuItem.menuId,
+          isFavorite: isFavoriteBoolean,
+          userId: auth.userId
+        },
+        {
+          onSuccess: () => {
+            onFavoriteUpdate(menuItem.menuId, !isFavoriteBoolean);
+          },
+          onError: (error) => {
+            console.error("Error updating favorite status:", error);
+            openModal("ERROR", {
+              message: error.message || "Failed to update favorite status",
+            });
+          }
+        }
+      );
     } catch (error) {
       console.error("Error updating favorite status:", error);
       openModal("ERROR", {
         message: error.message || "Failed to update favorite status",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -308,10 +306,10 @@ const VerticalMenuCard = ({
           </div>
           <a
             href="javascript:void(0);"
-            className={`${isLoading ? "disabled" : ""}`}
+            className={`${isFavoriteLoading ? "disabled" : ""}`}
             onClick={handleFavoriteToggle}
             style={{
-              pointerEvents: isLoading ? "none" : "auto",
+              pointerEvents: isFavoriteLoading ? "none" : "auto",
               cursor: "pointer",
               textDecoration: "none",
             }}

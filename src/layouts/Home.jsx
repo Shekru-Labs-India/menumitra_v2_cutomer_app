@@ -195,9 +195,10 @@ function Home() {
     // Will implement cart functionality later
   };
 
-  const handleFavoriteClick = (menuId) => {
-    console.log("Toggle favorite:", menuId);
-    // Will implement favorite functionality later
+  const handleFavoriteClick = (menuId, newFavoriteStatus) => {
+    // The UI will already be updated optimistically by the mutation
+    // This function can be simplified or even removed if not needed
+    // console.log("Favorite status updated:", menuId, newFavoriteStatus);
   };
 
   const handleQuantityChange = (menuId, newQuantity) => {
