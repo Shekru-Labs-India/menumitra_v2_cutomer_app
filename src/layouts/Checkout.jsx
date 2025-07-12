@@ -795,7 +795,7 @@ function Checkout() {
                         </div>
                       )}
 
-                      {/* Rest of the summary remains same */}
+                      {/* Subtotal after discounts */}
                       <div
                         className="d-flex justify-content-between align-items-center mb-1"
                         style={{ color: "#b0b3b8" }}
@@ -829,12 +829,16 @@ function Checkout() {
                         <span>+₹{checkoutDetails?.gst_amount || "0.00"}</span>
                       </div>
                       <hr className="my-2" style={{ borderColor: "#e0e0e0" }} />
+                      {/* Updated Grand Total with coupon discount */}
                       <div className="d-flex justify-content-between align-items-center">
                         <span className="fw-bold" style={{ fontSize: 18 }}>
                           Grand Total
                         </span>
                         <span className="fw-bold" style={{ fontSize: 18 }}>
-                          ₹{checkoutDetails?.final_grand_total || "0.00"}
+                          ₹{(
+                            parseFloat(checkoutDetails?.final_grand_total || 0) - 
+                            (couponStatus?.success ? parseFloat(couponStatus.couponDetails.value) : 0)
+                          ).toFixed(2)}
                         </span>
                       </div>
                     </>
