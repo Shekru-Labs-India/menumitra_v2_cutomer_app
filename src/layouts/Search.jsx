@@ -14,6 +14,14 @@ import apiService from "../api/apiService";
 import { useQuery } from '@tanstack/react-query';
 
 function Search() {
+  // Add this at the start of the component, with other useEffects
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = styles;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
+
   const [error, setError] = useState(null);
   const [showFilter, setShowFilter] = useState(false);
   const [activeFilters, setActiveFilters] = useState(null);
@@ -383,6 +391,9 @@ function Search() {
                         handleSearch();
                       }
                     }}
+                    autoComplete="off"
+                    results="0"
+                    data-search-input
                   />
                 </div>
               </div>
@@ -548,6 +559,41 @@ const styles = `
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  /* Remove the clear (x) button from search inputs - Comprehensive solution */
+  input[type="search"]::-webkit-search-decoration,
+  input[type="search"]::-webkit-search-cancel-button,
+  input[type="search"]::-webkit-search-results-button,
+  input[type="search"]::-webkit-search-results-decoration,
+  input[type="search"]::-webkit-clear-button {
+    -webkit-appearance: none;
+    appearance: none;
+    display: none;
+  }
+  
+  /* For Edge/IE */
+  input[type="search"]::-ms-clear,
+  input[type="search"]::-ms-reveal {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  /* For Firefox */
+  input[type="search"] {
+    -moz-appearance: none;
+  }
+
+  /* Global override */
+  input[type="search"] {
+    appearance: none;
+  }
+
+  /* Additional safety measure */
+  .main-in::-webkit-search-cancel-button {
+    display: none !important;
+    -webkit-appearance: none !important;
   }
 `;
 
