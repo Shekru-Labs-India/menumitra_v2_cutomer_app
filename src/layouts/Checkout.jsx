@@ -265,7 +265,6 @@ function Checkout() {
       menu_id: item.menuId,
       quantity: item.quantity,
       portion_name: item.portionName.toLowerCase(),
-      // comment: item.comment || "",
     }));
 
     // Get order settings from localStorage
@@ -285,9 +284,13 @@ function Checkout() {
       app_source: "user_app",
     };
 
+    // Add coupon code to payload if a valid coupon is applied
+    if (couponStatus?.success && couponStatus?.couponDetails?.code) {
+      payload.coupon = couponStatus.couponDetails.code;
+    }
+
     // Add table_id only for dine-in orders
     if (orderType === "dine-in") {
-      // Get table_id from outletDetails or localStorage
       const tableId = outletDetails?.tableId || localStorage.getItem("tableId");
       if (tableId) {
         payload.table_id = String(tableId);
@@ -311,7 +314,7 @@ function Checkout() {
       localStorage.removeItem("cart");
       navigate(`/orders`);
     }
-  };
+};
 
   // Add handlers for modal actions
   const handleModalClose = () => {
