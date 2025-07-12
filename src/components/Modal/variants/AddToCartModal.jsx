@@ -465,7 +465,7 @@ export const AddToCartModal = () => {
         {/* Comment textarea */}
         <div className="position-relative">
           <div className="d-flex justify-content-end mb-1">
-            <span className="text-muted small">
+            <span className="text-muted small me-2">
               {comments[selectedPortion]?.length || 0}/50
             </span>
           </div>
@@ -505,7 +505,7 @@ export const AddToCartModal = () => {
             }}
           />
 
-          {comments[selectedPortion] && (
+          {/* {comments[selectedPortion] && (
             <button
               onClick={() => handleCommentChange("")}
               className="position-absolute end-0 top-0 mt-2 me-2 btn btn-light btn-sm rounded-pill"
@@ -516,7 +516,7 @@ export const AddToCartModal = () => {
             >
               Clear
             </button>
-          )}
+          )} */}
         </div>
 
         {/* Validation message */}
