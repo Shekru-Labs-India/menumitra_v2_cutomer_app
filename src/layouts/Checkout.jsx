@@ -265,6 +265,7 @@ function Checkout() {
       menu_id: item.menuId,
       quantity: item.quantity,
       portion_name: item.portionName.toLowerCase(),
+      comment: item.comment || "" // Add the comment field here
     }));
 
     // Get order settings from localStorage
@@ -703,7 +704,7 @@ function Checkout() {
                                   className="fw-bold"
                                   style={{ color: "#2196f3", fontSize: 18 }}
                                 >
-                                  ₹{item.price}
+                                  ₹{parseFloat(item.price).toFixed(2) || "0.00"}
                                 </span>
                                 {item.offer > 0 && (
                                   <>

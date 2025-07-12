@@ -238,46 +238,29 @@ export const AddToCartModal = () => {
         );
 
         if (response.data?.detail?.menu_detail) {
-          // Silently update the state without affecting the UI
-          setMenuDetails(response.data.detail.menu_detail);
+          const newPortions = response.data.detail.menu_detail.portions.map(portion => ({
+            ...portion,
+            price: parseFloat(portion.price) || 0 // Ensure valid price
+          }));
+
+          setMenuDetails(prev => ({
+            ...prev,
+            portions: newPortions
+          }));
 
           // Update quantities and comments only if they don't exist
-          const newPortions = response.data.detail.menu_detail.portions;
-
-          setQuantities((prev) => {
-            const updated = { ...prev };
-            newPortions.forEach((portion) => {
-              if (!(portion.portion_id in updated)) {
-                const cartItem = cartItems.find(
-                  (item) =>
-                    item.menuId === modalConfig.data?.menuId &&
-                    item.portionId === portion.portion_id
-                );
-                updated[portion.portion_id] = cartItem?.quantity || 1;
-              }
-            });
-            return updated;
+          const updated = { ...prev };
+          newPortions.forEach((portion) => {
+            if (!(portion.portion_id in updated)) {
+              const cartItem = cartItems.find(
+                (item) =>
+                  item.menuId === modalConfig.data?.menuId &&
+                  item.portionId === portion.portion_id
+              );
+              updated[portion.portion_id] = cartItem?.quantity || 1;
+            }
           });
-
-          setComments((prev) => {
-            const updated = { ...prev };
-            newPortions.forEach((portion) => {
-              if (!(portion.portion_id in updated)) {
-                const cartItem = cartItems.find(
-                  (item) =>
-                    item.menuId === modalConfig.data?.menuId &&
-                    item.portionId === portion.portion_id
-                );
-                updated[portion.portion_id] = cartItem?.comment || "";
-              }
-            });
-            return updated;
-          });
-
-          // Only set selected portion if none is selected
-          if (!selectedPortion && newPortions.length > 0) {
-            setSelectedPortion(newPortions[0].portion_id);
-          }
+          return updated;
         }
       } catch (err) {
         // Just log the error without updating UI

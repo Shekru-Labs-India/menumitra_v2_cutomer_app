@@ -79,6 +79,11 @@ export const CartProvider = ({ children, onLogout }) => {
         (p) => p.portion_id === portionId
       );
 
+      // Validate price - ensure it's a valid number
+      const validPrice = selectedPortion?.price 
+        ? parseFloat(selectedPortion.price) || 0 
+        : 0;
+
       if (existingItemIndex !== -1) {
         const updatedItems = [...prevItems];
         if (quantity === 0) {
@@ -89,9 +94,8 @@ export const CartProvider = ({ children, onLogout }) => {
             quantity: quantity,
             comment: comment,
             outlet_id: outletId,
-            // Update these fields in case they changed
-            price: selectedPortion?.price,
-            offer: menuItem.offer || null, // Add offer if exists
+            price: validPrice, // Use validated price
+            offer: menuItem.offer || null,
           };
         }
         return updatedItems;
@@ -103,14 +107,13 @@ export const CartProvider = ({ children, onLogout }) => {
             menuName: menuItem.menuName,
             portionId: portionId,
             portionName: selectedPortion?.portion_name,
-            price: selectedPortion?.price,
+            price: validPrice, // Use validated price
             quantity: quantity,
             comment: comment,
             outlet_id: outletId,
-            // Add new fields
-            menu_cat_id: menuItem.menu_cat_id || menuItem.category_id, // Handle both naming conventions
+            menu_cat_id: menuItem.menu_cat_id || menuItem.category_id,
             category_name: menuItem.category_name,
-            offer: menuItem.offer || null, // Make offer optional
+            offer: menuItem.offer || null,
           },
         ];
       }
@@ -185,12 +188,13 @@ export const CartProvider = ({ children, onLogout }) => {
     }
   }, [onLogout]);
 
-  // Get cart total
+  // Update getCartTotal to handle invalid prices
   const getCartTotal = () => {
-    return cartItems.reduce(
-      (total, item) => total + item.price * item.quantity,
-      0
-    );
+    return cartItems.reduce((total, item) => {
+      const itemPrice = parseFloat(item.price) || 0;
+      const itemQuantity = parseInt(item.quantity) || 0;
+      return total + (itemPrice * itemQuantity);
+    }, 0);
   };
 
   // Get cart items count (unique items, not quantities)
