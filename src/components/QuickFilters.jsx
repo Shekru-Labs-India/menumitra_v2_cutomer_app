@@ -102,7 +102,7 @@ const QuickFilters = ({ onFilterChange }) => {
   ];
 
   const priceOptions = [
-    { id: "all", label: "All Prices", buttonLabel: "All Prices" },
+    { id: "all", label: "All", buttonLabel: "All" },
     { id: "50", label: "Under ₹50", buttonLabel: "₹50", icon: "₹" },
     { id: "100", label: "Under ₹100", buttonLabel: "₹100", icon: "₹" },
     { id: "200", label: "Under ₹200", buttonLabel: "₹200", icon: "₹" },
