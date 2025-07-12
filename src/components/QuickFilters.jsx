@@ -268,53 +268,84 @@ const QuickFilters = ({ onFilterChange }) => {
             <div className="dropdown">
               <button
                 type="button"
-                className={`btn rounded-pill d-flex align-items-center gap-1 px-3 py-2 shadow-none ${
+                className={`btn rounded-pill d-flex align-items-center gap-2 px-3 py-2 ${
                   activeValue && activeValue !== "all"
-                    ? "bg-success text-white" // Selected state: green background with white text
-                    : "bg-light" // Unselected state: light background
+                    ? "filter-active"
+                    : "filter-default"
                 }`}
                 style={{
                   border: activeValue && activeValue !== "all"
-                    ? "none"
-                    : "1px solid #22A45D",
-                  fontWeight: 500,
-                  minWidth: "100px", // Ensure consistent button width
+                    ? "1.5px solid #22A45D"
+                    : "1.5px solid #eaeaea",
+                  minWidth: "110px",
+                  transition: "all 0.2s ease",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  boxShadow: activeValue && activeValue !== "all"
+                    ? "0 2px 8px rgba(34, 164, 93, 0.12)"
+                    : "0 1px 2px rgba(0, 0, 0, 0.04)",
                 }}
                 data-bs-toggle="dropdown"
                 aria-expanded={openDropdown === dropdownType}
                 onClick={(e) => {
                   e.preventDefault();
-                  handleDropdownToggle(
-                    dropdownType,
-                    openDropdown !== dropdownType
-                  );
+                  handleDropdownToggle(dropdownType, openDropdown !== dropdownType);
                 }}
               >
                 {getButtonIcon(type)}
                 <span style={{
                   color: activeValue && activeValue !== "all"
-                    ? "white" // Selected state: white text
-                    : "#22A45D" // Unselected state: green text
+                    ? "#22A45D"
+                    : "#555555",
                 }}>
                   {getButtonLabel(type, options, activeValue)}
                 </span>
+                <i 
+                  className="fas fa-chevron-down ms-1" 
+                  style={{ 
+                    fontSize: "10px",
+                    opacity: 0.6,
+                    transform: openDropdown === dropdownType ? "rotate(180deg)" : "rotate(0)",
+                    transition: "transform 0.2s ease"
+                  }}
+                />
               </button>
+
               <div
-                className={`dropdown-menu ${
+                className={`dropdown-menu shadow-sm border-0 mt-2 ${
                   openDropdown === dropdownType ? "show" : ""
                 }`}
+                style={{
+                  borderRadius: "16px",
+                  padding: "6px",
+                  minWidth: "160px",
+                  animation: "dropdownFade 0.2s ease",
+                }}
               >
                 {options.map((option) => (
                   <a
                     key={option.id}
-                    className={`dropdown-item ${
+                    className={`dropdown-item rounded-pill ${
                       activeValue === option.id ? "active" : ""
                     }`}
+                    style={{
+                      padding: "8px 16px",
+                      margin: "2px 0",
+                      display: "flex",
+                      alignItems: "center",
+                      color: activeValue === option.id ? "#22A45D" : "#555555",
+                      backgroundColor: activeValue === option.id ? "#F0F9F4" : "transparent",
+                      transition: "all 0.15s ease",
+                    }}
                     href="javascript:void(0);"
                     onClick={() => handleFilterClick(dropdownType, option.id)}
                   >
-                    <span className="me-2">{option.icon}</span>
-                    {option.label}
+                    <span className="me-2" style={{ opacity: 0.9 }}>{option.icon}</span>
+                    <span style={{ 
+                      fontWeight: activeValue === option.id ? "500" : "400"
+                    }}>
+                      {option.label}
+                    </span>
                   </a>
                 ))}
               </div>
@@ -324,6 +355,38 @@ const QuickFilters = ({ onFilterChange }) => {
       </div>
     );
   };
+
+  // Add these styles to your CSS
+  const styles = `
+    .filter-active {
+      background-color: #F7FBF9 !important;
+    }
+
+    .filter-default {
+      background-color: white !important;
+    }
+
+    .dropdown-item:hover {
+      background-color: #F8F8F8 !important;
+      color: #22A45D !important;
+    }
+
+    @keyframes dropdownFade {
+      from {
+        opacity: 0;
+        transform: translateY(-5px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  `;
+
+  // Add the styles to the document
+  const styleSheet = document.createElement("style");
+  styleSheet.innerText = styles;
+  document.head.appendChild(styleSheet);
 
   return (
     <div className="d-flex gap-2">
