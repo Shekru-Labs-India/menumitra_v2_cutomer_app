@@ -102,13 +102,13 @@ const QuickFilters = ({ onFilterChange }) => {
   ];
 
   const priceOptions = [
-    { id: "all", label: "All Prices" },
-    { id: "50", label: "Under ₹50", icon: "₹" },
-    { id: "100", label: "Under ₹100", icon: "₹" },
-    { id: "200", label: "Under ₹200", icon: "₹" },
-    { id: "500", label: "Under ₹500", icon: "₹" },
-    { id: "1000", label: "Under ₹1000", icon: "₹" },
-    { id: "above1000", label: "Above ₹1000", icon: "₹" },
+    { id: "all", label: "All Prices", buttonLabel: "All Prices" },
+    { id: "50", label: "Under ₹50", buttonLabel: "₹50", icon: "₹" },
+    { id: "100", label: "Under ₹100", buttonLabel: "₹100", icon: "₹" },
+    { id: "200", label: "Under ₹200", buttonLabel: "₹200", icon: "₹" },
+    { id: "500", label: "Under ₹500", buttonLabel: "₹500", icon: "₹" },
+    { id: "1000", label: "Under ₹1000", buttonLabel: "₹1000", icon: "₹" },
+    { id: "above1000", label: "Above ₹1000", buttonLabel: "₹1000+", icon: "₹" },
   ];
 
   const spicyOptions = [
@@ -228,13 +228,14 @@ const QuickFilters = ({ onFilterChange }) => {
     }
   };
 
+  // Modify the getButtonLabel function
   const getButtonLabel = (type, options, activeValue) => {
     if (!activeValue || activeValue === "all") {
-      return type; // Show default type name if no selection or 'all' is selected
+      return type;
     }
     const selectedOption = options.find((opt) => opt.id === activeValue);
-    // Return only the label text without the icon
-    return selectedOption?.label || type;
+    // Use buttonLabel if available, otherwise fall back to label
+    return selectedOption?.buttonLabel || selectedOption?.label || type;
   };
 
   const handleDropdownToggle = (dropdownName, isOpen) => {
