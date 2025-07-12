@@ -367,11 +367,11 @@ const OrderAccordionItem = ({
                 <h6 className="mb-0">#{orderNumber}</h6>
                 
               {/* Status below only if not paid/cancelled */}
-              {/* {paymentStatus !== "Paid" && status !== "Cancelled" && (
+              {paymentStatus !== "Paid" && status !== "Cancelled" && (
                 <p className="mb-0 text-muted" style={{ fontSize: "12px" }}>
                   ({status})
                 </p>
-              )} */}
+              )}
                 {/* Status badge next to order number */}
                 {paymentStatus === "Paid" ? (
                   <span
