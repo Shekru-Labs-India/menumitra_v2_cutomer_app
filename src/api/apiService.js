@@ -7,9 +7,15 @@ export const apiService = {
   // Common API calls that return different data shapes
   common: {
     getAllMenuListByCategory: async ({ outletId }) => {
+      // Get user ID from auth data if available
+      const authData = localStorage.getItem('auth');
+      const auth = authData ? JSON.parse(authData) : null;
+      const userId = auth?.userId;
+
       const response = await axiosInstance.post(`/${API_VERSION}/user/get_all_menu_list_by_category`, {
         outlet_id: outletId,
-        app_source: "user_app"
+        app_source: "user_app",
+        user_id: userId || null
       });
       
       return response?.data?.detail || {};
