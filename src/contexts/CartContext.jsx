@@ -74,6 +74,11 @@ export const CartProvider = ({ children, onLogout }) => {
           item.menuId === menuItem.menuId && item.portionId === portionId
       );
 
+      // Get the selected portion details
+      const selectedPortion = menuItem.portions.find(
+        (p) => p.portion_id === portionId
+      );
+
       if (existingItemIndex !== -1) {
         const updatedItems = [...prevItems];
         if (quantity === 0) {
@@ -83,7 +88,10 @@ export const CartProvider = ({ children, onLogout }) => {
             ...updatedItems[existingItemIndex],
             quantity: quantity,
             comment: comment,
-            outlet_id: outletId, // Ensure outlet_id is updated
+            outlet_id: outletId,
+            // Update these fields in case they changed
+            price: selectedPortion?.price,
+            offer: menuItem.offer || null, // Add offer if exists
           };
         }
         return updatedItems;
@@ -94,14 +102,15 @@ export const CartProvider = ({ children, onLogout }) => {
             menuId: menuItem.menuId,
             menuName: menuItem.menuName,
             portionId: portionId,
-            portionName: menuItem.portions.find(
-              (p) => p.portion_id === portionId
-            )?.portion_name,
-            price: menuItem.portions.find((p) => p.portion_id === portionId)
-              ?.price,
+            portionName: selectedPortion?.portion_name,
+            price: selectedPortion?.price,
             quantity: quantity,
             comment: comment,
-            outlet_id: outletId, // Add outlet_id to new items
+            outlet_id: outletId,
+            // Add new fields
+            menu_cat_id: menuItem.menu_cat_id || menuItem.category_id, // Handle both naming conventions
+            category_name: menuItem.category_name,
+            offer: menuItem.offer || null, // Make offer optional
           },
         ];
       }

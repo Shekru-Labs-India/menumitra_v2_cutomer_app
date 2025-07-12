@@ -558,7 +558,7 @@ function Checkout() {
              minHeight: "100vh" }}
         >
           <div
-            className="container bottom-content"
+            className="container bottom-content pt-0"
             style={{ paddingBottom: "40px" }}
           >
             {/* Menu/Cart Items List */}
@@ -632,6 +632,20 @@ function Checkout() {
                               <h5 className="mb-0" style={{ fontWeight: 600 }}>
                                 {item.menuName}
                               </h5>
+                              {/* Add offer display */}
+                              {item.offer && (
+                                <span
+                                  className="badge bg-success-subtle text-success ms-2"
+                                  style={{
+                                    fontSize: 12,
+                                    padding: "4px 8px",
+                                    borderRadius: 12,
+                                    fontWeight: 500
+                                  }}
+                                >
+                                  {item.offer}% OFF
+                                </span>
+                              )}
                             </div>
                             <div className="d-flex align-items-center mb-1">
                               <span
@@ -649,6 +663,40 @@ function Checkout() {
                                 {item.portionName}
                               </span>
                             </div>
+
+                            {/* Add Special Instructions/Comment display */}
+                            {item.comment && (
+                              <div className="d-flex align-items-center mb-2">
+                                <span
+                                  className="text-muted"
+                                  style={{
+                                    fontSize: 13,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "4px"
+                                  }}
+                                >
+                                  <i 
+                                    className="fa-solid fa-message-lines"
+                                    style={{ 
+                                      fontSize: 12,
+                                      color: "#6c757d"
+                                    }}
+                                  ></i>
+                                  <span style={{ 
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    display: "-webkit-box",
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: "vertical",
+                                    lineHeight: "1.2"
+                                  }}>
+                                    {item.comment}
+                                  </span>
+                                </span>
+                              </div>
+                            )}
+
                             <div className="d-flex align-items-center justify-content-between">
                               <div className="d-flex align-items-center">
                                 <span
@@ -677,14 +725,14 @@ function Checkout() {
                                 )}
                               </div>
                               <div className="d-flex flex-column align-items-end gap-1">
-                                {item.offer > 0 && (
+                                {/* {item.offer > 0 && (
                                   <span
                                     className="text-success fw-bold mb-1"
                                     style={{ fontSize: 16 }}
                                   >
                                     {item.offer}% Off
                                   </span>
-                                )}
+                                )} */}
                                 <div className="bg-light rounded-pill d-flex align-items-center px-2 py-1">
                                   <button
                                     className="btn btn-link p-0 m-0"

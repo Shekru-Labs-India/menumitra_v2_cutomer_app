@@ -182,10 +182,21 @@ export const AddToCartModal = () => {
       isInCart,
     });
 
-    // Only add/update the selected portion
+    // Only add/update the selected portion if we have valid data
     if (selectedPortion && quantities[selectedPortion] > 0) {
+      // Ensure modalConfig.data has all required fields
+      const menuItemData = {
+        ...modalConfig.data,
+        menuId: modalConfig.data.menuId || modalConfig.data.menu_id,
+        menuName: modalConfig.data.menuName || modalConfig.data.menu_name,
+        menu_cat_id: modalConfig.data.menu_cat_id || modalConfig.data.category_id,
+        category_name: modalConfig.data.category_name,
+        offer: modalConfig.data.offer, // This will be undefined if not present
+        portions: menuDetails.portions || modalConfig.data.portions, // Use updated portions if available
+      };
+
       addToCart(
-        modalConfig.data,
+        menuItemData,
         Number(selectedPortion),
         quantities[selectedPortion],
         comments[selectedPortion] || ""
