@@ -369,7 +369,7 @@ function ProductDetail() {
                 </ul> */}
               </div>
 
-              <div className="item-list-2">
+              <div className="item-list-2 my-2">
                 <div className="price">
                   <span className="text-style text-soft">Price</span>
                   <div className="d-flex justify-content-between align-items-center">
