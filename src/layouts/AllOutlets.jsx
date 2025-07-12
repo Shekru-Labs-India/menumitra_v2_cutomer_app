@@ -65,6 +65,12 @@ function AllOutlets() {
     queryFn: apiService.customer.getAllRestaurants,
   });
 
+  // Log closed outlets
+  useEffect(() => {
+    const closedOutlets = outlets.filter(outlet => !outlet.is_open);
+    console.log("Closed Outlets:", closedOutlets);
+  }, [outlets]);
+
   // Filter outlets based on current filters
   const filteredOutlets = outlets.filter(outlet => {
     if (filters.type !== "all" && outlet.veg_nonveg !== filters.type) {
@@ -76,7 +82,12 @@ function AllOutlets() {
     return true;
   });
 
-  const handleRestoUrl = (url) => {
+  const handleRestoUrl = (url, isOpen) => {
+    // If outlet is closed, don't process the click
+    if (!isOpen) {
+      return;
+    }
+
     const parsed = parseRestoUrl(url);
 
     if (!parsed.isValid) {
@@ -251,20 +262,25 @@ function AllOutlets() {
                 <div
                   key={outlet.outlet_id}
                   className="card border-0 mb-2"
-                  onClick={() => handleRestoUrl(outlet.resto_url)}
+                  onClick={() => handleRestoUrl(outlet.resto_url, outlet.is_open)}
                   style={{
-                    cursor: outlet.resto_url ? "pointer" : "default",
+                    cursor: outlet.is_open ? "pointer" : "not-allowed", // Change cursor for closed outlets
                     transition: "all 0.3s ease",
+                    opacity: outlet.is_open ? 1 : 0.7, // Make closed outlets appear faded
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow =
-                      "0 .5rem 1rem rgba(0,0,0,.15)";
+                    if (outlet.is_open) { // Only apply hover effect for open outlets
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                      e.currentTarget.style.boxShadow =
+                        "0 .5rem 1rem rgba(0,0,0,.15)";
+                    }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "none";
-                    e.currentTarget.style.boxShadow =
-                      "0 .125rem .25rem rgba(0,0,0,.075)";
+                    if (outlet.is_open) { // Only remove hover effect for open outlets
+                      e.currentTarget.style.transform = "none";
+                      e.currentTarget.style.boxShadow =
+                        "0 .125rem .25rem rgba(0,0,0,.075)";
+                    }
                   }}
                 >
                   <div className="card-body p-3 rounded border border-1">

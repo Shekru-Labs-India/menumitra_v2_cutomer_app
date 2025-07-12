@@ -556,7 +556,7 @@ function OrderDetail() {
 
           {/* Order Items Card */}
           <div className="card mt-3">
-            <div className="card-header border-0">
+            <div className="card-header border-0 pb-0">
               <h5 className="card-title text-primary">
                 Order Items ({orderDetails.order_details.menu_count})
               </h5>
@@ -565,7 +565,7 @@ function OrderDetail() {
               {orderDetails.menu_details.map((menu, index) => (
                 <div
                   key={index}
-                  className="d-flex align-items-center justify-content-between py-3"
+                  className="d-flex align-items-center justify-content-between"
                   style={{
                     borderBottom:
                       index !== orderDetails.menu_details.length - 1
