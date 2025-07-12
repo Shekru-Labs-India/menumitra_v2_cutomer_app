@@ -447,11 +447,11 @@ function Search() {
             ) : (
               <div className="item-list style-2">
                 <div className="saprater" />
-                <div className="title-bar">
+                {/* <div className="title-bar">
                   <span className="title mb-0 font-18">
                     Search Results ({searchResults.length})
                   </span>
-                </div>
+                </div> */}
                 <ul>
                   {searchResults.map((menu) => (
                     <li key={menu.menu_id}>
