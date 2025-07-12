@@ -29,12 +29,31 @@ export const CartProvider = ({ children, onLogout }) => {
     return savedCart ? JSON.parse(savedCart) : [];
   });
 
+  // Add new useEffect to watch for outlet changes and clear mismatched items
+  useEffect(() => {
+    if (outletId && cartItems.length > 0) {
+      // Filter out items that don't match current outlet
+      const filteredItems = cartItems.filter(item => {
+        // If the item has an outlet_id and it doesn't match current outlet, remove it
+        if (item.outlet_id && item.outlet_id !== outletId) {
+          return false;
+        }
+        return true;
+      });
+
+      // Update cart if items were removed
+      if (filteredItems.length !== cartItems.length) {
+        setCartItems(filteredItems);
+      }
+    }
+  }, [outletId]); // This effect runs whenever outletId changes
+
   // Save cart items to localStorage when updated
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cartItems));
   }, [cartItems]);
 
-  // Add item to cart with comment
+  // Modify addToCart to include outlet_id
   const addToCart = (
     menuItem,
     portionId,
@@ -56,22 +75,19 @@ export const CartProvider = ({ children, onLogout }) => {
       );
 
       if (existingItemIndex !== -1) {
-        // Update existing item
         const updatedItems = [...prevItems];
         if (quantity === 0) {
-          // Remove item if quantity is 0
           updatedItems.splice(existingItemIndex, 1);
         } else {
-          // Update quantity and comment for specific portion
           updatedItems[existingItemIndex] = {
             ...updatedItems[existingItemIndex],
             quantity: quantity,
-            comment: comment, // Store comment for this specific portion
+            comment: comment,
+            outlet_id: outletId, // Ensure outlet_id is updated
           };
         }
         return updatedItems;
       } else if (quantity > 0) {
-        // Add new item with portion-specific comment
         return [
           ...prevItems,
           {
@@ -85,6 +101,7 @@ export const CartProvider = ({ children, onLogout }) => {
               ?.price,
             quantity: quantity,
             comment: comment,
+            outlet_id: outletId, // Add outlet_id to new items
           },
         ];
       }
