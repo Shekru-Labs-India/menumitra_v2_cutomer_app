@@ -300,7 +300,7 @@ function Home() {
               {/* <OutletInfoBanner /> */}
 
               {/* Offer Banner Swiper - Inserted here */}
-              <OfferBanner />
+              {/* <OfferBanner /> */}
 
               <div
                 className="title-bar d-flex justify-content-between align-items-center"
