@@ -472,6 +472,25 @@ const AuthOffcanvas = () => {
       )}
       <form onSubmit={handleSignupSubmit}>
         <div className="mb-3">
+          <label className="form-label">Full Name</label>
+          <input
+            type="text"
+            className="form-control"
+            value={userDetails.name}
+            onChange={(e) => {
+              const value = e.target.value;
+              // Only allow alphabets and spaces
+              if (/^[a-zA-Z ]*$/.test(value)) {
+                setUserDetails((prev) => ({ ...prev, name: value }));
+              }
+            }}
+            onFocus={handleInputFocus}
+            placeholder="Enter your full name"
+            required
+            disabled={isLoading}
+          />
+        </div>
+        <div className="mb-3">
           <label className="form-label">Phone Number</label>
           <div className="input-group">
             <span className="input-group-text">+91</span>
@@ -497,25 +516,6 @@ const AuthOffcanvas = () => {
             />
           </div>
           <small className="text-muted">Enter 10 digit mobile number</small>
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Full Name</label>
-          <input
-            type="text"
-            className="form-control"
-            value={userDetails.name}
-            onChange={(e) => {
-              const value = e.target.value;
-              // Only allow alphabets and spaces
-              if (/^[a-zA-Z ]*$/.test(value)) {
-                setUserDetails((prev) => ({ ...prev, name: value }));
-              }
-            }}
-            onFocus={handleInputFocus}
-            placeholder="Enter your full name"
-            required
-            disabled={isLoading}
-          />
         </div>
         <div style={buttonContainerStyle}>
           <button
@@ -544,7 +544,7 @@ const AuthOffcanvas = () => {
                 Creating Account...
               </span>
             ) : (
-              "NEXT"
+              "Send OTP"
             )}
           </button>
         </div>
