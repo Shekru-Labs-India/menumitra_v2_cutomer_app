@@ -236,11 +236,8 @@ const AuthOffcanvas = () => {
         name: userDetails.name,
       });
 
-      setError("Account created successfully!");
-      setTimeout(() => {
-        setCurrentStep(STEPS.OTP);
-        setError("");
-      }, 1500);
+      // Directly move to OTP step without showing success message
+      setCurrentStep(STEPS.OTP);
     } catch (err) {
       console.error("Signup error:", err);
       setError(
