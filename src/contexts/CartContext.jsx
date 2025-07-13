@@ -26,15 +26,25 @@ export const CartProvider = ({ children }) => {
   // Initialize cart items from localStorage
   const [cartItems, setCartItems] = useState(() => {
     const savedCart = localStorage.getItem("cart");
-    return savedCart ? JSON.parse(savedCart) : [];
+    const auth = localStorage.getItem('auth');
+    
+    // Only restore cart if user is authenticated
+    if (savedCart && auth) {
+      return JSON.parse(savedCart);
+    }
+    return [];
   });
 
   // Add effect to clear cart when user changes
   useEffect(() => {
     if (!user) {
-      // User logged out, clear cart
-      setCartItems([]);
-      localStorage.removeItem("cart");
+      // Check if there's actually no auth data in localStorage
+      const auth = localStorage.getItem('auth');
+      if (!auth) {
+        // Only clear cart if user is actually logged out
+        setCartItems([]);
+        localStorage.removeItem("cart");
+      }
     }
   }, [user]); // This effect runs whenever user auth state changes
 
