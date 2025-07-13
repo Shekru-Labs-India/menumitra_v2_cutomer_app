@@ -19,7 +19,7 @@ export const useCart = () => {
   return context;
 };
 
-export const CartProvider = ({ children, onLogout }) => {
+export const CartProvider = ({ children }) => {
   const { user, setShowAuthOffcanvas } = useAuth();
   const { outletId, sectionId, orderSettings } = useOutlet();
 
@@ -28,6 +28,15 @@ export const CartProvider = ({ children, onLogout }) => {
     const savedCart = localStorage.getItem("cart");
     return savedCart ? JSON.parse(savedCart) : [];
   });
+
+  // Add effect to clear cart when user changes
+  useEffect(() => {
+    if (!user) {
+      // User logged out, clear cart
+      setCartItems([]);
+      localStorage.removeItem("cart");
+    }
+  }, [user]); // This effect runs whenever user auth state changes
 
   // Add new useEffect to watch for outlet changes and clear mismatched items
   useEffect(() => {
@@ -177,16 +186,11 @@ export const CartProvider = ({ children, onLogout }) => {
     );
   };
 
-  // Update the clearCart method to be more comprehensive
+  // Update the clearCart method to be simpler since we handle logout separately
   const clearCart = useCallback(() => {
     setCartItems([]);
     localStorage.removeItem("cart");
-
-    // Call onLogout callback if provided
-    if (onLogout) {
-      onLogout();
-    }
-  }, [onLogout]);
+  }, []); // Remove onLogout dependency since we handle it via useEffect
 
   // Update getCartTotal to handle invalid prices
   const getCartTotal = () => {
