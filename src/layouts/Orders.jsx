@@ -8,6 +8,7 @@ import CancelOrderModal from "../components/Modal/variants/CancelOrderModal";
 import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import apiService from "../api/apiService";
 
 // Update the NoOrders component with new icon
 const NoOrders = ({ message }) => {
@@ -149,54 +150,37 @@ function Orders() {
   const fetchCompletedOrders = async () => {
     try {
       const auth = JSON.parse(localStorage.getItem("auth")) || {};
-      const userId = auth.userId || "73";
+      const userId = auth.userId;
       const accessToken = auth.accessToken;
 
       if (!accessToken) {
         throw new Error("Authentication token not found");
       }
 
-      const response = await fetch(
-        "https://men4u.xyz/v2/user/get_completed_and_cancel_order_list",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({
-            user_id: parseInt(userId),
-            outlet_id: outletId,
-            app_source: "user_app",
-          }),
-        }
-      );
+      const data = await apiService.customer.getOrderHistory({
+        userId: parseInt(userId),
+        outletId
+      });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch order history");
-      }
-
-      const data = await response.json();
-
-      if (data.detail && data.detail.lists) {
+      if (data) {
         // Merge both spellings of complementary/complimentary orders
         const complementaryOrders = {
-          ...(data.detail.lists.complementary_paid || {}),
-          ...(data.detail.lists.complimentary_paid || {})
+          ...(data.complementary_paid || {}),
+          ...(data.complimentary_paid || {})
         };
 
         // Transform the data to include all order types
         const transformedData = {
-          paid: data.detail.lists.paid || {},
+          paid: data.paid || {},
           complimentary_paid: complementaryOrders,
-          cancelled: data.detail.lists.cancelled || {},
-          udhari_paid: data.detail.lists.udhari_paid || {},
-          udhari_pending: data.detail.lists.udhari_pending || {},
+          cancelled: data.cancelled || {},
+          udhari_paid: data.udhari_paid || {},
+          udhari_pending: data.udhari_pending || {},
         };
         setOrdersData(transformedData);
 
         // Extract udhari_pending orders and flatten them into a single array
-        const udhariPendingRaw = data.detail.lists.udhari_pending || {};
+        const udhariPendingRaw = data.udhari_pending || {};
         const udhariPendingList = Object.values(udhariPendingRaw).flat();
         const mappedUdhariPending = udhariPendingList.map((order) => ({
           id: order.order_number,
@@ -230,7 +214,7 @@ function Orders() {
   const fetchOngoingOrders = async () => {
     try {
       const auth = JSON.parse(localStorage.getItem("auth")) || {};
-      const userId = auth.userId || "73";
+      const userId = auth.userId;
       const accessToken = auth.accessToken;
 
       if (!accessToken) throw new Error("Authentication token not found");

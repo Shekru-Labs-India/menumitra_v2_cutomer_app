@@ -403,7 +403,7 @@ function OrderDetail() {
     try {
       const auth = JSON.parse(localStorage.getItem("auth")) || {};
       const accessToken = auth.accessToken;
-      const userId = auth.userId || "73";
+      const userId = auth.userId;
 
       if (!accessToken) {
         console.error("Authentication token not found");
@@ -445,7 +445,7 @@ function OrderDetail() {
         // Get auth data from localStorage
         const auth = JSON.parse(localStorage.getItem("auth")) || {};
         const accessToken = auth.accessToken;
-        const userId = auth.userId || "73"; // Get userId from localStorage
+        const userId = auth.userId; // Get userId from localStorage
 
         if (!accessToken) {
           throw new Error("Authentication token not found");

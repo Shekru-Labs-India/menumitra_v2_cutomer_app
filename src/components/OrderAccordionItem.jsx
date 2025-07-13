@@ -304,7 +304,7 @@ const OrderAccordionItem = ({
     try {
       const auth = JSON.parse(localStorage.getItem("auth")) || {};
       const accessToken = auth.accessToken;
-      const userId = auth.userId || "73";
+      const userId = auth.userId;
 
       if (!accessToken) {
         console.error("Authentication token not found");

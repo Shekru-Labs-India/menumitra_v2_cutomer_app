@@ -195,6 +195,15 @@ export const apiService = {
       });
       return response?.data?.detail?.outlets || [];
     },
+    
+    getOrderHistory: async ({ userId, outletId }) => {
+      const response = await axiosInstance.post(`/${API_VERSION}/user/get_completed_and_cancel_order_list`, {
+        user_id: parseInt(userId),
+        outlet_id: outletId,
+        app_source: "user_app"
+      });
+      return response?.data?.detail?.lists || {};
+    },
   },
 
   // ... other API endpoints grouped by feature
