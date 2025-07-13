@@ -405,22 +405,11 @@ function Orders() {
   // Update handleConfirmCancel
   const handleConfirmCancel = async (reason) => {
     try {
-      const auth = JSON.parse(localStorage.getItem("auth")) || {};
-      const accessToken = auth.accessToken;
-      if (!accessToken) throw new Error("Authentication token not found");
-
-      await axios.post(
-        "https://men4u.xyz/v2/user/cancel_order",
-        {
-          outlet_id: outletId,
-          order_id: selectedOrderId,
-          note: reason,
-          app_source: "user_app",
-        },
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
-      );
+      await apiService.customer.cancelOrder({
+        outletId,
+        orderId: selectedOrderId,
+        note: reason
+      });
 
       _setCancelOrderStatus(true);
       await fetchOngoingOrders();

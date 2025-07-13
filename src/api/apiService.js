@@ -214,6 +214,16 @@ export const apiService = {
       });
       return response?.data?.detail?.orders || [];
     },
+    
+    cancelOrder: async ({ outletId, orderId, note }) => {
+      const response = await axiosInstance.post(`/${API_VERSION}/user/cancel_order`, {
+        outlet_id: outletId,
+        order_id: orderId,
+        note,
+        app_source: "user_app"
+      });
+      return response.data;
+    },
   },
 
   // ... other API endpoints grouped by feature
