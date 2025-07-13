@@ -621,12 +621,57 @@ function OrderDetail() {
             </div>
             <div className="card-body">
               <div className="bg-transparent">
-                <div className="d-flex justify-content-between px-0 border-0">
-                  <span className="text-soft">Total</span>
-                  <strong className="text-primary">
-                    ₹{Number(orderDetails.order_details.total_bill_amount).toFixed(2)}
-                  </strong>
-                </div>
+                {/* Show original bill amount if coupon applied */}
+                {orderDetails.order_details.coupon_details && (
+                  <div className="d-flex justify-content-between px-0 border-0">
+                    <span className="text-soft">Bill Amount</span>
+                    <strong className="text-primary">
+                      ₹{Number(orderDetails.order_details.coupon_details.total_bill_before_coupon).toFixed(2)}
+                    </strong>
+                  </div>
+                )}
+
+                {/* Show Coupon Details */}
+                {orderDetails.order_details.coupon_details && (
+                  <>
+                    <div
+                      className="d-flex justify-content-between px-0"
+                      style={{ paddingTop: 4, paddingBottom: 4, marginBottom: 0 }}
+                    >
+                      <span>
+                        Coupon ({orderDetails.order_details.coupon_details.coupon_code})
+                        {orderDetails.order_details.coupon_details.discount_type === "amount" 
+                          ? ` - Flat ₹${orderDetails.order_details.coupon_details.discount_value}`
+                          : ` - ${orderDetails.order_details.coupon_details.discount_value}% off`
+                        }
+                      </span>
+                      <strong style={{ color: "#e74c3c" }}>
+                        -₹{Number(orderDetails.order_details.coupon_discount).toFixed(2)}
+                      </strong>
+                    </div>
+                    <div
+                      className="d-flex justify-content-between px-0"
+                      style={{ paddingTop: 4, paddingBottom: 4, marginBottom: 0 }}
+                    >
+                      <span style={{ fontWeight: 500 }}>After Coupon Discount</span>
+                      <span style={{ fontWeight: 500 }}>
+                        ₹{Number(orderDetails.order_details.coupon_details.total_bill_after_coupon).toFixed(2)}
+                      </span>
+                    </div>
+                  </>
+                )}
+
+                {/* If no coupon, show regular total */}
+                {!orderDetails.order_details.coupon_details && (
+                  <div className="d-flex justify-content-between px-0 border-0">
+                    <span className="text-soft">Total</span>
+                    <strong className="text-primary">
+                      ₹{Number(orderDetails.order_details.total_bill_amount).toFixed(2)}
+                    </strong>
+                  </div>
+                )}
+
+                {/* Rest of the existing bill details */}
                 {orderDetails.order_details.discount_amount > 0 && (
                   <div
                     className="d-flex justify-content-between px-0"
@@ -772,8 +817,8 @@ function OrderDetail() {
           </div>
 
           {/* Table Information */}
-          {/* {orderDetails.order_details.table_number && 
-           orderDetails.order_details.table_number.length > 0 && 
+          {/* {orderDetails.order_details.table_number &&
+           orderDetails.order_details.table_number.length > 0 &&
            !['counter', 'drive-through', 'delivery', 'parcel'].includes(orderDetails.order_details.order_type.toLowerCase()) && (
             <div className="card dz-card mt-3">
               <div className="card-header border-0 pb-0">
