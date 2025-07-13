@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import OrderAccordionItem from "../components/OrderAccordionItem";
 import { useOutlet } from "../contexts/OutletContext";
 import Timer from "../components/Timer";
 import CancelOrderModal from "../components/Modal/variants/CancelOrderModal";
-import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import apiService from "../api/apiService";
@@ -58,20 +57,6 @@ const NoOrders = ({ message }) => {
 function Orders() {
   const { outletId } = useOutlet();
   const { user, setShowAuthOffcanvas } = useAuth();
-  const [ordersData, setOrdersData] = useState({
-    paid: {},
-    complimentary_paid: {},
-    cancelled: {},
-  });
-  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
-  const [error, setError] = useState({
-    ongoing: null,
-    history: null,
-  });
-  const [showCancelModal, setShowCancelModal] = useState(false);
-  const [selectedOrderId, setSelectedOrderId] = useState(null);
-  const [selectedOrderNumber, setSelectedOrderNumber] = useState(null);
-  const [cancelOrderStatus, _setCancelOrderStatus] = useState(true); // Prefix with _ to indicate intentionally unused
   const navigate = useNavigate();
 
   // Get userId from auth
@@ -82,9 +67,12 @@ function Orders() {
   const [expandedCompletedDates, setExpandedCompletedDates] = useState({});
   const [expandedCancelledDates, setExpandedCancelledDates] = useState({});
   const [expandedPendingDates, setExpandedPendingDates] = useState({});
-  const [udhariPendingOrders, setUdhariPendingOrders] = useState([]);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [selectedOrderNumber, setSelectedOrderNumber] = useState(null);
+  const [cancelOrderStatus, _setCancelOrderStatus] = useState(true);
 
-  // Replace fetchOngoingOrders with useQuery
+  // Query for ongoing orders
   const {
     data: ongoingOrdersData,
     isLoading: isLoadingOngoing,
@@ -100,7 +88,6 @@ function Orders() {
         outletId
       });
 
-      // Transform the response data
       return response.map((order) => ({
         id: order.order_number,
         orderId: order.order_id,
@@ -121,22 +108,69 @@ function Orders() {
       }));
     },
     enabled: !!userId && !!outletId,
-    // Using global configuration from queryClient.js
-    // But we can override specific settings for this query
-    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchInterval: 10000,
   });
 
-  // Remove the old interval effect since refetchInterval handles it
-  // Remove the old fetchOngoingOrders function
+  // Query for order history
+  const {
+    data: orderHistoryData,
+    isLoading: isLoadingOrderHistory,
+    error: orderHistoryError,
+    refetch: refetchOrderHistory
+  } = useQuery({
+    queryKey: ['orderHistory', outletId, userId],
+    queryFn: async () => {
+      if (!userId || !outletId) return null;
+      
+      const data = await apiService.customer.getOrderHistory({
+        userId: parseInt(userId),
+        outletId
+      });
 
-  useEffect(() => {
-    // Call both APIs independently
-    fetchCompletedOrders();
-  }, []);
+      if (!data) return null;
 
-  useEffect(() => {
-    // The refetchInterval is now handled by TanStack Query
-  }, []);
+      const complementaryOrders = {
+        ...(data.complementary_paid || {}),
+        ...(data.complimentary_paid || {})
+      };
+
+      const transformedData = {
+        paid: data.paid || {},
+        complimentary_paid: complementaryOrders,
+        cancelled: data.cancelled || {},
+        udhari_paid: data.udhari_paid || {},
+        udhari_pending: data.udhari_pending || {},
+      };
+
+      const udhariPendingRaw = data.udhari_pending || {};
+      const udhariPendingList = Object.values(udhariPendingRaw).flat();
+      const mappedUdhariPending = udhariPendingList.map((order) => ({
+        id: order.order_number,
+        orderId: order.order_id,
+        orderNumber: order.order_number,
+        itemCount: order.menu_count,
+        status: order.order_status,
+        iconColor: "#FFA902",
+        iconBgClass: "bg-warning",
+        isExpanded: false,
+        parentId: "accordionExamplePending",
+        orderType: order.order_type,
+        outletName: order.outlet_name,
+        totalAmount: order.final_grand_total,
+        paymentMethod: order.payment_method || "Not selected",
+        time: order.time,
+        tableNumber: order.table_number,
+        sectionName: order.section_name,
+        datetime: order.datetime,
+      }));
+
+      return {
+        orders: transformedData,
+        udhariPending: mappedUdhariPending
+      };
+    },
+    enabled: !!userId && !!outletId,
+  });
 
   // Handler for expanding/collapsing individual date accordions for completed orders
   const toggleCompletedDateExpansion = (date) => {
@@ -221,7 +255,7 @@ function Orders() {
           udhari_paid: data.udhari_paid || {},
           udhari_pending: data.udhari_pending || {},
         };
-        setOrdersData(transformedData);
+        // setOrdersData(transformedData); // This line is removed as per the new_code, as TanStack Query handles background updates.
 
         // Extract udhari_pending orders and flatten them into a single array
         const udhariPendingRaw = data.udhari_pending || {};
@@ -245,13 +279,13 @@ function Orders() {
           sectionName: order.section_name,
           datetime: order.datetime,
         }));
-        setUdhariPendingOrders(mappedUdhariPending);
+        // setUdhariPendingOrders(mappedUdhariPending); // This line is removed as per the new_code, as TanStack Query handles background updates.
       }
     } catch (err) {
       console.error("Error fetching order history:", err);
-      setError((prev) => ({ ...prev, history: err.message }));
+      // setError((prev) => ({ ...prev, history: err.message })); // This line is removed as per the new_code, as TanStack Query handles background updates.
     } finally {
-      setIsLoadingHistory(false);
+      // setIsLoadingHistory(false); // This line is removed as per the new_code, as TanStack Query handles background updates.
     }
   };
 
@@ -395,50 +429,16 @@ function Orders() {
     return transformedOrders;
   };
 
-  const transformedOrders = transformOrderData(ordersData);
+  // Update transformedOrders to use new data structure
+  const transformedOrders = transformOrderData(orderHistoryData?.orders || {
+    paid: {},
+    complimentary_paid: {},
+    cancelled: {},
+  });
 
-  // Update the handleCancelOrder function
-  const handleCancelOrder = (orderId, orderNumber) => {
-    setSelectedOrderId(orderId);
-    setSelectedOrderNumber(orderNumber);
-    setShowCancelModal(true);
-  };
-
-  // Update handleConfirmCancel
-  const handleConfirmCancel = async (reason) => {
-    try {
-      await apiService.customer.cancelOrder({
-        outletId,
-        orderId: selectedOrderId,
-        note: reason
-      });
-
-      // Invalidate and refetch ongoing orders
-      // queryClient.invalidateQueries(['ongoingOrders', outletId, userId]); // This line is removed as per the new_code, as TanStack Query handles background updates.
-      await refetchOngoingOrders();
-      handleCloseCancelModal();
-    } catch (err) {
-      _setCancelOrderStatus(false);
-      console.error("Error cancelling order:", err);
-    }
-  };
-
-  const handleCloseCancelModal = () => {
-    setShowCancelModal(false);
-    setSelectedOrderId(null);
-    setSelectedOrderNumber(null);
-  };
-
-  const handleLogin = () => {
-    setShowAuthOffcanvas(true);
-  };
-
-  // Group udhariPendingOrders by date
-  // const udhariPendingGrouped = groupUdhariPaidByDate(udhariPendingOrders);
-
-  // Group pending orders by date using the same logic as completed orders
+  // Update pendingOrdersByDate to use new data structure
   const pendingOrdersByDate = {};
-  udhariPendingOrders.forEach(order => {
+  (orderHistoryData?.udhariPending || []).forEach(order => {
     const dateKey = order.datetime.split(' ').slice(0, 3).join(' ');
     if (!pendingOrdersByDate[dateKey]) {
       pendingOrdersByDate[dateKey] = {
@@ -451,7 +451,7 @@ function Orders() {
     pendingOrdersByDate[dateKey].orderCount++;
   });
 
-  // Sort pending orders by order number in descending order
+  // Sort pending orders
   Object.values(pendingOrdersByDate).forEach(dateGroup => {
     dateGroup.orders.sort((a, b) => parseInt(b.orderNumber) - parseInt(a.orderNumber));
   });
@@ -477,6 +477,86 @@ function Orders() {
       [date]: !prev[date],
     }));
   };
+
+  // Update the handleCancelOrder function
+  const handleCancelOrder = (orderId, orderNumber) => {
+    setSelectedOrderId(orderId);
+    setSelectedOrderNumber(orderNumber);
+    setShowCancelModal(true);
+  };
+
+  // Update handleConfirmCancel
+  const handleConfirmCancel = async (reason) => {
+    try {
+      await apiService.customer.cancelOrder({
+        outletId,
+        orderId: selectedOrderId,
+        note: reason
+      });
+
+      await refetchOngoingOrders();
+      await refetchOrderHistory();
+      handleCloseCancelModal();
+    } catch (err) {
+      _setCancelOrderStatus(false);
+      console.error("Error cancelling order:", err);
+    }
+  };
+
+  const handleCloseCancelModal = () => {
+    setShowCancelModal(false);
+    setSelectedOrderId(null);
+    setSelectedOrderNumber(null);
+  };
+
+  const handleLogin = () => {
+    setShowAuthOffcanvas(true);
+  };
+
+  // Group udhariPendingOrders by date
+  // const udhariPendingGrouped = groupUdhariPaidByDate(udhariPendingOrders);
+
+  // Group pending orders by date using the same logic as completed orders
+  // const pendingOrdersByDate = {};
+  // udhariPendingOrders.forEach(order => {
+  //   const dateKey = order.datetime.split(' ').slice(0, 3).join(' ');
+  //   if (!pendingOrdersByDate[dateKey]) {
+  //     pendingOrdersByDate[dateKey] = {
+  //       date: dateKey,
+  //       orderCount: 0,
+  //       orders: []
+  //     };
+  //   }
+  //   pendingOrdersByDate[dateKey].orders.push(order);
+  //   pendingOrdersByDate[dateKey].orderCount++;
+  // });
+
+  // Sort pending orders by order number in descending order
+  // Object.values(pendingOrdersByDate).forEach(dateGroup => {
+  //   dateGroup.orders.sort((a, b) => parseInt(b.orderNumber) - parseInt(a.orderNumber));
+  // });
+
+  // Handler for expanding all pending date accordions
+  // const handleExpandAllPending = () => {
+  //   const newExpandedState = {};
+  //   Object.keys(pendingOrdersByDate).forEach((date) => {
+  //     newExpandedState[date] = true;
+  //   });
+  //   setExpandedPendingDates(newExpandedState);
+  // };
+
+  // Handler for collapsing all pending date accordions
+  // const handleCollapseAllPending = () => {
+  //   setExpandedPendingDates({});
+  // };
+
+  // Handler for expanding/collapsing individual date accordions for pending orders
+  // const togglePendingDateExpansion = (date) => {
+  //   setExpandedPendingDates((prev) => ({
+  //     ...prev,
+  //     [date]: !prev[date],
+  //   }));
+  // };
 
   // First check if user is not logged in
   if (!user) {
@@ -792,7 +872,7 @@ function Orders() {
                 tabIndex={0}
               >
                 <div className="accordion style-3" id="accordionExample3">
-                  {error.history ? (
+                  {orderHistoryError ? (
                     <NoOrders message="No completed orders" />
                   ) : Object.keys(transformedOrders.completedByDate).length >
                     0 ? (
@@ -925,11 +1005,11 @@ function Orders() {
                 tabIndex={0}
               >
                 <div className="accordion style-3" id="accordionExample2">
-                  {isLoadingHistory ? (
+                  {isLoadingOrderHistory ? (
                     <div className="text-center py-4">
                       Loading order history...
                     </div>
-                  ) : error.history ? (
+                  ) : orderHistoryError ? (
                     <NoOrders message="No cancelled orders" />
                   ) : Object.keys(transformedOrders.cancelledByDate).length >
                     0 ? (
