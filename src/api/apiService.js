@@ -204,6 +204,16 @@ export const apiService = {
       });
       return response?.data?.detail?.lists || {};
     },
+
+    // Add this new method
+    getOngoingOrders: async ({ userId, outletId }) => {
+      const response = await axiosInstance.post(`/${API_VERSION}/user/get_ongoing_or_placed_order`, {
+        user_id: parseInt(userId),
+        outlet_id: outletId,
+        app_source: "user_app"
+      });
+      return response?.data?.detail?.orders || [];
+    },
   },
 
   // ... other API endpoints grouped by feature

@@ -215,48 +215,36 @@ function Orders() {
     try {
       const auth = JSON.parse(localStorage.getItem("auth")) || {};
       const userId = auth.userId;
-      const accessToken = auth.accessToken;
+      
+      if (!auth.accessToken) throw new Error("Authentication token not found");
 
-      if (!accessToken) throw new Error("Authentication token not found");
+      const orders = await apiService.customer.getOngoingOrders({
+        userId: parseInt(userId),
+        outletId
+      });
 
-      const { data } = await axios.post(
-        "https://men4u.xyz/v2/user/get_ongoing_or_placed_order",
-        {
-          user_id: parseInt(userId),
-          outlet_id: outletId,
-          app_source: "user_app",
-        },
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
-      );
+      const transformedOngoingOrders = orders.map((order) => ({
+        id: order.order_number,
+        orderId: order.order_id,
+        orderNumber: order.order_number,
+        itemCount: order.menu_count,
+        status: order.status,
+        iconColor: "#FFA902",
+        iconBgClass: "bg-warning",
+        isExpanded: false,
+        parentId: "accordionExample1",
+        orderType: order.order_type,
+        outletName: order.outlet_name,
+        totalAmount: order.final_grand_total,
+        paymentMethod: order.payment_method || "Not selected",
+        time: order.time,
+      }));
 
-      if (data.detail?.orders) {
-        const transformedOngoingOrders = data.detail.orders.map((order) => {
-          return {
-            id: order.order_number,
-            orderId: order.order_id,
-            orderNumber: order.order_number,
-            itemCount: order.menu_count,
-            status: order.status,
-            iconColor: "#FFA902",
-            iconBgClass: "bg-warning",
-            isExpanded: false,
-            parentId: "accordionExample1",
-            orderType: order.order_type,
-            outletName: order.outlet_name,
-            totalAmount: order.final_grand_total,
-            paymentMethod: order.payment_method || "Not selected",
-            time: order.time,
-          };
-        });
-
-        setOngoingOrders(transformedOngoingOrders);
-        setError((prev) => ({ ...prev, ongoing: null }));
-      }
+      setOngoingOrders(transformedOngoingOrders);
+      setError((prev) => ({ ...prev, ongoing: null }));
     } catch (err) {
       console.error("Error fetching ongoing orders:", err);
-      if (axios.isAxiosError(err) && err.response?.status === 404) {
+      if (err.status === 404) {
         setOngoingOrders([]);
         setError((prev) => ({ ...prev, ongoing: "404" }));
       } else {
