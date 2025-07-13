@@ -9,6 +9,7 @@ import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import apiService from "../api/apiService";
+import { useQuery } from '@tanstack/react-query';
 
 // Update the NoOrders component with new icon
 const NoOrders = ({ message }) => {
@@ -62,7 +63,6 @@ function Orders() {
     complimentary_paid: {},
     cancelled: {},
   });
-  const [ongoingOrders, setOngoingOrders] = useState([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [error, setError] = useState({
     ongoing: null,
@@ -74,24 +74,68 @@ function Orders() {
   const [cancelOrderStatus, _setCancelOrderStatus] = useState(true); // Prefix with _ to indicate intentionally unused
   const navigate = useNavigate();
 
+  // Get userId from auth
+  const auth = JSON.parse(localStorage.getItem("auth")) || {};
+  const userId = auth.userId;
+
   // State for managing expansion of date accordions
   const [expandedCompletedDates, setExpandedCompletedDates] = useState({});
   const [expandedCancelledDates, setExpandedCancelledDates] = useState({});
   const [expandedPendingDates, setExpandedPendingDates] = useState({});
   const [udhariPendingOrders, setUdhariPendingOrders] = useState([]);
 
+  // Replace fetchOngoingOrders with useQuery
+  const {
+    data: ongoingOrdersData,
+    isLoading: isLoadingOngoing,
+    error: ongoingError,
+    refetch: refetchOngoingOrders
+  } = useQuery({
+    queryKey: ['ongoingOrders', outletId, userId],
+    queryFn: async () => {
+      if (!userId || !outletId) return [];
+      
+      const response = await apiService.customer.getOngoingOrders({
+        userId: parseInt(userId),
+        outletId
+      });
+
+      // Transform the response data
+      return response.map((order) => ({
+        id: order.order_number,
+        orderId: order.order_id,
+        orderNumber: order.order_number,
+        itemCount: order.menu_count,
+        status: order.status,
+        iconColor: "#FFA902",
+        iconBgClass: "bg-warning",
+        isExpanded: false,
+        parentId: "accordionExample1",
+        orderType: order.order_type,
+        outletName: order.outlet_name,
+        totalAmount: order.final_grand_total,
+        paymentMethod: order.payment_method || "Not selected",
+        time: order.time,
+        tableNumber: order.table_number,
+        sectionName: order.section_name
+      }));
+    },
+    enabled: !!userId && !!outletId,
+    // Using global configuration from queryClient.js
+    // But we can override specific settings for this query
+    refetchInterval: 10000, // Refetch every 10 seconds
+  });
+
+  // Remove the old interval effect since refetchInterval handles it
+  // Remove the old fetchOngoingOrders function
+
   useEffect(() => {
     // Call both APIs independently
-    fetchOngoingOrders();
     fetchCompletedOrders();
   }, []);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      fetchOngoingOrders();
-    }, 10000); // every 10 seconds
-
-    return () => clearInterval(interval);
+    // The refetchInterval is now handled by TanStack Query
   }, []);
 
   // Handler for expanding/collapsing individual date accordions for completed orders
@@ -208,48 +252,6 @@ function Orders() {
       setError((prev) => ({ ...prev, history: err.message }));
     } finally {
       setIsLoadingHistory(false);
-    }
-  };
-
-  const fetchOngoingOrders = async () => {
-    try {
-      const auth = JSON.parse(localStorage.getItem("auth")) || {};
-      const userId = auth.userId;
-      
-      if (!auth.accessToken) throw new Error("Authentication token not found");
-
-      const orders = await apiService.customer.getOngoingOrders({
-        userId: parseInt(userId),
-        outletId
-      });
-
-      const transformedOngoingOrders = orders.map((order) => ({
-        id: order.order_number,
-        orderId: order.order_id,
-        orderNumber: order.order_number,
-        itemCount: order.menu_count,
-        status: order.status,
-        iconColor: "#FFA902",
-        iconBgClass: "bg-warning",
-        isExpanded: false,
-        parentId: "accordionExample1",
-        orderType: order.order_type,
-        outletName: order.outlet_name,
-        totalAmount: order.final_grand_total,
-        paymentMethod: order.payment_method || "Not selected",
-        time: order.time,
-      }));
-
-      setOngoingOrders(transformedOngoingOrders);
-      setError((prev) => ({ ...prev, ongoing: null }));
-    } catch (err) {
-      console.error("Error fetching ongoing orders:", err);
-      if (err.status === 404) {
-        setOngoingOrders([]);
-        setError((prev) => ({ ...prev, ongoing: "404" }));
-      } else {
-        setError((prev) => ({ ...prev, ongoing: err.message }));
-      }
     }
   };
 
@@ -411,8 +413,9 @@ function Orders() {
         note: reason
       });
 
-      _setCancelOrderStatus(true);
-      await fetchOngoingOrders();
+      // Invalidate and refetch ongoing orders
+      // queryClient.invalidateQueries(['ongoingOrders', outletId, userId]); // This line is removed as per the new_code, as TanStack Query handles background updates.
+      await refetchOngoingOrders();
       handleCloseCancelModal();
     } catch (err) {
       _setCancelOrderStatus(false);
@@ -531,68 +534,57 @@ function Orders() {
       <Header />
       <div className="page-content">
         <div className="container pb">
-          {/* Only show if error is not 404 and we have orders */}
-          {error.ongoing !== "404" && ongoingOrders.length > 0 && (
+          {/* Show ongoing orders section */}
+          {!ongoingError && ongoingOrdersData?.length > 0 && (
             <div className="mb-4">
               <h6 className="mb-3">Ongoing Orders</h6>
               <div className="orders-list">
-                {ongoingOrders.map((order) => {
-                  return (
-                    <div
-                      key={order.id}
-                      className="order-item mb-3"
-                      onClick={() => navigate(`/order-detail/${order.orderId}`)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <div className="border border-warning shadow-sm p-3 rounded">
-                        <div className="d-flex align-items-center justify-content-between w-100">
-                          {/* Left side with icon and order details */}
-                          <div className="d-flex align-items-center">
-                            {order.status === "placed" ? (
-                              <Timer orderTime={order.time} />
-                            ) : (
-                              <span className={`icon-box ${order.iconBgClass}`}>
-                                <i className="fa-solid fa-bag-shopping text-white"></i>
-                              </span>
-                            )}
-                            <div className="ms-3">
-                              <h6 className="mb-0">
-                                Order #{order.orderNumber}
-                              </h6>
-                              <span className="text-soft">
-                                {order.itemCount} Items {order.status}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Right side with dine-in status and cancel button */}
-                          <div className="d-flex flex-column align-items-end">
-                            <span className="text-soft mb-2">
-                              {order.orderType}
+                {ongoingOrdersData.map((order) => (
+                  <div
+                    key={order.id}
+                    className="order-item mb-3"
+                    onClick={() => navigate(`/order-detail/${order.orderId}`)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <div className="border border-warning shadow-sm p-3 rounded">
+                      <div className="d-flex align-items-center justify-content-between w-100">
+                        {/* Left side with icon and order details */}
+                        <div className="d-flex align-items-center">
+                          {order.status === "placed" ? (
+                            <Timer orderTime={order.time} />
+                          ) : (
+                            <span className={`icon-box ${order.iconBgClass}`}>
+                              <i className="fa-solid fa-bag-shopping text-white"></i>
                             </span>
-                            {order.status === "placed" && (
-                              <button
-                                className="btn btn-sm text-white"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleCancelOrder(
-                                    order.orderId,
-                                    order.orderNumber
-                                  );
-                                }}
-                                style={{
-                                  backgroundColor: "#FF0000",
-                                }}
-                              >
-                                Cancel Order
-                              </button>
-                            )}
+                          )}
+                          <div className="ms-3">
+                            <h6 className="mb-0">Order #{order.orderNumber}</h6>
+                            <span className="text-soft">
+                              {order.itemCount} Items {order.status}
+                            </span>
                           </div>
+                        </div>
+
+                        {/* Right side with dine-in status and cancel button */}
+                        <div className="d-flex flex-column align-items-end">
+                          <span className="text-soft mb-2">{order.orderType}</span>
+                          {order.status === "placed" && (
+                            <button
+                              className="btn btn-sm text-white"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCancelOrder(order.orderId, order.orderNumber);
+                              }}
+                              style={{ backgroundColor: "#FF0000" }}
+                            >
+                              Cancel Order
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             </div>
           )}
