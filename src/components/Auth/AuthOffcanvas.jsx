@@ -4,6 +4,7 @@ import Offcanvas from "../Shared/Offcanvas";
 import { useAuth } from "../../contexts/AuthContext";
 import axios from "axios";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useToast } from "../Toast/useToast";
 
 const STEPS = {
   LOGIN: "login",
@@ -33,10 +34,10 @@ const AuthOffcanvas = () => {
     email: "",
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
   const { isDarkMode } = useTheme();
   const [timer, setTimer] = useState(0);
   const [isResendDisabled, setIsResendDisabled] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     if (currentStep === STEPS.OTP) {
@@ -183,13 +184,12 @@ const AuthOffcanvas = () => {
     setPhoneNumber("");
     setOtp("");
     setUserDetails({ name: "", email: "" });
-    setError("");
+    setIsLoading(false);
     setShowAuthOffcanvas(false);
   };
 
   const handlePhoneSubmit = async (e) => {
     e.preventDefault();
-    setError("");
     setIsLoading(true);
 
     try {
@@ -200,25 +200,25 @@ const AuthOffcanvas = () => {
 
       if (data.role === "customer") {
         setCurrentStep(STEPS.OTP);
+        toast.success("OTP sent successfully", "Verification");
       } else {
-        setError("This mobile number is not registered as a customer.");
+        toast.error("This mobile number is not registered as a customer", "Error");
       }
     } catch (err) {
       console.error("Login error:", err);
 
-      // Check for 400 status with specific error message
       if (
         err.response?.status === 400 &&
         err.response?.data?.detail === "This mobile number is not registered."
       ) {
-        // Automatically switch to signup step
         setCurrentStep(STEPS.SIGNUP);
-        return; // Exit early to avoid showing error message
+        toast.info("Number not registered. Please sign up.", "New User");
+        return;
       }
 
-      setError(
-        err.response?.data?.detail ||
-          "Unable to process request. Please try again."
+      toast.error(
+        err.response?.data?.detail || "Unable to process request. Please try again.",
+        "Error"
       );
     } finally {
       setIsLoading(false);
@@ -227,7 +227,6 @@ const AuthOffcanvas = () => {
 
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
-    setError("");
     setIsLoading(true);
 
     try {
@@ -236,13 +235,13 @@ const AuthOffcanvas = () => {
         name: userDetails.name,
       });
 
-      // Directly move to OTP step without showing success message
       setCurrentStep(STEPS.OTP);
+      toast.success("Account created successfully. Please verify OTP.", "Success");
     } catch (err) {
       console.error("Signup error:", err);
-      setError(
-        err.response?.data?.detail ||
-          "Failed to create account. Please try again."
+      toast.error(
+        err.response?.data?.detail || "Failed to create account. Please try again.",
+        "Error"
       );
     } finally {
       setIsLoading(false);
@@ -251,7 +250,6 @@ const AuthOffcanvas = () => {
 
   const handleOTPSubmit = async (e) => {
     e.preventDefault();
-    setError("");
     setIsLoading(true);
 
     const deviceInfo = {
@@ -261,28 +259,51 @@ const AuthOffcanvas = () => {
     };
 
     try {
-      const { data } = await api.post("/common/verify_otp", {
+      const response = await api.post("/common/verify_otp", {
         mobile: phoneNumber,
         otp: otp,
         app_type: "customer",
         ...deviceInfo,
       });
 
+      const { data } = response;
+
+      // Check if we have all required data
+      if (!data.user_id || !data.access_token) {
+        throw new Error('Invalid response from server');
+      }
+
+      // Store user data in localStorage and update context
       handleLoginSuccess({
-        ...data,
+        user_id: data.user_id,
+        name: data.name,
+        role: data.role,
         mobile: phoneNumber,
+        access_token: data.access_token,
+        expires_at: data.expires_at
       });
+
+      toast.success("Login successful!", "Welcome");
       handleClose();
     } catch (err) {
       console.error("OTP verification error:", err);
-      setError(err.response?.data?.message || "Invalid OTP. Please try again.");
+      
+      // Handle different types of errors
+      if (err.response?.status === 400) {
+        toast.error("Invalid OTP. Please try again.", "Error");
+      } else if (err.response?.data?.detail) {
+        toast.error(err.response.data.detail, "Error");
+      } else if (err.message) {
+        toast.error(err.message, "Error");
+      } else {
+        toast.error("Failed to verify OTP. Please try again.", "Error");
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleResendOTP = async () => {
-    setError("");
     setIsLoading(true);
     setTimer(20);
     setIsResendDisabled(true);
@@ -294,15 +315,15 @@ const AuthOffcanvas = () => {
       });
 
       if (data.role === "customer") {
-        setError(data.detail || "OTP resent successfully!");
-        setTimeout(() => setError(""), 3000);
+        toast.success(data.detail || "OTP resent successfully!", "OTP Sent");
       } else {
         throw new Error("Invalid response from server");
       }
     } catch (err) {
       console.error("Resend OTP error:", err);
-      setError(
-        err.response?.data?.detail || "Failed to resend OTP. Please try again."
+      toast.error(
+        err.response?.data?.detail || "Failed to resend OTP. Please try again.",
+        "Error"
       );
     } finally {
       setIsLoading(false);
@@ -329,15 +350,6 @@ const AuthOffcanvas = () => {
   const renderLoginStep = () => (
     <div className="px-1">
       <h6 className="title font-w600 mb-2">Login to MenuMitra</h6>
-      {error && (
-        <div
-          className={`alert ${
-            error.includes("successfully") ? "alert-success" : "alert-danger"
-          } py-2 mb-3`}
-        >
-          {error}
-        </div>
-      )}
       <form onSubmit={handlePhoneSubmit}>
         <div className="mb-3">
           <label className="form-label">Phone Number</label>
@@ -458,15 +470,6 @@ const AuthOffcanvas = () => {
   const renderSignupStep = () => (
     <div className="px-1">
       <h6 className="title font-w600 mb-2">Create Account</h6>
-      {error && (
-        <div
-          className={`alert ${
-            error.includes("successfully") ? "alert-success" : "alert-danger"
-          } py-2 mb-3`}
-        >
-          {error}
-        </div>
-      )}
       <form onSubmit={handleSignupSubmit}>
         <div className="mb-3">
           <label className="form-label">Full Name</label>
@@ -569,15 +572,6 @@ const AuthOffcanvas = () => {
   const renderOTPStep = () => (
     <div className="px-1">
       <h6 className="title font-w600 mb-2">Verify OTP</h6>
-      {error && (
-        <div
-          className={`alert ${
-            error.includes("success") ? "alert-success" : "alert-danger"
-          } py-2 mb-3`}
-        >
-          {error}
-        </div>
-      )}
       <p className="text-muted mb-4">
         Enter the verification code sent to{" "} <br/>
         <span className="fw-bold fs-6">+91 {phoneNumber}</span>

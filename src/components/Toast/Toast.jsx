@@ -7,7 +7,7 @@ const Toast = memo(function Toast({
   type,
   message,
   title,
-  duration,
+  duration = 3000,
   onClose,
   pauseOnHover = true
 }) {
@@ -33,6 +33,14 @@ const Toast = memo(function Toast({
   }, []);
 
   useEffect(() => {
+    // Add show class after a small delay to trigger animation
+    const toast = toastRef.current;
+    if (toast) {
+      requestAnimationFrame(() => {
+        toast.classList.add('show');
+      });
+    }
+    
     startTimer();
     return clearTimer;
   }, [startTimer, clearTimer]);

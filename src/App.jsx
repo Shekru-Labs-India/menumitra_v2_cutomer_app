@@ -27,7 +27,6 @@ import CustomerSavings from "./layouts/CustomerSavings";
 import OutletDetails from "./layouts/OutletDetails";
 import OutletNotFound from "./components/OutletNotFound";
 import FeedbackButton from "./components/FeedbackButton";
-// import CustomerFeedback from "./components/Modal/variants/CustomerFeedback";
 import axios from "axios";
 import { CacheDataProvider } from "./contexts/CacheDataContext";
 import CacheStatus from "./components/CacheStatus";
@@ -35,6 +34,9 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { queryClient } from './lib/react-query/queryClient';
 import QueryTestWrapper from "./components/QueryTestWrapper";
+// Import Toast components
+import { ToastProvider } from './components/Toast/ToastContext.jsx';
+import ToastContainer from './components/Toast/ToastContainer.jsx';
 
 function App() {
   const [shouldClearCart, setShouldClearCart] = useState(false);
@@ -47,59 +49,67 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ModalProvider>
-        <Router basename={import.meta.env.BASE_URL}>
-          <CacheDataProvider>
-            <OutletProvider>
-              <ThemeColorProvider>
-                <ThemeProvider>
-                  <AuthProvider>
-                    <CartProvider onLogout={handleLogout}>
-                      <AuthOffcanvas />
-                      <SidebarProvider>
-                        <Routes>
-                          <Route path="*" element={<Home />} />
-                          <Route path="/all-outlets" element={<AllOutlets />} />
-                          <Route path="/favourites" element={<Favourite />} />
-                          <Route path="/checkout" element={<Checkout />} />
-                          <Route path="/orders" element={<Orders />} />
-                          <Route
-                            path="/order-detail/:orderId"
-                            element={<OrderDetail />}
-                          />
-                          <Route path="/profile" element={<Profile />} />
-                          <Route path="/edit-profile" element={<EditProfile />} />
-                          <Route path="/categories" element={<Categories />} />
-                          <Route
-                            path="/category-menu/:categoryId"
-                            element={<CategoryFilteredMenuList />}
-                          />
-                          <Route path="/search" element={<Search />} />
-                          <Route
-                            path="/product-detail/:menuId/:menuCatId"
-                            element={<ProductDetail />}
-                          />
-                          <Route path="/savings" element={<CustomerSavings />} />
-                          <Route
-                            path="/outlet-details"
-                            element={<OutletDetails />}
-                          />
-                          <Route path="/notfound" element={<OutletNotFound />} />
-                          <Route path="/query-test" element={<QueryTestWrapper />} />
-                        </Routes>
-                        <Sidebar />
-                      </SidebarProvider>
-                      <ModalManager />
-                      {/* <CacheStatus /> */}
-                    </CartProvider>
-                  </AuthProvider>
-                </ThemeProvider>
-              </ThemeColorProvider>
-            </OutletProvider>
-          </CacheDataProvider>
-        </Router>
-      </ModalProvider>
-      <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />
+      <ToastProvider config={{
+        position: 'bottom-center',
+        duration: 3000,
+        pauseOnHover: true,
+        limit: 3
+      }}>
+        <ModalProvider>
+          <Router basename={import.meta.env.BASE_URL}>
+            <CacheDataProvider>
+              <OutletProvider>
+                <ThemeColorProvider>
+                  <ThemeProvider>
+                    <AuthProvider>
+                      <CartProvider onLogout={handleLogout}>
+                        <AuthOffcanvas />
+                        <SidebarProvider>
+                          <Routes>
+                            <Route path="*" element={<Home />} />
+                            <Route path="/all-outlets" element={<AllOutlets />} />
+                            <Route path="/favourites" element={<Favourite />} />
+                            <Route path="/checkout" element={<Checkout />} />
+                            <Route path="/orders" element={<Orders />} />
+                            <Route
+                              path="/order-detail/:orderId"
+                              element={<OrderDetail />}
+                            />
+                            <Route path="/profile" element={<Profile />} />
+                            <Route path="/edit-profile" element={<EditProfile />} />
+                            <Route path="/categories" element={<Categories />} />
+                            <Route
+                              path="/category-menu/:categoryId"
+                              element={<CategoryFilteredMenuList />}
+                            />
+                            <Route path="/search" element={<Search />} />
+                            <Route
+                              path="/product-detail/:menuId/:menuCatId"
+                              element={<ProductDetail />}
+                            />
+                            <Route path="/savings" element={<CustomerSavings />} />
+                            <Route
+                              path="/outlet-details"
+                              element={<OutletDetails />}
+                            />
+                            <Route path="/notfound" element={<OutletNotFound />} />
+                            <Route path="/query-test" element={<QueryTestWrapper />} />
+                          </Routes>
+                          <Sidebar />
+                        </SidebarProvider>
+                        <ModalManager />
+                        {/* <CacheStatus /> */}
+                      </CartProvider>
+                    </AuthProvider>
+                  </ThemeProvider>
+                </ThemeColorProvider>
+              </OutletProvider>
+            </CacheDataProvider>
+          </Router>
+        </ModalProvider>
+        <ToastContainer />
+        <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />
+      </ToastProvider>
     </QueryClientProvider>
   );
 }

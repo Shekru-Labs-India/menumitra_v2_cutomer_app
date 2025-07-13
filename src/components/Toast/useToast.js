@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useToastContext } from './ToastContext';
+import { useToastContext } from './ToastContext.jsx';
 import { TOAST_TYPES } from './constants';
 
 export function useToast() {

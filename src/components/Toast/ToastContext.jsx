@@ -11,6 +11,7 @@ const ACTIONS = {
   CLEAR_TOASTS: 'CLEAR_TOASTS'
 };
 
+// Define reducer outside as a regular function
 const toastReducer = (state, action) => {
   switch (action.type) {
     case ACTIONS.ADD_TOAST: {
