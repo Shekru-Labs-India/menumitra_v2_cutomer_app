@@ -206,11 +206,10 @@ const AuthOffcanvas = () => {
     } catch (err) {
       console.error("Login error:", err);
 
-      // Check for 500 status with specific error message
+      // Check for 400 status with specific error message
       if (
-        err.response?.status === 500 &&
-        err.response?.data?.detail ===
-          "400: This mobile number is not registered."
+        err.response?.status === 400 &&
+        err.response?.data?.detail === "This mobile number is not registered."
       ) {
         // Automatically switch to signup step
         setCurrentStep(STEPS.SIGNUP);
