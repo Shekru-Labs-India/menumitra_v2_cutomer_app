@@ -805,7 +805,7 @@ function OrderDetail() {
             <div>
               <FeedbackButton />
             </div>
-            {["paid", "<complementary_paid></complementary_paid>", "udhari"].includes(orderDetails.order_details.order_status?.toLowerCase()) && (
+            {["paid", "complementary_paid", "udhari"].includes(orderDetails.order_details.order_status?.toLowerCase()) && (
               <button
                 className="btn btn-light btn-sm d-flex align-items-center"
                 onClick={handleDownloadInvoice}
