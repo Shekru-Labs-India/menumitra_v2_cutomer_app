@@ -199,10 +199,20 @@ function Home() {
   // Add favorite mutations with optimistic updates
   const toggleFavorite = useMutation({
     mutationFn: async ({ menuId, isFavorite }) => {
-      if (isFavorite) {
-        return apiService.favorites.add({ outletId, userId, menuId });
-      } else {
-        return apiService.favorites.remove({ outletId, userId, menuId });
+      try {
+        // Add flag to prevent duplicate calls
+        if (toggleFavorite.mutationFn.isRunning) {
+          return null;
+        }
+        toggleFavorite.mutationFn.isRunning = true;
+
+        if (isFavorite) {
+          return apiService.favorites.add({ outletId, userId, menuId });
+        } else {
+          return apiService.favorites.remove({ outletId, userId, menuId });
+        }
+      } finally {
+        toggleFavorite.mutationFn.isRunning = false;
       }
     },
     onMutate: async ({ menuId, isFavorite }) => {
@@ -382,7 +392,7 @@ function Home() {
     }
     
     try {
-      await toggleFavorite.mutateAsync({ menuId, isFavorite });
+      await toggleFavorite.mutateAsync({ menuId, isFavorite: !isFavorite });
     } catch (error) {
       console.error("Failed to update favorite status:", error);
     }
