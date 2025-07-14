@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useModal } from "../contexts/ModalContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useOutlet } from "../contexts/OutletContext";
@@ -161,6 +161,9 @@ const HorizontalMenuCard = ({
   const { cartItems, getCartItemComment } = useCart(); // Add this
   const userId = getUserId();
 
+  // Add useNavigate hook from react-router-dom
+  const navigate = useNavigate();
+
   // Convert isFavorite to boolean if it's a number
   const isFavoriteBoolean = typeof isFavorite === 'number' ? isFavorite === 1 : Boolean(isFavorite);
 
@@ -176,6 +179,21 @@ const HorizontalMenuCard = ({
 
   // Check if this menu item belongs to the current outlet
   const isCurrentOutlet = true;
+
+  // Modify the click handler for the entire card
+  const handleCardClick = (e) => {
+    // Don't navigate if clicking on favorite button or cart button
+    if (
+      e.target.closest('.like-button') || 
+      e.target.closest('.btn-primary')
+    ) {
+      return;
+    }
+
+    if (menuItem?.menuId && menuItem?.menuCatId) {
+      navigate(`/product-detail/${menuItem.menuId}/${menuItem.menuCatId}`);
+    }
+  };
 
   const handleFavoriteToggle = async (e) => {
     e.preventDefault();
@@ -252,6 +270,7 @@ const HorizontalMenuCard = ({
   return (
     <div 
       className="horizontal-menu-card card product-card position-relative shadow border border-1 border-light"
+      onClick={handleCardClick}  // Add onClick handler here
       style={{ 
         minHeight: 50, 
         padding: "8px 0",
@@ -260,6 +279,7 @@ const HorizontalMenuCard = ({
         whiteSpace: "nowrap",
         WebkitOverflowScrolling: "touch",
         msOverflowStyle: "-ms-autohiding-scrollbar",
+        cursor: 'pointer'  // Add cursor pointer to indicate clickable
       }}>
       <div 
         className="d-flex align-items-center p-1" 
@@ -385,6 +405,7 @@ const HorizontalMenuCard = ({
               {discount} Off
             </div>
           )}
+          {/* Remove the Link component and just use plain text */}
           <h5
             className="mb-1"
             style={{ 
@@ -393,9 +414,7 @@ const HorizontalMenuCard = ({
               marginBottom: 2 
             }}
           >
-            <Link to={detailPageUrl} className="text-dark text-decoration-none">
-              {title}
-            </Link>
+            {title}
           </h5>
           {/* Category name */}
           {menuItem.categoryName && (
