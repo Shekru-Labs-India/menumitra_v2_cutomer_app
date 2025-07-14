@@ -469,13 +469,6 @@ function Home() {
         <div className="page-content">
           <div className=" pt-0">
             <div className="container p-b40 p-t0">
-              {/* <SearchBar onSearch={handleSearch} menuItems={menuItems || []} /> */}
-
-              {/* Outlet Info Banner (Hotel Name, etc.) */}
-              {/* <OutletInfoBanner /> */}
-
-              {/* Offer Banner Swiper - Inserted here */}
-              {/* <OfferBanner /> */}
 
               <div className="">
                 <div className="swiper-btn-center-lr position-relative my-0 py-0">
@@ -495,62 +488,14 @@ function Home() {
                       992: { slidesPerView: 3 },
                       1200: { slidesPerView: 4 }
                     }}
-                    // pagination={{
-                    //   clickable: true,
-                    //   type: 'bullets',
-                    //   bulletClass: 'swiper-pagination-bullet bg-primary'
-                    // }}
-                    // navigation={{
-                    //   nextEl: '.swiper-button-next',
-                    //   prevEl: '.swiper-button-prev'
-                    // }}
-                    // className="py-4"
+               
                     style={{
                       padding: '10px 0',
                       position: 'relative',
                       overflow: 'hidden'
                     }}
                   >
-                    {/* Navigation Buttons with Bootstrap styling */}
-                    {/* <div 
-                      className="swiper-button-prev" 
-                      style={{
-                        position: 'absolute',
-                        left: '10px',
-                        width: '40px',
-                        height: '40px',
-                        background: 'rgba(255, 255, 255, 0.9)',
-                        borderRadius: '50%',
-                        zIndex: 10,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
-                      }}
-                    >
-                      <i className="fas fa-chevron-left text-primary"></i>
-                    </div> */}
-{/*                     
-                    <div 
-                      className="swiper-button-next"
-                      style={{
-                        position: 'absolute',
-                        right: '10px',
-                        width: '40px',
-                        height: '40px',
-                        background: 'rgba(255, 255, 255, 0.9)',
-                        borderRadius: '50%',
-                        zIndex: 10,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
-                      }}
-                    >
-                      <i className="fas fa-chevron-right text-primary"></i>
-                    </div> */}
+                  
 
                     {/* Slides */}
                     {bannerData.map((banner) => (
@@ -591,22 +536,7 @@ function Home() {
                               style={{
                                 background: 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.6))'
                               }}
-                            ></div>
-                            
-                            {/* Content */}
-                            <div 
-                              className="position-absolute w-100 text-center text-white"
-                              style={{
-                                bottom: '20px',
-                                left: '50%',
-                                transform: 'translateX(-50%)',
-                                padding: '0 15px'
-                              }}
-                            >
-                              <h5 className="mb-2">{banner.title}</h5>
-                              <h3 className="mb-2 fw-bold">{banner.discount}</h3>
-                              <p className="mb-0 small opacity-75">{banner.description}</p>
-                            </div>
+                            ></div>s
                           </div>
                         </div>
                       </SwiperSlide>
