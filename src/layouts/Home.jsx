@@ -475,11 +475,11 @@ function Home() {
                   <Swiper
                     modules={[Navigation, Pagination, Autoplay]}
                     slidesPerView={1}
-                    spaceBetween={20}
+                    spaceBetween={10}
                     loop={true}
                     autoplay={{
                       delay: 3000,
-                      disableOnInteraction: false,
+                      disableOnInteraction: true,
                     }}
                     breakpoints={{
                       // Bootstrap breakpoints
@@ -489,11 +489,11 @@ function Home() {
                       1200: { slidesPerView: 4 }
                     }}
                
-                    style={{
-                      padding: '10px 0',
-                      position: 'relative',
-                      overflow: 'hidden'
-                    }}
+                    // style={{
+                    //   // padding: '10px 0',
+                    //   position: 'relative',
+                    //   overflow: 'hidden'
+                    // }}
                   >
                   
 
