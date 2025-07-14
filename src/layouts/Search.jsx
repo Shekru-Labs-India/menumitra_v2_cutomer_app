@@ -463,6 +463,8 @@ function Search() {
                           category: menu.category_name,
                           rating: menu.rating,
                           isSpecial: menu.is_special,
+                          spicyIndex: menu.spicy_index, // Add this line
+                          categoryName: menu.category_name // Add this line
                         }}
                         onFavoriteClick={() => handleFavoriteClick(menu.menu_id)}
                         isFavorite={menu.is_favourite === 1}

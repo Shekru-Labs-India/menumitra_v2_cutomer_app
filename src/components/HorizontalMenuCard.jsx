@@ -411,6 +411,7 @@ const HorizontalMenuCard = ({
               {menuItem.categoryName}
             </div>
           )}
+
           {/* Price Section with Cart Button */}
           <div className="d-flex align-items-center mb-1 justify-content-between">
             <h6
@@ -424,21 +425,57 @@ const HorizontalMenuCard = ({
               <span className="fw-bold">₹{currentPrice}</span>
             </h6>
 
-            {/* Cart Button */}
-            <button
-              className="btn btn-primary rounded-circle p-2"
-              onClick={handleAddToCartClick}
-              style={{ 
-                width: "32px", 
-                height: "32px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: 0
-              }}
-            >
-              <i className="fa-solid fa-cart-shopping" style={{ fontSize: "14px" }}></i>
-            </button>
+            {/* Add Spicy Index here */}
+            <div className="d-flex align-items-center gap-2">
+              {menuItem?.spicyIndex && Number(menuItem.spicyIndex) > 0 && (
+                <div
+                  className="spicy_index"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  {[...Array(3)].map((_, index) => {
+                    const spicyIndex = Number(menuItem.spicyIndex);
+                    let color = "#E0E0E0"; // default: white/grey
+                    if (spicyIndex === 1) {
+                      color = index === 0 ? "#22A45D" : "#E0E0E0"; // green, rest white
+                    } else if (spicyIndex === 2) {
+                      color = index < 2 ? "#FFA500" : "#E0E0E0"; // orange, last white
+                    } else if (spicyIndex === 3) {
+                      color = "#FF2D2D"; // all red
+                    }
+                    return (
+                      <i
+                        key={index}
+                        className="fa-solid fa-pepper-hot"
+                        style={{
+                          color,
+                          fontSize: "12px",
+                          marginRight: index < 2 ? "2px" : "0",
+                        }}
+                      ></i>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Cart Button */}
+              <button
+                className="btn btn-primary rounded-circle p-2"
+                onClick={handleAddToCartClick}
+                style={{ 
+                  width: "32px", 
+                  height: "32px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: 0
+                }}
+              >
+                <i className="fa-solid fa-cart-shopping" style={{ fontSize: "14px" }}></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
