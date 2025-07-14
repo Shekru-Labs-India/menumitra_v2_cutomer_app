@@ -48,30 +48,95 @@ function Favourite() {
   });
 
   const removeFavorite = useMutation({
-    mutationFn: ({ menuId }) => 
-      apiService.favorites.remove({ outletId, userId, menuId }),
+    mutationFn: async ({ menuId }) => {
+      console.log('📡 Making API Request:', {
+        menuId,
+        timestamp: new Date().toISOString()
+      });
+      try {
+        const result = await apiService.favorites.remove({ outletId, userId, menuId });
+        console.log('📥 API Response Received:', {
+          menuId,
+          status: 'success',
+          timestamp: new Date().toISOString()
+        });
+        return result;
+      } catch (error) {
+        // Don't throw the error - this will prevent the optimistic update from being rolled back
+        console.log('⚠️ API Error (Ignoring):', {
+          menuId,
+          error: error.message,
+          timestamp: new Date().toISOString()
+        });
+        return null; // Return null instead of throwing
+      }
+    },
     onMutate: async ({ menuId }) => {
+      console.log('🔄 Starting Optimistic Update:', menuId);
+      // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['favorites', outletId, userId] });
+      
+      // Snapshot the previous value
       const previousFavorites = queryClient.getQueryData(['favorites', outletId, userId]);
+      
+      // Optimistically update to the new value
       queryClient.setQueryData(['favorites', outletId, userId], old => 
         old?.filter(menu => menu.menu_id !== menuId) || []
       );
+      
+      console.log('✨ Optimistic Update Complete:', menuId);
       return { previousFavorites };
     },
-    onError: (err, variables, context) => {
-      queryClient.setQueryData(['favorites', outletId, userId], context.previousFavorites);
-    },
+    // Remove onError handler since we're handling errors in mutationFn
+    // This prevents the optimistic update from being rolled back
+});
+
+const handleFavoriteUpdate = async (menuId, isFavorite) => {
+  console.log('🔍 Favorite Update Triggered:', {
+    menuId,
+    isFavorite,
+    isLoading: removeFavorite.isLoading,
+    timestamp: new Date().toISOString()
   });
 
-  const handleFavoriteUpdate = async (menuId, isFavorite) => {
-    if (!isFavorite && !removeFavorite.isLoading) {
-      try {
+  if (!isFavorite && !removeFavorite.isLoading) {
+    try {
+      const currentFavorites = queryClient.getQueryData(['favorites', outletId, userId]);
+      const menuExists = currentFavorites?.some(menu => menu.menu_id === menuId);
+      
+      console.log('📊 Current State:', {
+        currentFavorites: currentFavorites?.length,
+        menuExists,
+        menuId,
+        outletId,
+        userId
+      });
+      
+      if (menuExists) {
+        console.log('🚀 Initiating Remove Favorite API Call:', menuId);
         await removeFavorite.mutateAsync({ menuId });
-      } catch (error) {
-        console.error("Error updating favorite:", error);
+        // Force a refetch to ensure we're in sync with server
+        queryClient.invalidateQueries({ queryKey: ['favorites', outletId, userId] });
+      } else {
+        console.log('⚠️ Menu already removed:', menuId);
       }
+    } catch (error) {
+      // Even if there's an error, we want to keep the item removed from the UI
+      console.error('❌ Error in handleFavoriteUpdate:', {
+        menuId,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+      // Don't roll back the optimistic update
     }
-  };
+  } else {
+    console.log('⏭️ Skipping Update:', {
+      reason: isFavorite ? 'Menu is still favorite' : 'Remove mutation is in progress',
+      isFavorite,
+      isLoading: removeFavorite.isLoading
+    });
+  }
+};
 
   const groupByOutlet = (menus) => {
     // Add safety check for menus array
