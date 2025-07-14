@@ -332,8 +332,9 @@ const HorizontalMenuCard = ({
           
           {/* Favorite icon */}
           {isCurrentOutlet && (
-            <button
-              className={`favorite-btn ${isLoading ? "disabled" : ""}`}
+            <a
+              href="javascript:void(0);"
+              className={`${isLoading ? "disabled" : ""}`}
               onClick={handleFavoriteToggle}
               style={{
                 position: "absolute",
@@ -341,9 +342,7 @@ const HorizontalMenuCard = ({
                 bottom: 2,
                 pointerEvents: isLoading ? "none" : "auto",
                 cursor: "pointer",
-                background: "none",
-                border: "none",
-                padding: 0,
+                textDecoration: "none",
                 zIndex: 3,
               }}
             >
@@ -352,7 +351,7 @@ const HorizontalMenuCard = ({
                   className={`fa-${isFavoriteBoolean ? "solid" : "regular"} fa-heart`}
                   style={{
                     fontSize: "16px",
-                    color: isFavoriteBoolean ? colors.danger : colors.secondary,
+                    color: isFavoriteBoolean ? "#dc3545" : "#6c757d",
                     lineHeight: 1,
                     background: "#fff",
                     padding: "4px",
@@ -362,7 +361,7 @@ const HorizontalMenuCard = ({
                   }}
                 />
               </div>
-            </button>
+            </a>
           )}
         </div>
         {/* Right side - Content */}

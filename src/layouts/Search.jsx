@@ -145,10 +145,10 @@ function Search() {
     queryFn: () =>
       apiService.menus.searchMenus({
         outletId,
-        userId,
+        userId,  // Make sure userId is passed
         keyword: searchInputValue.trim(),
       }),
-    enabled: false, // Only run when manually triggered
+    enabled: false,
     // staleTime: 5 * 60 * 1000,
     keepPreviousData: true,
   });
@@ -231,8 +231,23 @@ function Search() {
     }
   };
 
-  const handleFavoriteClick = (menuId) => {
-    // Implement favorite toggle logic
+  const handleFavoriteClick = async (menuId, isFavorite) => {
+    if (!userId) {
+      // setShowAuthOffcanvas(true); // This state is not defined in the original file
+      return;
+    }
+
+    try {
+      if (isFavorite) {
+        await apiService.favorites.remove({ outletId, userId, menuId });
+      } else {
+        await apiService.favorites.add({ outletId, userId, menuId });
+      }
+      // Refetch search results to get updated is_favourite status
+      refetch();
+    } catch (error) {
+      console.error("Failed to update favorite status:", error);
+    }
   };
 
   // Add this helper function
@@ -465,7 +480,7 @@ function Search() {
                           spicyIndex: menu.spicy_index, // Add this line
                           categoryName: menu.category_name // Add this line
                         }}
-                        onFavoriteClick={() => handleFavoriteClick(menu.menu_id)}
+                        onFavoriteClick={() => handleFavoriteClick(menu.menu_id, menu.is_favourite === 1)}
                         isFavorite={menu.is_favourite === 1}
                         rating={menu.rating}
                         categoryName={menu.category_name}
