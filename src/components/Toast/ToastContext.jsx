@@ -98,3 +98,18 @@ export function useToastContext() {
   }
   return context;
 } 
+
+export function useToast() {
+  const { addToast, removeToast } = useToastContext();
+  
+  return {
+    show: ({ message, type = 'info', duration = 3000 }) => {
+      addToast({
+        message,
+        type,
+        duration,
+      });
+    },
+    remove: removeToast
+  };
+} 

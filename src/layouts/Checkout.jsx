@@ -7,11 +7,11 @@ import { API_CONFIG } from "../constants/config";
 import { useNavigate } from "react-router-dom";
 import { useOutlet } from "../contexts/OutletContext";
 import OrderExistsModal from "../components/Modal/variants/OrderExistsModal";
-import toast, { Toaster } from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
 import LazyImage from "../components/Shared/LazyImage";
 import { useQuery, useMutation } from '@tanstack/react-query';
 import apiService from '../api/apiService';
+import { useToastContext } from '../components/Toast/ToastContext';
 
 const FooterSummary = React.memo(function FooterSummary({ checkoutDetails }) {
   // Fallback to zeros if no data yet
@@ -93,6 +93,7 @@ function Checkout() {
   const [couponStatus, setCouponStatus] = useState(null);
   const [couponLoading, setCouponLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const { addToast } = useToastContext();
 
   // Keep all your handlers and effects here
   const handleLogin = () => {
@@ -143,9 +144,9 @@ function Checkout() {
     retry: 2,
     onError: (err) => {
       if (err.response?.status === 401) {
-        toast.error("Session expired. Please login again.");
+        addToast({ message: "Session expired. Please login again.", type: "error" });
       } else {
-        toast.error("Failed to fetch checkout details");
+        addToast({ message: "Failed to fetch checkout details", type: "error" });
       }
     }
   });
@@ -172,13 +173,13 @@ function Checkout() {
     onSuccess: () => {
       clearCart();
       localStorage.removeItem("cart");
-      toast.success("Items added to existing order successfully!");
+      addToast({ message: "Items added to existing order successfully!", type: "success" });
       navigate("/orders");
       handleModalClose();
     },
     onError: (error) => {
       console.error("Error adding to existing order:", error);
-      toast.error(error.message || "Failed to add to existing order");
+      addToast({ message: error.message || "Failed to add to existing order", type: "error" });
     }
   });
 
@@ -191,16 +192,92 @@ function Checkout() {
     onSuccess: () => {
       clearCart();
       localStorage.removeItem("cart");
-      toast.success("Order cancelled and new order created successfully!");
+      addToast({ message: "Order cancelled and new order created successfully!", type: "success" });
       navigate("/orders");
       handleModalClose();
     },
     onError: (error) => {
       console.error("Error cancelling order:", error);
-      toast.error(error.message || "Failed to cancel existing order and create new one");
+      addToast({ message: error.message || "Failed to cancel existing order and create new one", type: "error" });
     }
   });
 
+  // Modify the createOrder function to handle errors without re-throwing
+  const createOrder = async () => {
+    try {
+      const auth = JSON.parse(localStorage.getItem("auth"));
+      const accessToken = auth?.accessToken;
+      const userId = auth?.userId;
+
+      const orderItems = cartItems.map((item) => ({
+        menu_id: item.menuId,
+        quantity: item.quantity,
+        portion_name: item.portionName.toLowerCase(),
+        comment: item.comment || "" // Add the comment field here
+      }));
+
+      // Get order settings from localStorage
+      const orderSettings = localStorage.getItem("orderSettings");
+      const orderType = orderSettings
+        ? JSON.parse(orderSettings).order_type
+        : null;
+
+      // Base payload
+      const payload = {
+        outlet_id: String(outletId),
+        user_id: String(userId),
+        section_id: String(sectionId),
+        order_type: orderType || "dine-in", // Fallback to takeaway if no order type
+        order_items: orderItems,
+        action: "create_order",
+        app_source: "user_app",
+      };
+
+      // Add coupon code to payload if a valid coupon is applied
+      if (couponStatus?.success && couponStatus?.couponDetails?.code) {
+        payload.coupon = couponStatus.couponDetails.code;
+      }
+
+      // Add table_id only for dine-in orders
+      if (orderType === "dine-in") {
+        const tableId = outletDetails?.tableId || localStorage.getItem("tableId");
+        if (tableId) {
+          payload.table_id = String(tableId);
+        }
+      }
+
+      const response = await axios.post(
+        `https://men4u.xyz/v2/common/create_order`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+
+      if (response.data?.order_id) {
+        clearCart();
+        localStorage.removeItem("cart");
+        navigate(`/orders`);
+        return true; // Indicate success
+      }
+      return false; // Indicate failure
+    } catch (error) {
+      // Handle error here and show toast
+      if (error.response?.status === 400) {
+        const errorMessage = error.response.data?.detail || error.response.data?.message || "Failed to create order";
+        addToast({ message: errorMessage, type: "error" });
+      } else {
+        addToast({ message: "An unexpected error occurred. Please try again.", type: "error" });
+      }
+      return false; // Indicate failure
+    }
+  };
+
+  // Modify handleCheckout to not show duplicate error messages
   const handleCheckout = async () => {
     // Validate comments
     for (const item of cartItems) {
@@ -208,7 +285,7 @@ function Checkout() {
         item.comment &&
         (item.comment.length < 5 || item.comment.length > 50)
       ) {
-        toast.error("Comment must be between 5 and 50 characters.");
+        addToast({ message: "Comment must be between 5 and 50 characters.", type: "error" });
         return;
       }
     }
@@ -220,11 +297,10 @@ function Checkout() {
       const userId = auth?.userId;
 
       if (!accessToken || !userId) {
-        toast.error("Authentication required");
+        addToast({ message: "Authentication required", type: "error" });
         return;
       }
 
-      // Use the new service method
       const existingOrder = await apiService.checkout.checkExistingOrder({
         userId,
         outletId
@@ -241,81 +317,20 @@ function Checkout() {
         return;
       }
 
-      // Proceed with creating new order
-      await createOrder();
-      toast.success("Order placed successfully!");
+      // Create order and only show success message if it succeeds
+      const orderCreated = await createOrder();
+      if (orderCreated) {
+        addToast({ message: "Order placed successfully!", type: "success" });
+      }
     } catch (err) {
-      console.error("Checkout error:", err);
+      // Only handle non-order creation errors here
       if (err.response?.status === 401) {
-        toast.error("Session expired. Please login again.");
-      } else {
-        toast.error("Failed to create order. Please try again.");
+        addToast({ message: "Session expired. Please login again.", type: "error" });
       }
     } finally {
       setCheckoutLoading(false);
     }
   };
-
-  const createOrder = async () => {
-    const auth = JSON.parse(localStorage.getItem("auth"));
-    const accessToken = auth?.accessToken;
-    const userId = auth?.userId;
-
-    const orderItems = cartItems.map((item) => ({
-      menu_id: item.menuId,
-      quantity: item.quantity,
-      portion_name: item.portionName.toLowerCase(),
-      comment: item.comment || "" // Add the comment field here
-    }));
-
-    // Get order settings from localStorage
-    const orderSettings = localStorage.getItem("orderSettings");
-    const orderType = orderSettings
-      ? JSON.parse(orderSettings).order_type
-      : null;
-
-    // Base payload
-    const payload = {
-      outlet_id: String(outletId),
-      user_id: String(userId),
-      section_id: String(sectionId),
-      order_type: orderType || "dine-in", // Fallback to takeaway if no order type
-      order_items: orderItems,
-      action: "create_order",
-      app_source: "user_app",
-    };
-
-    // Add coupon code to payload if a valid coupon is applied
-    if (couponStatus?.success && couponStatus?.couponDetails?.code) {
-      payload.coupon = couponStatus.couponDetails.code;
-    }
-
-    // Add table_id only for dine-in orders
-    if (orderType === "dine-in") {
-      const tableId = outletDetails?.tableId || localStorage.getItem("tableId");
-      if (tableId) {
-        payload.table_id = String(tableId);
-      }
-    }
-
-    const response = await axios.post(
-      `https://men4u.xyz/v2/common/create_order`,
-      payload,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      }
-    );
-
-    if (response.data?.order_id) {
-      clearCart();
-      localStorage.removeItem("cart");
-      navigate(`/orders`);
-    }
-};
 
   // Add handlers for modal actions
   const handleModalClose = () => {
@@ -331,7 +346,7 @@ function Checkout() {
       const userId = auth?.userId;
 
       if (!userId) {
-        toast.error("Authentication required");
+        addToast({ message: "Authentication required", type: "error" });
         return;
       }
 
@@ -360,7 +375,7 @@ function Checkout() {
       const userId = auth?.userId;
 
       if (!userId) {
-        toast.error("Authentication required");
+        addToast({ message: "Authentication required", type: "error" });
         return;
       }
 
@@ -445,39 +460,6 @@ function Checkout() {
   return (
     <>
       <Header />
-      <Toaster
-        position="bottom-center"
-        reverseOrder={true}
-        gutter={8}
-        containerStyle={{
-          bottom: 40,
-          margin: "0 auto",
-        }}
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: "#333",
-            color: "#fff",
-            marginBottom: "6rem",
-            padding: "1rem",
-            borderRadius: "8px",
-          },
-          success: {
-            duration: 3000,
-            iconTheme: {
-              primary: "#4aed88",
-              secondary: "#fff",
-            },
-          },
-          error: {
-            duration: 5000,
-            iconTheme: {
-              primary: "#ff4b4b",
-              secondary: "#fff",
-            },
-          },
-        }}
-      />
       {!user ? (
         // Not logged in view
         <div className="page-content">
