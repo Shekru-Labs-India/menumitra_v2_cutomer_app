@@ -132,6 +132,7 @@ const VerticalMenuCard = ({
   discount,
   menuItem = {},
   onFavoriteUpdate,
+  originalPrice,
 }) => {
   // Convert isFavorite to boolean if it's a number
   const isFavoriteBoolean = typeof isFavorite === 'number' ? isFavorite === 1 : Boolean(isFavorite);
@@ -376,12 +377,20 @@ const VerticalMenuCard = ({
               className="price"
               style={{
                 color: "#3AB4F2",
-                // fontWeight: "bold",
                 fontSize: "15px",
                 marginLeft: "auto",
               }}
             >
-              ₹{currentPrice}
+              {menuItem.offer > 0 ? (
+                <>
+                  ₹{Math.round(menuItem.portions?.[0]?.price * (1 - menuItem.offer / 100))}
+                  <del className="ms-2 text-muted">
+                    ₹{menuItem.portions?.[0]?.price}
+                  </del>
+                </>
+              ) : (
+                `₹${currentPrice}`
+              )}
             </li>
           </ul>
         </div>
@@ -485,6 +494,7 @@ VerticalMenuCard.propTypes = {
   discount: PropTypes.string,
   menuItem: PropTypes.object,
   onFavoriteUpdate: PropTypes.func.isRequired,
+  originalPrice: PropTypes.number,
 };
 
 export default VerticalMenuCard;
