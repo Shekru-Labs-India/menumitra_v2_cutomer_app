@@ -68,15 +68,22 @@ export const apiService = {
       };
     },
     searchMenus: async ({ outletId, userId, keyword }) => {
+      // Get user ID from auth data if not provided
+      if (!userId) {
+        const authData = localStorage.getItem('auth');
+        const auth = authData ? JSON.parse(authData) : null;
+        userId = auth?.userId;
+      }
+
       const payload = {
         outlet_id: outletId,
+        user_id: userId || null,
         app_source: "user_app",
       };
-      if (userId) payload.user_id = userId;
       if (keyword !== undefined && keyword !== null && keyword.trim() !== "") {
         payload.keyword = keyword.trim();
       }
-      const response = await axiosInstance.post(`/v2/user/search_menu`, payload, {
+      const response = await axiosInstance.post(`/${API_VERSION}/user/search_menu`, payload, {
         headers: { "Content-Type": "application/json" },
       });
       return response?.data;
