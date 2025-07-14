@@ -435,13 +435,12 @@ function Search() {
                             : menu.image || null
                         }
                         title={menu.menu_name}
-                        currentPrice={menu.portions?.[0]?.price || 0}
-                        originalPrice={
-                          menu.portions?.[0]?.price && menu.offer
-                            ? menu.portions[0].price +
-                              (menu.portions[0].price * menu.offer) / 100
-                            : null
+                        currentPrice={
+                          menu.offer > 0 
+                          ? Math.round(menu.portions?.[0]?.price * (1 - menu.offer / 100))
+                          : menu.portions?.[0]?.price || 0
                         }
+                        originalPrice={menu.offer > 0 ? menu.portions?.[0]?.price : null}
                         discount={menu.offer > 0 ? `${menu.offer}%` : null}
                         menuItem={{
                           menuId: menu.menu_id,

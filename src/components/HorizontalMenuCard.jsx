@@ -124,6 +124,7 @@ const FoodTypeIcon = ({ foodType }) => {
 const HorizontalMenuCard = ({
   title = "",
   currentPrice = 0,
+  originalPrice = null,  // Add this line
   discount = "",
   menuItem = {},
   isFavorite = false,
@@ -422,7 +423,12 @@ const HorizontalMenuCard = ({
                 fontWeight: 600 
               }}
             >
-              <span className="fw-bold">₹{currentPrice}</span>
+              ₹{currentPrice}
+              {originalPrice && (
+                <del className="ms-2 text-muted" style={{ fontSize: "12px" }}>
+                  ₹{originalPrice}
+                </del>
+              )}
             </h6>
 
             {/* Add Spicy Index here */}
@@ -535,7 +541,8 @@ HorizontalMenuCard.propTypes = {
   icons: PropTypes.shape({
     category: PropTypes.string,
     placeholder: PropTypes.string
-  })
+  }),
+  originalPrice: PropTypes.number,
 };
 
 export default HorizontalMenuCard;
