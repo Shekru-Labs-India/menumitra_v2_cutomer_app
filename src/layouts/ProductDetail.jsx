@@ -117,7 +117,7 @@ const FoodTypeIcon = ({ foodType }) => {
               style={{
                 color: "#B0BEC5",
                 fontSize: "10px",
-                transform: "rotate(-15deg)",
+                // transform: "rotate(-15deg)",
               }}
             ></i>
           </div>
