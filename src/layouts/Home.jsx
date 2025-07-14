@@ -20,10 +20,12 @@ import apiService from "../api/apiService";
 import OfferBanner from "./OfferBanner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Autoplay } from "swiper/modules";
-import "swiper/css";
+import { Navigation, Autoplay, Pagination } from "swiper/modules";
+import "swiper/css/bundle"; // This includes all Swiper styles
 import "swiper/css/navigation";
-import "swiper/css/autoplay"; // Add autoplay CSS
+import "swiper/css/pagination";
+import "swiper/css/effect-fade";
+import "swiper/css/autoplay";
 
 // Helper function to get auth data
 const getAuthData = () => {
@@ -93,6 +95,85 @@ const bannerData = [
   }
 ];
 
+const styles = {
+  swiperContainer: {
+    position: 'relative',
+    width: '100%',
+    height: '100%',
+    overflow: 'hidden'
+  },
+  slide: {
+    position: 'relative',
+    width: '100%',
+    height: '300px' // Adjust height as needed
+  },
+  slideImage: {
+    width: '100%',
+    height: '300px',
+    objectFit: 'cover'
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.4)'
+  },
+  content: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    textAlign: 'center',
+    color: '#FFFFFF',
+    width: '100%',
+    padding: '0 20px'
+  },
+  title: {
+    fontSize: '1.25rem',
+    marginBottom: '0.5rem',
+    fontWeight: '500'
+  },
+  discount: {
+    fontSize: '2.5rem',
+    fontWeight: 'bold',
+    marginBottom: '0.5rem'
+  },
+  description: {
+    fontSize: '0.875rem',
+    opacity: '0.9'
+  },
+  navigation: {
+    button: {
+      position: 'absolute',
+      top: '50%',
+      transform: 'translateY(-50%)',
+      zIndex: 10,
+      width: '40px',
+      height: '40px',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      cursor: 'pointer',
+      boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+    },
+    icon: {
+      color: '#666'
+    }
+  },
+  pagination: {
+    position: 'absolute',
+    bottom: '10px',
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    zIndex: 10
+  }
+};
+
 function Home() {
   // Keep core hooks and context values
   const { menuItems, menuCategories, isLoading } = useMenuItems();
@@ -127,24 +208,24 @@ function Home() {
     onMutate: async ({ menuId, isFavorite }) => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries(["specialMenus", outletId, userId]);
-
+      
       // Snapshot the previous value
       const previousData = queryClient.getQueryData([
         "specialMenus",
         outletId,
         userId,
       ]);
-
+      
       // Optimistically update the UI
       queryClient.setQueryData(["specialMenus", outletId, userId], (old) => {
         if (!old) return old;
         return old.map((menu) =>
-          menu.menu_id === menuId
+          menu.menu_id === menuId 
             ? { ...menu, is_favourite: isFavorite ? 1 : 0 }
             : menu
         );
       });
-
+      
       return { previousData };
     },
     onError: (err, variables, context) => {
@@ -198,7 +279,7 @@ function Home() {
     // First apply category filter
     let filtered =
       selectedCategoryId === "all" || !selectedCategoryId
-        ? menuItems
+      ? menuItems
         : categoriesData.menusByCategory[selectedCategoryId] || [];
 
     // Then apply search if active
@@ -299,7 +380,7 @@ function Home() {
       // Handle unauthenticated users - maybe show login modal
       return;
     }
-
+    
     try {
       await toggleFavorite.mutateAsync({ menuId, isFavorite });
     } catch (error) {
@@ -346,6 +427,41 @@ function Home() {
     setIsSearching(!!searchResults.length);
   };
 
+  // Add this at the component level
+  const [swiperInstance, setSwiperInstance] = useState(null);
+
+  // Update the Swiper component with detailed logging
+  useEffect(() => {
+    if (swiperInstance) {
+      console.log("=== Swiper Instance State ===");
+      console.log("Is Swiper mounted:", swiperInstance.mounted);
+      console.log("Is Swiper initialized:", swiperInstance.initialized);
+      console.log("Current breakpoint:", swiperInstance.currentBreakpoint);
+      console.log("Current parameters:", swiperInstance.params);
+      console.log("DOM elements:", {
+        wrapper: swiperInstance.wrapperEl,
+        navigation: {
+          nextEl: swiperInstance.navigation?.nextEl,
+          prevEl: swiperInstance.navigation?.prevEl
+        },
+        pagination: swiperInstance.pagination?.el
+      });
+
+      // Check for potential issues
+      const issues = [];
+      if (!swiperInstance.mounted) issues.push("Swiper not mounted");
+      if (!swiperInstance.initialized) issues.push("Swiper not initialized");
+      if (!swiperInstance.navigation?.nextEl) issues.push("Next button not found");
+      if (!swiperInstance.navigation?.prevEl) issues.push("Prev button not found");
+      if (!swiperInstance.pagination?.el) issues.push("Pagination not found");
+      
+      if (issues.length > 0) {
+        console.warn("=== Swiper Issues Detected ===");
+        issues.forEach(issue => console.warn(`- ${issue}`));
+      }
+    }
+  }, [swiperInstance]);
+
   return (
     <>
       <div className="page-wraper">
@@ -361,127 +477,154 @@ function Home() {
               {/* Offer Banner Swiper - Inserted here */}
               {/* <OfferBanner /> */}
 
-              <div className="swiper-btn-center-lr position-relative">
-                <Swiper
-                  modules={[Navigation, Autoplay]} // Add Autoplay to modules
-                  className="tag-group mt-4 recomand-swiper"
-                  spaceBetween={20}
-                  slidesPerView={1.2}
-                  navigation={{
-                    nextEl: '.swiper-button-next-custom',
-                    prevEl: '.swiper-button-prev-custom',
-                  }}
-                  // Add autoplay configuration
-                  autoplay={{
-                    delay: 3000, // Delay between transitions (in ms)
-                    disableOnInteraction: false, // Continue autoplay after user interaction
-                    pauseOnMouseEnter: true, // Pause on mouse enter
-                  }}
-                  speed={400}
-                  threshold={5}
-                  resistance={false}
-                  resistanceRatio={0}
-                  watchSlidesProgress={true}
-                  preventInteractionOnTransition={true}
-                  cssMode={false}
-                  breakpoints={{
-                    320: { slidesPerView: 1, spaceBetween: 10 },
-                    480: { slidesPerView: 1.1, spaceBetween: 15 },
-                    768: { slidesPerView: 1.2, spaceBetween: 20 }
-                  }}
-                >
-                  {bannerData.map((banner) => (
-                    <SwiperSlide key={banner.id}>
-                      <div
-                        className="card add-banner rounded-4 overflow-hidden"
-                        style={{ 
-                          margin: "10px",
-                          boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-                          minHeight: "180px",
-                          position: "relative"
+              <div className="">
+                <div className="swiper-btn-center-lr position-relative my-0 py-0">
+                  <Swiper
+                    modules={[Navigation, Pagination, Autoplay]}
+                    slidesPerView={1}
+                    spaceBetween={20}
+                    loop={true}
+                    autoplay={{
+                      delay: 3000,
+                      disableOnInteraction: false,
+                    }}
+                    breakpoints={{
+                      // Bootstrap breakpoints
+                      576: { slidesPerView: 1 },
+                      768: { slidesPerView: 2 },
+                      992: { slidesPerView: 3 },
+                      1200: { slidesPerView: 4 }
+                    }}
+                    // pagination={{
+                    //   clickable: true,
+                    //   type: 'bullets',
+                    //   bulletClass: 'swiper-pagination-bullet bg-primary'
+                    // }}
+                    // navigation={{
+                    //   nextEl: '.swiper-button-next',
+                    //   prevEl: '.swiper-button-prev'
+                    // }}
+                    // className="py-4"
+                    style={{
+                      padding: '10px 0',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    {/* Navigation Buttons with Bootstrap styling */}
+                    {/* <div 
+                      className="swiper-button-prev" 
+                      style={{
+                        position: 'absolute',
+                        left: '10px',
+                        width: '40px',
+                        height: '40px',
+                        background: 'rgba(255, 255, 255, 0.9)',
+                        borderRadius: '50%',
+                        zIndex: 10,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+                      }}
+                    >
+                      <i className="fas fa-chevron-left text-primary"></i>
+                    </div> */}
+{/*                     
+                    <div 
+                      className="swiper-button-next"
+                      style={{
+                        position: 'absolute',
+                        right: '10px',
+                        width: '40px',
+                        height: '40px',
+                        background: 'rgba(255, 255, 255, 0.9)',
+                        borderRadius: '50%',
+                        zIndex: 10,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+                      }}
+                    >
+                      <i className="fas fa-chevron-right text-primary"></i>
+                    </div> */}
+
+                    {/* Slides */}
+                    {bannerData.map((banner) => (
+                      <SwiperSlide 
+                        key={banner.id}
+                        style={{
+                          padding: '15px',
+                          borderRadius: '12px',
+                          boxSizing: 'border-box',
                         }}
                       >
-                        {/* Image container */}
-                        <div style={{
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          backgroundImage: `url(${banner.imageUrl})`,
-                          backgroundSize: "cover",
-                          backgroundPosition: "center",
-                        }} />
-                        
-                        {/* Dark overlay for better text visibility */}
-                        <div style={{
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          backgroundColor: "rgba(0,0,0,0.4)",
-                        }} />
-
-                        <div className="card-body p-4" style={{ position: "relative", zIndex: 1 }}>
-                          <div className="card-info" style={{ padding: "10px 0" }}>
-                            <span className="font-12 font-w500 mb-2 d-block" style={{ color: banner.textColor }}>
-                              {banner.title}
-                            </span>
-                            <h1 className="title mb-2" style={{ fontSize: "2rem", color: banner.textColor }}>
-                              {banner.discount}
-                            </h1>
-                            <small style={{ color: banner.textColor }}>{banner.description}</small>
+                        <div 
+                          className="card h-100 border-0 shadow-sm"
+                          style={{
+                            borderRadius: '8px',
+                            overflow: 'hidden',
+                            height: '100%'
+                          }}
+                        >
+                          <div 
+                            className="position-relative"
+                            style={{
+                              paddingTop: '56.25%', // 16:9 aspect ratio
+                              overflow: 'hidden'
+                            }}
+                          >
+                            <img 
+                              src={banner.imageUrl} 
+                              alt={banner.title}
+                              className="position-absolute top-0 start-0 w-100 h-100"
+                              style={{
+                                objectFit: 'cover',
+                              }}
+                            />
+                            {/* Overlay with gradient */}
+                            <div 
+                              className="position-absolute top-0 start-0 w-100 h-100"
+                              style={{
+                                background: 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.6))'
+                              }}
+                            ></div>
+                            
+                            {/* Content */}
+                            <div 
+                              className="position-absolute w-100 text-center text-white"
+                              style={{
+                                bottom: '20px',
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                padding: '0 15px'
+                              }}
+                            >
+                              <h5 className="mb-2">{banner.title}</h5>
+                              <h3 className="mb-2 fw-bold">{banner.discount}</h3>
+                              <p className="mb-0 small opacity-75">{banner.description}</p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </SwiperSlide>
-                  ))}
+                      </SwiperSlide>
+                    ))}
 
-                  {/* Navigation Buttons */}
-                  <div 
-                    className="swiper-button-prev-custom" 
-                    style={{
-                      position: 'absolute',
-                      left: '10px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      zIndex: 10,
-                      width: '40px',
-                      height: '40px',
-                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
-                    }}
-                  >
-                    <i className="fas fa-chevron-left" style={{ color: '#666' }}></i>
-                  </div>
-                  <div 
-                    className="swiper-button-next-custom"
-                    style={{
-                      position: 'absolute',
-                      right: '10px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      zIndex: 10,
-                      width: '40px',
-                      height: '40px',
-                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
-                    }}
-                  >
-                    <i className="fas fa-chevron-right" style={{ color: '#666' }}></i>
-                  </div>
-                </Swiper>
+                    {/* Pagination */}
+                    <div 
+                      className="swiper-pagination"
+                      style={{
+                        position: 'absolute',
+                        bottom: '10px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        zIndex: 10
+                      }}
+                    ></div>
+                  </Swiper>
+                </div>
               </div>
 
               <div
