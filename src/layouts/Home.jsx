@@ -16,9 +16,14 @@ import { OrderTypeModal } from "../components/Modal/variants/OrderTypeModal";
 import { useModal } from "../contexts/ModalContext";
 import OutletInfoBanner from "../components/OutletInfoBanner";
 import SearchBar from "../components/SearchBar";
-import apiService from '../api/apiService';
+import apiService from "../api/apiService";
 import OfferBanner from "./OfferBanner";
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Autoplay } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/autoplay"; // Add autoplay CSS
 
 // Helper function to get auth data
 const getAuthData = () => {
@@ -43,6 +48,50 @@ function extractOutletParamsFromPath(pathname) {
   }
   return null;
 }
+
+// Update the bannerData array
+const bannerData = [
+  {
+    id: 1,
+    imageUrl: "https://men4u.xyz/v2/media/menu_images/mm_images_70143.jpg",
+    title: "Special Offer",
+    discount: "20% OFF",
+    textColor: "#FFFFFF", // Changed to white for better visibility on image
+    description: "*on Selected Items"
+  },
+  {
+    id: 2,
+    imageUrl: "https://men4u.xyz/v2/media/menu_images/mm_images_70143.jpg",
+    title: "Lunch Special",
+    discount: "30% OFF",
+    textColor: "#FFFFFF",
+    description: "*12PM to 3PM"
+  },
+  {
+    id: 3,
+    imageUrl: "https://men4u.xyz/v2/media/menu_images/mm_images_70143.jpg",
+    title: "Happy Hours",
+    discount: "25% OFF",
+    textColor: "#FFFFFF",
+    description: "*on Beverages"
+  },
+  {
+    id: 4,
+    imageUrl: "https://men4u.xyz/v2/media/menu_images/mm_images_70143.jpg",
+    title: "Weekend Special",
+    discount: "40% OFF",
+    textColor: "#FFFFFF",
+    description: "*Saturday & Sunday"
+  },
+  {
+    id: 5,
+    imageUrl: "https://men4u.xyz/v2/media/menu_images/mm_images_70143.jpg",
+    title: "First Order",
+    discount: "50% OFF",
+    textColor: "#FFFFFF",
+    description: "*New Customers Only"
+  }
+];
 
 function Home() {
   // Keep core hooks and context values
@@ -77,31 +126,38 @@ function Home() {
     },
     onMutate: async ({ menuId, isFavorite }) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries(['specialMenus', outletId, userId]);
-      
+      await queryClient.cancelQueries(["specialMenus", outletId, userId]);
+
       // Snapshot the previous value
-      const previousData = queryClient.getQueryData(['specialMenus', outletId, userId]);
-      
+      const previousData = queryClient.getQueryData([
+        "specialMenus",
+        outletId,
+        userId,
+      ]);
+
       // Optimistically update the UI
-      queryClient.setQueryData(['specialMenus', outletId, userId], old => {
+      queryClient.setQueryData(["specialMenus", outletId, userId], (old) => {
         if (!old) return old;
-        return old.map(menu => 
-          menu.menu_id === menuId 
+        return old.map((menu) =>
+          menu.menu_id === menuId
             ? { ...menu, is_favourite: isFavorite ? 1 : 0 }
             : menu
         );
       });
-      
+
       return { previousData };
     },
     onError: (err, variables, context) => {
       // Rollback on error
-      queryClient.setQueryData(['specialMenus', outletId, userId], context.previousData);
+      queryClient.setQueryData(
+        ["specialMenus", outletId, userId],
+        context.previousData
+      );
     },
     onSettled: () => {
       // Refetch after error or success
-      queryClient.invalidateQueries(['specialMenus', outletId, userId]);
-    }
+      queryClient.invalidateQueries(["specialMenus", outletId, userId]);
+    },
   });
 
   // IMPROVEMENT: Use useMemo for categoriesData instead of useState + useEffect
@@ -140,22 +196,25 @@ function Home() {
     if (!menuItems) return [];
 
     // First apply category filter
-    let filtered = selectedCategoryId === "all" || !selectedCategoryId
-      ? menuItems
-      : (categoriesData.menusByCategory[selectedCategoryId] || []);
+    let filtered =
+      selectedCategoryId === "all" || !selectedCategoryId
+        ? menuItems
+        : categoriesData.menusByCategory[selectedCategoryId] || [];
 
     // Then apply search if active
     if (isSearching && searchQuery) {
-      filtered = filtered.filter(item => 
+      filtered = filtered.filter((item) =>
         item.menuName.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
     // Finally apply special/offer filter
     if (activeMenuFilter === "special") {
-      filtered = filtered.filter(item => item.isSpecial === true || item.isSpecial === 1);
+      filtered = filtered.filter(
+        (item) => item.isSpecial === true || item.isSpecial === 1
+      );
     } else if (activeMenuFilter === "offer") {
-      filtered = filtered.filter(item => Number(item.offer) > 0);
+      filtered = filtered.filter((item) => Number(item.offer) > 0);
     }
 
     return filtered;
@@ -165,7 +224,7 @@ function Home() {
     searchQuery,
     isSearching,
     activeMenuFilter,
-    categoriesData.menusByCategory
+    categoriesData.menusByCategory,
   ]);
 
   // IMPROVEMENT: Use useMemo for visible menus to prevent recalculation on every render
@@ -240,11 +299,11 @@ function Home() {
       // Handle unauthenticated users - maybe show login modal
       return;
     }
-    
+
     try {
       await toggleFavorite.mutateAsync({ menuId, isFavorite });
     } catch (error) {
-      console.error('Failed to update favorite status:', error);
+      console.error("Failed to update favorite status:", error);
     }
   };
 
@@ -265,7 +324,7 @@ function Home() {
     isLoading: isSpecialMenusLoading,
     error: specialMenusError,
   } = useQuery({
-    queryKey: ['specialMenus', outletId, userId],
+    queryKey: ["specialMenus", outletId, userId],
     queryFn: async () => {
       if (!outletId) return [];
       const data = await apiService.menus.getSpecialMenus({ outletId, userId });
@@ -301,6 +360,129 @@ function Home() {
 
               {/* Offer Banner Swiper - Inserted here */}
               {/* <OfferBanner /> */}
+
+              <div className="swiper-btn-center-lr position-relative">
+                <Swiper
+                  modules={[Navigation, Autoplay]} // Add Autoplay to modules
+                  className="tag-group mt-4 recomand-swiper"
+                  spaceBetween={20}
+                  slidesPerView={1.2}
+                  navigation={{
+                    nextEl: '.swiper-button-next-custom',
+                    prevEl: '.swiper-button-prev-custom',
+                  }}
+                  // Add autoplay configuration
+                  autoplay={{
+                    delay: 3000, // Delay between transitions (in ms)
+                    disableOnInteraction: false, // Continue autoplay after user interaction
+                    pauseOnMouseEnter: true, // Pause on mouse enter
+                  }}
+                  speed={400}
+                  threshold={5}
+                  resistance={false}
+                  resistanceRatio={0}
+                  watchSlidesProgress={true}
+                  preventInteractionOnTransition={true}
+                  cssMode={false}
+                  breakpoints={{
+                    320: { slidesPerView: 1, spaceBetween: 10 },
+                    480: { slidesPerView: 1.1, spaceBetween: 15 },
+                    768: { slidesPerView: 1.2, spaceBetween: 20 }
+                  }}
+                >
+                  {bannerData.map((banner) => (
+                    <SwiperSlide key={banner.id}>
+                      <div
+                        className="card add-banner rounded-4 overflow-hidden"
+                        style={{ 
+                          margin: "10px",
+                          boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+                          minHeight: "180px",
+                          position: "relative"
+                        }}
+                      >
+                        {/* Image container */}
+                        <div style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          backgroundImage: `url(${banner.imageUrl})`,
+                          backgroundSize: "cover",
+                          backgroundPosition: "center",
+                        }} />
+                        
+                        {/* Dark overlay for better text visibility */}
+                        <div style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          backgroundColor: "rgba(0,0,0,0.4)",
+                        }} />
+
+                        <div className="card-body p-4" style={{ position: "relative", zIndex: 1 }}>
+                          <div className="card-info" style={{ padding: "10px 0" }}>
+                            <span className="font-12 font-w500 mb-2 d-block" style={{ color: banner.textColor }}>
+                              {banner.title}
+                            </span>
+                            <h1 className="title mb-2" style={{ fontSize: "2rem", color: banner.textColor }}>
+                              {banner.discount}
+                            </h1>
+                            <small style={{ color: banner.textColor }}>{banner.description}</small>
+                          </div>
+                        </div>
+                      </div>
+                    </SwiperSlide>
+                  ))}
+
+                  {/* Navigation Buttons */}
+                  <div 
+                    className="swiper-button-prev-custom" 
+                    style={{
+                      position: 'absolute',
+                      left: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      zIndex: 10,
+                      width: '40px',
+                      height: '40px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+                    }}
+                  >
+                    <i className="fas fa-chevron-left" style={{ color: '#666' }}></i>
+                  </div>
+                  <div 
+                    className="swiper-button-next-custom"
+                    style={{
+                      position: 'absolute',
+                      right: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      zIndex: 10,
+                      width: '40px',
+                      height: '40px',
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+                    }}
+                  >
+                    <i className="fas fa-chevron-right" style={{ color: '#666' }}></i>
+                  </div>
+                </Swiper>
+              </div>
 
               <div
                 className="title-bar d-flex justify-content-between align-items-center"
@@ -523,8 +705,6 @@ function Home() {
                   ))}
                 </div>
               )}
-
-             
             </div>
           </div>
         </div>
