@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useModal } from "../contexts/ModalContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useOutlet } from "../contexts/OutletContext";
+import { useCart } from "../contexts/CartContext"; // Add this import
 import apiService from "../api/apiService";
 import "./HorizontalMenuCard.css"; // We'll create this CSS file next
 
@@ -156,10 +157,21 @@ const HorizontalMenuCard = ({
   const { openModal } = useModal();
   const { user, setShowAuthOffcanvas, getUserId } = useAuth();
   const { outletId } = useOutlet();
+  const { cartItems, getCartItemComment } = useCart(); // Add this
   const userId = getUserId();
 
   // Convert isFavorite to boolean if it's a number
   const isFavoriteBoolean = typeof isFavorite === 'number' ? isFavorite === 1 : Boolean(isFavorite);
+
+  // Check if this menu exists in cart
+  const cartItemsForMenu = menuItem?.menuId
+    ? cartItems.filter((item) => item.menuId === menuItem.menuId)
+    : [];
+
+  // Get the comment for this menu item
+  const menuComment = menuItem?.menuId
+    ? getCartItemComment(menuItem.menuId)
+    : "";
 
   // Check if this menu item belongs to the current outlet
   const isCurrentOutlet = true;
@@ -201,6 +213,33 @@ const HorizontalMenuCard = ({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleAddToCartClick = (e) => {
+    e.preventDefault();
+
+    if (!menuItem) return;
+
+    // Check if user is authenticated
+    if (!user) {
+      setShowAuthOffcanvas(true);
+      return;
+    }
+
+    openModal("addToCart", menuItem);
+  };
+
+  // Handle quantity changes
+  const handleQuantityChange = (increment) => {
+    if (!menuItem) return;
+
+    // Check if user is authenticated
+    if (!user) {
+      setShowAuthOffcanvas(true);
+      return;
+    }
+
+    openModal("addToCart", menuItem);
   };
 
   // Generate the product URL from menuItem data with safety checks
@@ -372,8 +411,8 @@ const HorizontalMenuCard = ({
               {menuItem.categoryName}
             </div>
           )}
-          {/* Price Section */}
-          <div className="d-flex align-items-center mb-1">
+          {/* Price Section with Cart Button */}
+          <div className="d-flex align-items-center mb-1 justify-content-between">
             <h6
               className="mb-0 me-1"
               style={{ 
@@ -384,9 +423,31 @@ const HorizontalMenuCard = ({
             >
               <span className="fw-bold">₹{currentPrice}</span>
             </h6>
+
+            {/* Cart Button */}
+            <button
+              className="btn btn-primary rounded-circle p-2"
+              onClick={handleAddToCartClick}
+              style={{ 
+                width: "32px", 
+                height: "32px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: 0
+              }}
+            >
+              <i className="fa-solid fa-cart-shopping" style={{ fontSize: "14px" }}></i>
+            </button>
           </div>
         </div>
       </div>
+      {menuComment && (
+        <div className="text-muted small mt-1" style={{ fontSize: "12px" }}>
+          <i className="fas fa-comment-alt me-1"></i>
+          {menuComment}
+        </div>
+      )}
     </div>
   );
 };
@@ -395,7 +456,23 @@ HorizontalMenuCard.propTypes = {
   title: PropTypes.string,
   currentPrice: PropTypes.number,
   discount: PropTypes.string,
-  menuItem: PropTypes.object,
+  menuItem: PropTypes.shape({
+    menuId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    menuCatId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    menuName: PropTypes.string,
+    menuFoodType: PropTypes.string,
+    categoryName: PropTypes.string,
+    spicyIndex: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    portions: PropTypes.array,
+    rating: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    offer: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    isSpecial: PropTypes.bool,
+    isFavourite: PropTypes.bool,
+    isActive: PropTypes.bool,
+    image: PropTypes.oneOfType([PropTypes.string, PropTypes.array]),
+    outletName: PropTypes.string,
+    outletId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  }),
   isFavorite: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
   onFavoriteUpdate: PropTypes.func.isRequired,
   image: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
