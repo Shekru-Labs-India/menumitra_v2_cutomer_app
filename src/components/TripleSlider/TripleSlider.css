@@ -18,41 +18,31 @@
 /* Background Image Styles */
 .triple-slider .bg-image {
   width: 100%;
-  height: 220px; /* Adjusted height to match your app's design */
+  height: 220px;
   object-fit: cover;
   display: block;
 }
 
-/* Slide Effects - Important to animate the content, not the slide itself */
-.triple-slider .swiper-slide img {
-  opacity: 0.4;
-  transform: scale(0.85);
-  transition: all 0.4s ease;
+/* Slide styles */
+.triple-slider .swiper-slide {
+  width: 100% !important;
 }
 
-.triple-slider .swiper-slide-active img,
-.triple-slider .swiper-slide-duplicate-active img {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.triple-slider .swiper-slide-prev img,
-.triple-slider .swiper-slide-duplicate-prev img,
-.triple-slider .swiper-slide-next img,
-.triple-slider .swiper-slide-duplicate-next img {
-  opacity: 0.8;
-  transform: scale(0.9);
-}
-
-/* Pagination Styles */
+/* Pagination styles */
 .triple-slider .swiper-pagination {
-  bottom: 10px;
+  position: absolute;
+  bottom: 10px !important;
+  left: 0;
+  right: 0;
+  z-index: 10;
 }
 
 .triple-slider .swiper-pagination-bullet {
-  width: 6px;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.7);
+  width: 8px;
+  height: 8px;
+  display: inline-block;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
   opacity: 0.5;
   margin: 0 4px;
 }
@@ -63,23 +53,27 @@
   transform: scale(1.2);
 }
 
-/* Slide Content Wrapper */
-.triple-slider .slide-content {
-  width: 100%;
-  position: relative;
-  overflow: hidden;
-}
-
-/* Optional: Gradient Overlay */
+/* Add a dark gradient overlay for better pagination visibility */
 .triple-slider .slide-content::after {
   content: '';
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 40%;
-  background: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.3));
+  height: 60px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.4));
   pointer-events: none;
+}
+
+/* Optional: Navigation button styles */
+.triple-slider .swiper-button-next,
+.triple-slider .swiper-button-prev {
+  color: #fff;
+}
+
+.triple-slider .swiper-button-next:after,
+.triple-slider .swiper-button-prev:after {
+  font-size: 20px;
 }
 
 /* Responsive adjustments */

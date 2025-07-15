@@ -326,18 +326,17 @@ function ProductDetail() {
   slides={
     menuDetails.images?.length
       ? menuDetails.images.map((image, index) => ({
-          backgroundImage: image, // This should be the direct image URL
+          backgroundImage: image,
           title: menuDetails.menu_name,
-          // Remove overlayImage since we don't need it for this use case
         }))
       : [{
-          backgroundImage: 'https://via.placeholder.com/800x450', // Default image
+          backgroundImage: 'https://via.placeholder.com/800x450',
           title: menuDetails.menu_name,
         }]
   }
   autoplayDelay={3000}
   pauseOnHover={true}
-  loop={menuDetails.images?.length > 1} // Only loop if there are multiple images
+  loop={false} // Force loop to be false
   speed={800}
   className="product-detail-slider"
 />
