@@ -325,20 +325,15 @@ function ProductDetail() {
 <TripleSlider
   slides={
     menuDetails.images?.length
-      ? menuDetails.images.map((image, index) => ({
+      ? menuDetails.images.map((image) => ({
           backgroundImage: image,
           title: menuDetails.menu_name,
         }))
       : [{
-          backgroundImage: 'https://via.placeholder.com/800x450',
+          backgroundImage: 'https://via.placeholder.com/800x800', // Updated to square placeholder
           title: menuDetails.menu_name,
         }]
   }
-  autoplayDelay={3000}
-  pauseOnHover={true}
-  loop={false} // Force loop to be false
-  speed={800}
-  className="product-detail-slider"
 />
 
           <div className="account-box style-1">

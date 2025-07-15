@@ -2,22 +2,20 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Swiper, SwiperSlide } from 'swiper/react';
-// Change the imports to use simpler effects
-import { Autoplay, Pagination, Navigation } from 'swiper/modules';
-import LazyImage from '../Shared/LazyImage';
 
-// Import required Swiper styles
+// Import Swiper styles in correct order
 import 'swiper/css';
+import 'swiper/css/effect-fade';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
+
+// Import required modules
+import { EffectFade, Pagination, Navigation } from 'swiper/modules';
+
 import './TripleSlider.css';
 
 const TripleSlider = ({
   slides,
-  autoplayDelay = 3000,
-  pauseOnHover = true,
-  loop = false,
-  speed = 800,
   className = '',
 }) => {
   const limitedSlides = slides.slice(0, 5);
@@ -25,7 +23,8 @@ const TripleSlider = ({
   return (
     <div className={`triple-slider ${className}`}>
       <Swiper
-        modules={[Autoplay, Pagination, Navigation]}
+        modules={[EffectFade, Pagination, Navigation]}
+        effect={'fade'} // Add fade effect for smooth transitions
         slidesPerView={1}
         spaceBetween={0}
         pagination={{
@@ -33,35 +32,26 @@ const TripleSlider = ({
           dynamicBullets: true,
         }}
         navigation={true}
-        autoplay={{
-          delay: autoplayDelay,
-          disableOnInteraction: false,
-          pauseOnMouseEnter: pauseOnHover,
-        }}
-        loop={false}
-        speed={speed}
+        grabCursor={true} // Makes it clear the slider is interactive
+        touchRatio={1} // Makes touch/swipe more responsive
+        touchAngle={45} // Makes swiping easier
+        touchEventsTarget="wrapper" // Improves touch detection
         className="triple-swiper"
       >
         {limitedSlides.map((slide, index) => (
           <SwiperSlide key={index}>
             <div className="slide-content">
-              <LazyImage
+              <img 
                 src={slide.backgroundImage}
                 alt={slide.title || `Slide ${index + 1}`}
                 className="bg-image"
-                blur={true}
-                aspectRatio="16/9"
+                style={{
+                  width: '100%',
+                  aspectRatio: '1/1',
+                  objectFit: 'cover',
+                  display: 'block' // Ensures no extra space
+                }}
               />
-              {slide.overlayImage && (
-                <div className="overlay-image-wrapper">
-                  <LazyImage
-                    src={slide.overlayImage}
-                    alt={`${slide.title || `Slide ${index + 1}`} overlay`}
-                    className="overlay-image"
-                    blur={true}
-                  />
-                </div>
-              )}
             </div>
           </SwiperSlide>
         ))}
@@ -70,19 +60,13 @@ const TripleSlider = ({
   );
 };
 
-// PropTypes remain the same
 TripleSlider.propTypes = {
   slides: PropTypes.arrayOf(
     PropTypes.shape({
       backgroundImage: PropTypes.string.isRequired,
-      overlayImage: PropTypes.string,
       title: PropTypes.string,
     })
   ).isRequired,
-  autoplayDelay: PropTypes.number,
-  pauseOnHover: PropTypes.bool,
-  loop: PropTypes.bool,
-  speed: PropTypes.number,
   className: PropTypes.string,
 };
 
