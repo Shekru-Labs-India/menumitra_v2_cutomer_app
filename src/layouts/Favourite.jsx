@@ -172,11 +172,17 @@ function Favourite() {
                   const entries = Object.entries(groupedMenus)
                     .filter(([outletName]) => outletName && outletName !== "undefined")
                     .sort(([, aMenus], [, bMenus]) => {
+                      // Get outlet IDs
                       const aOutletId = aMenus[0]?.outlet_id;
                       const bOutletId = bMenus[0]?.outlet_id;
-                      if (String(aOutletId) === String(outletId)) return -1;
-                      if (String(bOutletId) === String(outletId)) return 1;
-                      return 0;
+                      
+                      // If aOutlet matches current outletId, it goes first
+                      if (Number(aOutletId) === Number(outletId)) return -1;
+                      // If bOutlet matches current outletId, it goes first
+                      if (Number(bOutletId) === Number(outletId)) return 1;
+                      
+                      // For all other outlets, sort alphabetically by outlet name
+                      return aMenus[0]?.outlet_name.localeCompare(bMenus[0]?.outlet_name);
                     });
 
                   return entries.length > 0 ? (
