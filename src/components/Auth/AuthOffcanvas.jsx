@@ -5,6 +5,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import axios from "axios";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useToast } from "../Toast/useToast";
+import { browserName, browserVersion, deviceType, getUA, mobileModel, mobileVendor, osName, osVersion } from 'react-device-detect';
 
 const STEPS = {
   LOGIN: "login",
@@ -257,22 +258,81 @@ const AuthOffcanvas = () => {
     }
   };
 
+  const getDeviceInfo = () => {
+    // Generate a semi-permanent device ID using available device characteristics
+    const generateDeviceId = () => {
+      const characteristics = [
+        navigator.userAgent,
+        screen.height,
+        screen.width,
+        navigator.language,
+        new Date().getTimezoneOffset()
+      ].join('|');
+      
+      // Create a hash of the characteristics
+      let hash = 0;
+      for (let i = 0; i < characteristics.length; i++) {
+        const char = characteristics.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32-bit integer
+      }
+      return Math.abs(hash).toString(16);
+    };
+
+    // Get or create device ID
+    let deviceId = localStorage.getItem('mm_device_id');
+    if (!deviceId) {
+      deviceId = generateDeviceId();
+      localStorage.setItem('mm_device_id', deviceId);
+    }
+
+    // Format device model in a human-readable way
+    let deviceModel = '';
+    
+    if (mobileModel && mobileVendor) {
+      // For mobile devices: "iPhone 12" or "Samsung Galaxy S21"
+      deviceModel = `${mobileVendor} ${mobileModel}`;
+    } else {
+      // For desktop/laptop: "Windows 11 - Chrome" or "MacOS - Safari"
+      const formattedOS = osName === 'Mac OS' ? 'MacOS' : osName;
+      deviceModel = `${formattedOS} - ${browserName}`;
+    }
+
+    // Determine device type in a readable format
+    let readableDeviceType = 'Desktop';
+    if (deviceType === 'mobile') {
+      readableDeviceType = 'Mobile Phone';
+    } else if (deviceType === 'tablet') {
+      readableDeviceType = 'Tablet';
+    }
+
+    return {
+      device_id: deviceId,
+      device_model: deviceModel.trim(),
+      device_type: readableDeviceType,
+      // Additional details if needed by your backend
+      full_details: {
+        browser: `${browserName} ${browserVersion}`,
+        operating_system: `${osName} ${osVersion}`,
+        device_type: readableDeviceType
+      }
+    };
+  };
+
   const handleOTPSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-    const deviceInfo = {
-      // fcm_token: "457896354789",
-      device_id: "8974561234",
-      device_model: "Laptop 122",
-    };
+    const deviceInfo = getDeviceInfo();
 
     try {
       const response = await api.post("/common/verify_otp", {
         mobile: phoneNumber,
         otp: otp,
         app_type: "customer",
-        ...deviceInfo,
+        device_id: deviceInfo.device_id,
+        device_model: deviceInfo.device_model,
+        device_type: deviceInfo.device_type
       });
 
       const { data } = response;
