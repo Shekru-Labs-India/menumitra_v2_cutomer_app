@@ -48,7 +48,7 @@
 /* Pagination */
 .triple-slider .swiper-pagination {
   position: absolute;
-  bottom: 20px;
+  bottom: 40px;
   left: 0;
   right: 0;
   z-index: 20;
@@ -59,6 +59,10 @@
   height: 8px;
   background: #fff;
   opacity: 0.5;
+  border-radius: 50%;
+  display: inline-block;
+  margin: 0 4px;
+  transition: transform 0.3s ease;
 }
 
 .triple-slider .swiper-pagination-bullet-active {
