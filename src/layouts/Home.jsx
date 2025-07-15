@@ -409,20 +409,20 @@ function Home() {
     return cartItem ? cartItem.quantity : 0;
   };
 
-  // Special menus query remains unchanged
-  const {
-    data: specialMenuItems = [],
-    isLoading: isSpecialMenusLoading,
-    error: specialMenusError,
-  } = useQuery({
-    queryKey: ["specialMenus", outletId, userId],
-    queryFn: async () => {
-      if (!outletId) return [];
-      const data = await apiService.menus.getSpecialMenus({ outletId, userId });
-      return data?.special_menu_list || [];
-    },
-    enabled: !!outletId,
-  });
+  // // Special menus query remains unchanged
+  // const {
+  //   data: specialMenuItems = [],
+  //   isLoading: isSpecialMenusLoading,
+  //   error: specialMenusError,
+  // } = useQuery({
+  //   queryKey: ["specialMenus", outletId, userId],
+  //   queryFn: async () => {
+  //     if (!outletId) return [];
+  //     const data = await apiService.menus.getSpecialMenus({ outletId, userId });
+  //     return data?.special_menu_list || [];
+  //   },
+  //   enabled: !!outletId,
+  // });
 
   // Only show modal on outlet-only URL if no order type is set
   useEffect(() => {
