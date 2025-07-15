@@ -286,38 +286,93 @@ const AuthOffcanvas = () => {
       localStorage.setItem('mm_device_id', deviceId);
     }
 
-    // Format device model in a human-readable way
+    // Enhanced browser detection
+    const getBrowserInfo = () => {
+      const ua = navigator.userAgent;
+      
+      // Check for common browsers using both user agent and specific browser properties
+      if (navigator.brave?.isBrave || ua.includes('Brave')) {
+        return 'Brave';
+      } else if (ua.includes('Chrome') && !ua.includes('Edg') && !ua.includes('OPR')) {
+        return 'Chrome';
+      } else if (ua.includes('Firefox')) {
+        return 'Firefox';
+      } else if (ua.includes('Safari') && !ua.includes('Chrome')) {
+        return 'Safari';
+      } else if (ua.includes('Edg')) {
+        return 'Edge';
+      } else if (ua.includes('OPR') || ua.includes('Opera')) {
+        return 'Opera';
+      } else if (ua.includes('MSIE') || ua.includes('Trident/')) {
+        return 'Internet Explorer';
+      } else {
+        return 'Browser'; // Generic fallback
+      }
+    };
+
+    // Get OS info with better formatting
+    const getOSInfo = () => {
+      if (osName === 'none' || !osName) {
+        // Fallback OS detection from user agent
+        const ua = navigator.userAgent;
+        if (ua.includes('Windows')) return 'Windows';
+        if (ua.includes('Mac')) return 'MacOS';
+        if (ua.includes('Linux')) return 'Linux';
+        if (ua.includes('Android')) return 'Android';
+        if (ua.includes('iOS') || ua.includes('iPhone') || ua.includes('iPad')) return 'iOS';
+        return 'Unknown OS';
+      }
+      return osName === 'Mac OS' ? 'MacOS' : osName;
+    };
+
+    // Format device model
     let deviceModel = '';
+    const detectedBrowser = getBrowserInfo();
+    const detectedOS = getOSInfo();
     
-    if (mobileModel && mobileVendor) {
-      // For mobile devices: "iPhone 12" or "Samsung Galaxy S21"
+    if (mobileModel && mobileVendor && mobileModel !== 'none' && mobileVendor !== 'none') {
+      // Mobile device format
       deviceModel = `${mobileVendor} ${mobileModel}`;
     } else {
-      // For desktop/laptop: "Windows 11 - Chrome" or "MacOS - Safari"
-      const formattedOS = osName === 'Mac OS' ? 'MacOS' : osName;
-      deviceModel = `${formattedOS} - ${browserName}`;
+      // Desktop/laptop format
+      deviceModel = `${detectedOS} - ${detectedBrowser}`;
     }
 
-    // Determine device type in a readable format
+    // Enhanced device type detection
     let readableDeviceType = 'Desktop';
-    if (deviceType === 'mobile') {
+    const ua = navigator.userAgent;
+    
+    if (deviceType === 'mobile' || 
+        /Mobile|Android|iPhone|iPod/i.test(ua) || 
+        (mobileModel !== 'none' && !ua.includes('iPad'))) {
       readableDeviceType = 'Mobile Phone';
-    } else if (deviceType === 'tablet') {
+    } else if (deviceType === 'tablet' || 
+               /iPad|Tablet|PlayBook/i.test(ua) || 
+               (ua.includes('Android') && !ua.includes('Mobile'))) {
       readableDeviceType = 'Tablet';
     }
 
     return {
       device_id: deviceId,
-      device_model: deviceModel.trim(),
+      device_model: deviceModel.trim() || `${detectedOS} Device`,
       device_type: readableDeviceType,
-      // Additional details if needed by your backend
       full_details: {
-        browser: `${browserName} ${browserVersion}`,
-        operating_system: `${osName} ${osVersion}`,
+        browser: `${detectedBrowser} ${browserVersion !== 'none' ? browserVersion : ''}`.trim(),
+        operating_system: `${detectedOS} ${osVersion !== 'none' ? osVersion : ''}`.trim(),
         device_type: readableDeviceType
       }
     };
   };
+
+  useEffect(() => {
+    const info = getDeviceInfo();
+    console.log('Browser Detection:', {
+      userAgent: navigator.userAgent,
+      deviceInfo: info,
+      platform: navigator.platform,
+      vendor: navigator.vendor
+    });
+  }, []);
 
   const handleOTPSubmit = async (e) => {
     e.preventDefault();
