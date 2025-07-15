@@ -106,55 +106,31 @@ function Favourite() {
     }
   };
 
-  // Check if user is not logged in
-  if (!user) {
-    return (
-      <>
-        <Header />
-        <div className="page-content">
-          <div className="content-inner pt-0">
-            <div className="container p-b20">
-              <div
-                className="d-flex align-items-center justify-content-center"
-                style={{ minHeight: "calc(100vh - 300px)" }}
-              >
-                <div className="text-center">
-                  <div className="mb-4">
-                    <svg
-                      width="80"
-                      height="80"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      style={{ opacity: "0.5" }}
-                      className="text-muted"
-                    >
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                      <circle cx="12" cy="7" r="4"></circle>
-                    </svg>
-                  </div>
-                  <h5 className="mb-3">Please Login First</h5>
-                  <p className="text-muted mb-4">
-                    Login to view and manage your favorite menus
-                  </p>
-                  <button 
-                    className="btn btn-primary" 
-                    onClick={navigateToLogin}
-                  >
-                    Login Now
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <Footer />
-      </>
-    );
-  }
+  // Move useEffect to component top level
+  React.useEffect(() => {
+    if (!isLoading && favoriteMenus.length > 0) {
+      const grouped = groupByOutlet(favoriteMenus);
+      const sortedEntries = Object.entries(grouped)
+        .filter(([outletName]) => outletName && outletName !== "undefined")
+        .sort(([, aMenus], [, bMenus]) => {
+          const aOutletId = aMenus[0]?.outlet_id;
+          const bOutletId = bMenus[0]?.outlet_id;
+          
+          if (Number(aOutletId) === Number(outletId)) return -1;
+          if (Number(bOutletId) === Number(outletId)) return 1;
+          
+          return aMenus[0]?.outlet_name.localeCompare(bMenus[0]?.outlet_name);
+        });
+
+      if (sortedEntries.length > 0) {
+        const [firstOutletName] = sortedEntries[0];
+        setExpandedOutlet(prev => ({
+          ...prev,
+          [firstOutletName]: true
+        }));
+      }
+    }
+  }, [isLoading, favoriteMenus, outletId]); // Add proper dependencies
 
   const groupedMenus = groupByOutlet(favoriteMenus);
 
@@ -172,16 +148,12 @@ function Favourite() {
                   const entries = Object.entries(groupedMenus)
                     .filter(([outletName]) => outletName && outletName !== "undefined")
                     .sort(([, aMenus], [, bMenus]) => {
-                      // Get outlet IDs
                       const aOutletId = aMenus[0]?.outlet_id;
                       const bOutletId = bMenus[0]?.outlet_id;
                       
-                      // If aOutlet matches current outletId, it goes first
                       if (Number(aOutletId) === Number(outletId)) return -1;
-                      // If bOutlet matches current outletId, it goes first
                       if (Number(bOutletId) === Number(outletId)) return 1;
                       
-                      // For all other outlets, sort alphabetically by outlet name
                       return aMenus[0]?.outlet_name.localeCompare(bMenus[0]?.outlet_name);
                     });
 
