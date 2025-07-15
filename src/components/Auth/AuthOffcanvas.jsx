@@ -37,14 +37,16 @@ const AuthOffcanvas = () => {
   const { isDarkMode } = useTheme();
   const [timer, setTimer] = useState(0);
   const [isResendDisabled, setIsResendDisabled] = useState(false);
+  const [resetTimer, setResetTimer] = useState(0);
   const toast = useToast();
 
   useEffect(() => {
-    if (currentStep === STEPS.OTP) {
+    let interval;
+    if (currentStep === STEPS.OTP || resetTimer) {
       setTimer(20);
       setIsResendDisabled(true);
       
-      const interval = setInterval(() => {
+      interval = setInterval(() => {
         setTimer((prevTimer) => {
           if (prevTimer <= 1) {
             setIsResendDisabled(false);
@@ -54,10 +56,14 @@ const AuthOffcanvas = () => {
           return prevTimer - 1;
         });
       }, 1000);
-
-      return () => clearInterval(interval);
     }
-  }, [currentStep]);
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [currentStep, resetTimer]);
 
   useEffect(() => {
     if (currentStep === STEPS.OTP) {
@@ -186,6 +192,9 @@ const AuthOffcanvas = () => {
     setUserDetails({ name: "", email: "" });
     setIsLoading(false);
     setShowAuthOffcanvas(false);
+    setTimer(0);
+    setIsResendDisabled(false);
+    setResetTimer(0); // Reset the resetTimer state
   };
 
   const handlePhoneSubmit = async (e) => {
@@ -253,7 +262,7 @@ const AuthOffcanvas = () => {
     setIsLoading(true);
 
     const deviceInfo = {
-      fcm_token: "457896354789",
+      // fcm_token: "457896354789",
       device_id: "8974561234",
       device_model: "Laptop 122",
     };
@@ -305,8 +314,7 @@ const AuthOffcanvas = () => {
 
   const handleResendOTP = async () => {
     setIsLoading(true);
-    setTimer(20);
-    setIsResendDisabled(true);
+    setResetTimer(prev => prev + 1); // Trigger timer reset
 
     try {
       const { data } = await api.post("/common/resend_otp", {
@@ -325,6 +333,9 @@ const AuthOffcanvas = () => {
         err.response?.data?.detail || "Failed to resend OTP. Please try again.",
         "Error"
       );
+      // Reset timer state if API call fails
+      setTimer(0);
+      setIsResendDisabled(false);
     } finally {
       setIsLoading(false);
     }
