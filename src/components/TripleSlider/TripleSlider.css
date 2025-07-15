@@ -1,0 +1,124 @@
+/* src/components/TripleSlider/TripleSlider.css */
+
+.triple-slider {
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  perspective: 1200px;
+  padding: 32px 0;
+}
+
+/* Main Swiper Container */
+.triple-slider .swiper {
+  width: 90%;
+  max-width: 640px;
+  height: 320px;
+  border-radius: 8px;
+  margin: 0 auto;
+}
+
+/* Background Image Styles */
+.triple-slider .bg-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Overlay Image Styles */
+.triple-slider .overlay-image-wrapper {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.triple-slider .overlay-image {
+  max-width: 320px;
+  width: 100%;
+  height: auto;
+}
+
+/* Slide Effects */
+.triple-slider .swiper-slide {
+  opacity: 0.25;
+  transition: all 0.8s ease;
+}
+
+.triple-slider .swiper-slide-active {
+  opacity: 1;
+  z-index: 10;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+}
+
+.triple-slider .swiper-slide-prev {
+  transform: translateY(-50%) scale(0.75) rotateY(10deg);
+  right: 50%;
+}
+
+.triple-slider .swiper-slide-next {
+  transform: translateY(-50%) scale(0.75) rotateY(-10deg);
+  left: 50%;
+}
+
+/* Responsive Image Sizes */
+@media (max-width: 480px) {
+  .triple-slider .overlay-image {
+    width: 160px;
+    margin-left: -80px;
+  }
+}
+
+/* Custom Image Sizes Based on Index */
+.triple-slider .logo-image-1 {
+  width: 310px;
+  margin-left: -155px;
+}
+
+.triple-slider .logo-image-2 {
+  width: 146px;
+  margin-left: -73px;
+}
+
+.triple-slider .logo-image-3 {
+  width: 262px;
+  margin-left: -131px;
+}
+
+.triple-slider .logo-image-4 {
+  width: 196px;
+  margin-left: -98px;
+}
+
+.triple-slider .logo-image-5 {
+  width: 320px;
+  margin-left: -160px;
+}
+
+/* 3D Effect Shadows */
+.triple-slider .swiper-slide-shadow-left,
+.triple-slider .swiper-slide-shadow-right {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.triple-slider .swiper-slide-shadow-left {
+  background-image: linear-gradient(
+    to left,
+    rgba(0, 0, 0, 0.5),
+    rgba(0, 0, 0, 0)
+  );
+}
+
+.triple-slider .swiper-slide-shadow-right {
+  background-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.5),
+    rgba(0, 0, 0, 0)
+  );
+}
