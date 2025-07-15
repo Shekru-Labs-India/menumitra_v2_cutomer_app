@@ -12,21 +12,15 @@ export const AddToCartModal = () => {
   const { user, setShowAuthOffcanvas, getAccessToken } = useAuth();
   const { outletId } = useOutlet();
 
-  console.log("Modal Config Data:", modalConfig.data);
-  console.log("Current Cart Items:", cartItems);
+  // First, fix the initial states
+  const [selectedPortion, setSelectedPortion] = useState(null); // Start with null instead of assuming a portion ID
 
-  // Track quantities for all portions
-  const [quantities, setQuantities] = useState(() => {
-    const initial = {};
-    modalConfig.data?.portions?.forEach((portion) => {
-      const cartItem = cartItems.find(
-        (item) =>
-          item.menuId === modalConfig.data?.menuId &&
-          item.portionId === portion.portion_id
-      );
-      initial[portion.portion_id] = cartItem?.quantity || 1;
-    });
-    return initial;
+  // Initialize quantities with empty object
+  const [quantities, setQuantities] = useState({});
+
+  // Initialize menuDetails
+  const [menuDetails, setMenuDetails] = useState({
+    portions: []
   });
 
   // Track comments for all portions
@@ -43,13 +37,6 @@ export const AddToCartModal = () => {
     return initial;
   });
 
-  const [selectedPortion, setSelectedPortion] = useState(
-    modalConfig.data?.portions?.[0]?.portion_id
-  );
-
-  console.log("Initial Selected Portion:", selectedPortion);
-  console.log("Initial Quantities:", quantities);
-
   // Check if item exists in cart
   const isInCart = cartItems.some(
     (item) => item.menuId === modalConfig.data?.menuId
@@ -65,11 +52,6 @@ export const AddToCartModal = () => {
 
   // Update quantity when portion changes
   const handlePortionChange = (portionId) => {
-    console.log("Portion Change:", {
-      from: selectedPortion,
-      to: portionId,
-    });
-
     setSelectedPortion(portionId);
 
     // Set quantity to 1 if it's 0 or undefined
@@ -102,13 +84,6 @@ export const AddToCartModal = () => {
       setShowAuthOffcanvas(true); // Show auth modal
       return;
     }
-
-    console.log("Quantity Change:", {
-      currentQuantity: quantities[selectedPortion],
-      newQuantity: newQuantity,
-      selectedPortion: selectedPortion,
-      isInCart,
-    });
 
     const finalQuantity = Math.max(0, newQuantity);
     setQuantities((prev) => ({
@@ -174,14 +149,6 @@ export const AddToCartModal = () => {
       return;
     }
 
-    console.log("Final Cart Update:", {
-      menuData: modalConfig.data,
-      selectedPortion: selectedPortion,
-      quantity: quantities[selectedPortion],
-      comment: comments[selectedPortion],
-      isInCart,
-    });
-
     // Only add/update the selected portion if we have valid data
     if (selectedPortion && quantities[selectedPortion] > 0) {
       // Ensure modalConfig.data has all required fields
@@ -211,12 +178,7 @@ export const AddToCartModal = () => {
     return Object.values(quantities).some((quantity) => quantity > 0);
   };
 
-  // Initialize menuDetails with modalConfig.data instead of null
-  const [menuDetails, setMenuDetails] = useState({
-    portions: modalConfig.data?.portions || [],
-  });
-
-  // Update the useEffect to silently update the UI
+  // Update the useEffect to properly handle the API response
   useEffect(() => {
     const fetchMenuDetails = async () => {
       try {
@@ -240,38 +202,44 @@ export const AddToCartModal = () => {
         if (response.data?.detail?.menu_detail) {
           const newPortions = response.data.detail.menu_detail.portions.map(portion => ({
             ...portion,
-            price: parseFloat(portion.price) || 0 // Ensure valid price
+            price: parseFloat(portion.price) || 0
           }));
 
+          // Set the first portion as selected if none is selected
+          if (!selectedPortion && newPortions.length > 0) {
+            setSelectedPortion(newPortions[0].portion_id);
+          }
+
+          // Initialize quantities for new portions
+          setQuantities(prev => {
+            const newQuantities = { ...prev };
+            newPortions.forEach(portion => {
+              if (!(portion.portion_id in newQuantities)) {
+                const cartItem = cartItems.find(
+                  item => item.menuId === modalConfig.data?.menuId && 
+                         item.portionId === portion.portion_id
+                );
+                newQuantities[portion.portion_id] = cartItem?.quantity || 1;
+              }
+            });
+            return newQuantities;
+          });
+
+          // Update menuDetails
           setMenuDetails(prev => ({
             ...prev,
             portions: newPortions
           }));
-
-          // Update quantities and comments only if they don't exist
-          const updated = { ...prev };
-          newPortions.forEach((portion) => {
-            if (!(portion.portion_id in updated)) {
-              const cartItem = cartItems.find(
-                (item) =>
-                  item.menuId === modalConfig.data?.menuId &&
-                  item.portionId === portion.portion_id
-              );
-              updated[portion.portion_id] = cartItem?.quantity || 1;
-            }
-          });
-          return updated;
         }
       } catch (err) {
-        // Just log the error without updating UI
-        console.error("Error fetching menu details:", err);
+        console.error("API Error:", err);
       }
     };
 
     if (modalConfig.data?.menuId || modalConfig.data?.menu_id) {
       fetchMenuDetails();
     }
-  }, [modalConfig.data, cartItems, getAccessToken, outletId, selectedPortion]);
+  }, [modalConfig.data, cartItems, getAccessToken, outletId]); // Remove selectedPortion from dependencies
 
   // Add state for dropdown
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -305,6 +273,9 @@ export const AddToCartModal = () => {
       );
     }
 
+    // Find the selected portion object
+    const selectedPortionObj = portions.find(p => p.portion_id === selectedPortion);
+
     return (
       <div className="position-relative">
         <div
@@ -316,16 +287,8 @@ export const AddToCartModal = () => {
           }}
         >
           <span>
-            {selectedPortion && portions.length > 0
-              ? `${portions.find((p) => p.portion_id === selectedPortion)?.portion_name 
-                  ? `${portions.find((p) => p.portion_id === selectedPortion)?.portion_name} - ` 
-                  : ''}₹${portions.find((p) => p.portion_id === selectedPortion)?.price} (${
-                    portions.find((p) => p.portion_id === selectedPortion)?.unit_value
-                  }${
-                    portions.find((p) => p.portion_id === selectedPortion)?.unit_type 
-                      ? ` ${portions.find((p) => p.portion_id === selectedPortion)?.unit_type}` 
-                      : ''
-                  })`
+            {selectedPortionObj
+              ? `${selectedPortionObj.portion_name} - ₹${selectedPortionObj.price} (${selectedPortionObj.unit_value}${selectedPortionObj.unit_type ? ` ${selectedPortionObj.unit_type}` : ''})`
               : "Select a portion size"}
           </span>
           <i
@@ -395,11 +358,20 @@ export const AddToCartModal = () => {
         <label className="text-secondary mb-2 d-flex justify-content-between align-items-center">
           <span style={{ fontSize: "14px" }}>
             Special Instructions for{" "}
-            {
-              menuDetails?.portions?.find(
-                (p) => p.portion_id === selectedPortion
-              )?.portion_name
-            }
+            {(() => {
+              if (!selectedPortion || !menuDetails?.portions?.length) {
+                return "selected portion";
+              }
+
+              const portion = menuDetails.portions.find(p => p.portion_id === selectedPortion);
+
+              if (!portion) {
+                return "selected portion";
+              }
+
+              const label = `${portion.portion_name || ''} (${portion.unit_value}${portion.unit_type ? ` ${portion.unit_type}` : ''})`;
+              return label;
+            })()}
           </span>
           <small
             style={{
