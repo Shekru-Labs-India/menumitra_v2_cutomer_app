@@ -12,6 +12,7 @@ import { useAuth } from "../contexts/AuthContext";
 import LazyImage from "../components/Shared/LazyImage";
 import apiService from "../api/apiService";
 import { useMenuItems } from '../hooks/useMenuItems';
+import TripleSlider from '../components/TripleSlider/TripleSlider';
 
 // Import Swiper styles
 import "swiper/css";
@@ -267,56 +268,79 @@ function ProductDetail() {
       <Header />
       <div className="page-content">
         <div className="content-body bottom-content">
-          <div className="swiper-btn-center-lr my-0">
-            <Swiper
-              modules={[Pagination, Autoplay]}
-              pagination={{
-                el: ".swiper-pagination",
-                clickable: true,
-              }}
-              autoplay={{
-                delay: 3000,
-                disableOnInteraction: false,
-              }}
-              className="demo-swiper swiper-initialized swiper-horizontal swiper-pointer-events swiper-watch-progress swiper-backface-hidden"
-            >
-              {(menuDetails.images?.length ? menuDetails.images : [null]).map(
-                (image, index) => (
-                  <SwiperSlide
-                    key={index}
-                    role="group"
-                    aria-label={`${index + 1} / ${menuDetails.images?.length || 1}`}
-                    className={index === 0 ? "swiper-slide-visible swiper-slide-active" : ""}
-                  >
-                    <div className="dz-banner-heading">
-                      <div className="overlay-black-light">
-                        {image ? (
-                          <LazyImage
-                            src={image}
-                            alt={`${menuDetails.menu_name} image ${index + 1}`}
-                            className="bnr-img"
-                            aspectRatio="16/9"
-                            blur={true}
-                          />
-                        ) : (
-                          <div
-                            className="bnr-img d-flex justify-content-center align-items-center border border-2 border-light-subtle"
-                            style={{ aspectRatio: "16/9" }}
-                          >
-                            <i className="fa-solid fa-utensils font-100 opacity-50 text-muted"></i>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </SwiperSlide>
-                )
+          {/* Comment out or remove the existing code:
+<div className="swiper-btn-center-lr my-0">
+  <Swiper
+    modules={[Pagination, Autoplay]}
+    pagination={{
+      el: ".swiper-pagination",
+      clickable: true,
+    }}
+    autoplay={{
+      delay: 3000,
+      disableOnInteraction: false,
+    }}
+    className="demo-swiper swiper-initialized swiper-horizontal swiper-pointer-events swiper-watch-progress swiper-backface-hidden"
+  >
+    {(menuDetails.images?.length ? menuDetails.images : [null]).map(
+      (image, index) => (
+        <SwiperSlide
+          key={index}
+          role="group"
+          aria-label={`${index + 1} / ${menuDetails.images?.length || 1}`}
+          className={index === 0 ? "swiper-slide-visible swiper-slide-active" : ""}
+        >
+          <div className="dz-banner-heading">
+            <div className="overlay-black-light">
+              {image ? (
+                <LazyImage
+                  src={image}
+                  alt={`${menuDetails.menu_name} image ${index + 1}`}
+                  className="bnr-img"
+                  aspectRatio="16/9"
+                  blur={true}
+                />
+              ) : (
+                <div
+                  className="bnr-img d-flex justify-content-center align-items-center border border-2 border-light-subtle"
+                  style={{ aspectRatio: "16/9" }}
+                >
+                  <i className="fa-solid fa-utensils font-100 opacity-50 text-muted"></i>
+                </div>
               )}
-              <div className="swiper-btn">
-                <div className="swiper-pagination style-2 flex-1"></div>
-              </div>
-              <span className="swiper-notification" aria-live="assertive" aria-atomic="true"></span>
-            </Swiper>
+            </div>
           </div>
+        </SwiperSlide>
+      )
+    )}
+    <div className="swiper-btn">
+      <div className="swiper-pagination style-2 flex-1"></div>
+    </div>
+    <span className="swiper-notification" aria-live="assertive" aria-atomic="true"></span>
+  </Swiper>
+</div>
+*/}
+
+{/* Add the new TripleSlider implementation */}
+<TripleSlider
+  slides={
+    menuDetails.images?.length
+      ? menuDetails.images.map((image, index) => ({
+          backgroundImage: image, // This should be the direct image URL
+          title: menuDetails.menu_name,
+          // Remove overlayImage since we don't need it for this use case
+        }))
+      : [{
+          backgroundImage: 'https://via.placeholder.com/800x450', // Default image
+          title: menuDetails.menu_name,
+        }]
+  }
+  autoplayDelay={3000}
+  pauseOnHover={true}
+  loop={menuDetails.images?.length > 1} // Only loop if there are multiple images
+  speed={800}
+  className="product-detail-slider"
+/>
 
           <div className="account-box style-1">
             <div className="container p-b60">
