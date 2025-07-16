@@ -304,7 +304,7 @@ const OrderAccordionItem = ({
     try {
       const auth = JSON.parse(localStorage.getItem("auth")) || {};
       const accessToken = auth.accessToken;
-      const userId = auth.userId || "73";
+      const userId = auth.userId;
 
       if (!accessToken) {
         console.error("Authentication token not found");
@@ -365,6 +365,13 @@ const OrderAccordionItem = ({
             >
               <div className="d-flex align-items-center gap-2 mb-0">
                 <h6 className="mb-0">#{orderNumber}</h6>
+                
+              {/* Status below only if not paid/cancelled */}
+              {paymentStatus !== "Paid" && status !== "Cancelled" && (
+                <p className="mb-0 text-muted" style={{ fontSize: "12px" }}>
+                  ({status})
+                </p>
+              )}
                 {/* Status badge next to order number */}
                 {paymentStatus === "Paid" ? (
                   <span
@@ -410,12 +417,6 @@ const OrderAccordionItem = ({
               <p className="mb-0 text-muted" style={{ fontSize: "12px" }}>
                 {orderType} • {itemCount} Menu
               </p>
-              {/* Status below only if not paid/cancelled */}
-              {paymentStatus !== "Paid" && status !== "Cancelled" && (
-                <p className="mb-0 text-muted" style={{ fontSize: "12px" }}>
-                  {status}
-                </p>
-              )}
             </div>
             <div className="text-end">
               <p className="mb-0 text-muted" style={{ fontSize: "12px" }}>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
@@ -16,34 +16,22 @@ import { OrderTypeModal } from "../components/Modal/variants/OrderTypeModal";
 import { useModal } from "../contexts/ModalContext";
 import OutletInfoBanner from "../components/OutletInfoBanner";
 import SearchBar from "../components/SearchBar";
-import axios from "axios";
+import apiService from "../api/apiService";
 import OfferBanner from "./OfferBanner";
-
-const API_BASE_URL = "https://men4u.xyz/v2";
-
-// Create axios instance with default config
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-  },
-});
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Autoplay, Pagination } from "swiper/modules";
+import "swiper/css/bundle"; // This includes all Swiper styles
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import "swiper/css/effect-fade";
+import "swiper/css/autoplay";
 
 // Helper function to get auth data
 const getAuthData = () => {
   const authData = localStorage.getItem("auth");
   return authData ? JSON.parse(authData) : null;
 };
-
-// Add request interceptor to handle auth token
-api.interceptors.request.use((config) => {
-  const userData = getAuthData();
-  if (userData?.accessToken) {
-    config.headers.Authorization = `Bearer ${userData.accessToken}`;
-  }
-  return config;
-});
 
 // Helper to extract outlet params from the path
 function extractOutletParamsFromPath(pathname) {
@@ -63,40 +51,293 @@ function extractOutletParamsFromPath(pathname) {
   return null;
 }
 
+// Update the bannerData array
+const bannerData = [
+  {
+    id: 1,
+    imageUrl: "https://men4u.xyz/v2/media/menu_images/mm_images_70143.jpg",
+    title: "Special Offer",
+    discount: "20% OFF",
+    textColor: "#FFFFFF", // Changed to white for better visibility on image
+    description: "*on Selected Items"
+  },
+  {
+    id: 2,
+    imageUrl: "https://men4u.xyz/v2/media/menu_images/mm_images_70143.jpg",
+    title: "Lunch Special",
+    discount: "30% OFF",
+    textColor: "#FFFFFF",
+    description: "*12PM to 3PM"
+  },
+  {
+    id: 3,
+    imageUrl: "https://men4u.xyz/v2/media/menu_images/mm_images_70143.jpg",
+    title: "Happy Hours",
+    discount: "25% OFF",
+    textColor: "#FFFFFF",
+    description: "*on Beverages"
+  },
+  {
+    id: 4,
+    imageUrl: "https://men4u.xyz/v2/media/menu_images/mm_images_70143.jpg",
+    title: "Weekend Special",
+    discount: "40% OFF",
+    textColor: "#FFFFFF",
+    description: "*Saturday & Sunday"
+  },
+  {
+    id: 5,
+    imageUrl: "https://men4u.xyz/v2/media/menu_images/mm_images_70143.jpg",
+    title: "First Order",
+    discount: "50% OFF",
+    textColor: "#FFFFFF",
+    description: "*New Customers Only"
+  }
+];
+
+const styles = {
+  swiperContainer: {
+    position: 'relative',
+    width: '100%',
+    height: '100%',
+    overflow: 'hidden'
+  },
+  slide: {
+    position: 'relative',
+    width: '100%',
+    height: '300px' // Adjust height as needed
+  },
+  slideImage: {
+    width: '100%',
+    height: '300px',
+    objectFit: 'cover'
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.4)'
+  },
+  content: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    textAlign: 'center',
+    color: '#FFFFFF',
+    width: '100%',
+    padding: '0 20px'
+  },
+  title: {
+    fontSize: '1.25rem',
+    marginBottom: '0.5rem',
+    fontWeight: '500'
+  },
+  discount: {
+    fontSize: '2.5rem',
+    fontWeight: 'bold',
+    marginBottom: '0.5rem'
+  },
+  description: {
+    fontSize: '0.875rem',
+    opacity: '0.9'
+  },
+  navigation: {
+    button: {
+      position: 'absolute',
+      top: '50%',
+      transform: 'translateY(-50%)',
+      zIndex: 10,
+      width: '40px',
+      height: '40px',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      cursor: 'pointer',
+      boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+    },
+    icon: {
+      color: '#666'
+    }
+  },
+  pagination: {
+    position: 'absolute',
+    bottom: '10px',
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    zIndex: 10
+  }
+};
+
 function Home() {
-  const { menuItems, isLoading } = useMenuItems();
+  // Keep core hooks and context values
+  const { menuItems, menuCategories, isLoading } = useMenuItems();
   const { cartItems } = useCart();
-  const { orderSettings, isOutletOnlyUrl } = useOutlet();
-  const [specialMenuItems, setSpecialMenuItems] = useState([]);
+  const { orderSettings, isOutletOnlyUrl, outletId } = useOutlet();
+  const { getUserId } = useAuth();
+  const { openModal } = useModal();
   const navigate = useNavigate();
-  const [favoriteMenuIds, setFavoriteMenuIds] = useState(new Set());
   const location = useLocation();
 
-  const { outletId } = useOutlet();
-  const { openModal } = useModal();
-
-  const [filteredMenuItems, setFilteredMenuItems] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
+  // Essential state that can't be derived
+  const [favoriteMenuIds, setFavoriteMenuIds] = useState(new Set());
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [visibleMenuCount, setVisibleMenuCount] = useState(10);
+  const [activeMenuFilter, setActiveMenuFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState(""); // New: track search query
+  const [isSearching, setIsSearching] = useState(false);
 
-  const [categoriesData, setCategoriesData] = useState({
-    categories: [],
-    menusByCategory: {},
+  // Add QueryClient
+  const queryClient = useQueryClient();
+  const userId = getUserId();
+
+  // Add favorite mutations with optimistic updates
+  const toggleFavorite = useMutation({
+    mutationFn: async ({ menuId, isFavorite }) => {
+      try {
+        // Add flag to prevent duplicate calls
+        if (toggleFavorite.mutationFn.isRunning) {
+          return null;
+        }
+        toggleFavorite.mutationFn.isRunning = true;
+
+        if (isFavorite) {
+          return apiService.favorites.add({ outletId, userId, menuId });
+        } else {
+          return apiService.favorites.remove({ outletId, userId, menuId });
+        }
+      } finally {
+        toggleFavorite.mutationFn.isRunning = false;
+      }
+    },
+    onMutate: async ({ menuId, isFavorite }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries(["specialMenus", outletId, userId]);
+      
+      // Snapshot the previous value
+      const previousData = queryClient.getQueryData([
+        "specialMenus",
+        outletId,
+        userId,
+      ]);
+      
+      // Optimistically update the UI
+      queryClient.setQueryData(["specialMenus", outletId, userId], (old) => {
+        if (!old) return old;
+        return old.map((menu) =>
+          menu.menu_id === menuId 
+            ? { ...menu, is_favourite: isFavorite ? 1 : 0 }
+            : menu
+        );
+      });
+      
+      return { previousData };
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      queryClient.setQueryData(
+        ["specialMenus", outletId, userId],
+        context.previousData
+      );
+    },
+    onSettled: () => {
+      // Refetch after error or success
+      queryClient.invalidateQueries(["specialMenus", outletId, userId]);
+    },
   });
 
-  const [activeMenuFilter, setActiveMenuFilter] = useState("all"); // "all", "special", "offer"
+  // IMPROVEMENT: Use useMemo for categoriesData instead of useState + useEffect
+  // This prevents unnecessary recalculations and removes a source of render loops
+  const categoriesData = useMemo(() => {
+    if (!menuItems || !menuCategories) {
+      return { categories: [], menusByCategory: {} };
+    }
 
-  // Add state for lazy loading
-  const [visibleMenuCount, setVisibleMenuCount] = useState(10);
+    const menusByCategory = {};
+    let totalMenuCount = 0;
 
-  // Reset visibleMenuCount when filters/search/category changes
+    menuItems.forEach((menu) => {
+      if (!menusByCategory[menu.menuCatId]) {
+        menusByCategory[menu.menuCatId] = [];
+      }
+      menusByCategory[menu.menuCatId].push(menu);
+      totalMenuCount++;
+    });
+
+    const allCategory = {
+      menuCatId: "all",
+      categoryName: "All",
+      menuCount: totalMenuCount,
+    };
+
+    return {
+      categories: [allCategory, ...menuCategories],
+      menusByCategory,
+    };
+  }, [menuItems, menuCategories]); // Only recompute when menu data changes
+
+  // IMPROVEMENT: Use useMemo for filtered menus instead of useState + useEffect
+  // This eliminates the need for filteredMenuItems state and its update effects
+  const filteredMenus = useMemo(() => {
+    if (!menuItems) return [];
+
+    // First apply category filter
+    let filtered =
+      selectedCategoryId === "all" || !selectedCategoryId
+      ? menuItems
+        : categoriesData.menusByCategory[selectedCategoryId] || [];
+
+    // Then apply search if active
+    if (isSearching && searchQuery) {
+      filtered = filtered.filter((item) =>
+        item.menuName.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Finally apply special/offer filter
+    if (activeMenuFilter === "special") {
+      filtered = filtered.filter(
+        (item) => item.isSpecial === true || item.isSpecial === 1
+      );
+    } else if (activeMenuFilter === "offer") {
+      filtered = filtered.filter((item) => Number(item.offer) > 0);
+    }
+
+    return filtered;
+  }, [
+    menuItems,
+    selectedCategoryId,
+    searchQuery,
+    isSearching,
+    activeMenuFilter,
+    categoriesData.menusByCategory,
+  ]);
+
+  // IMPROVEMENT: Use useMemo for visible menus to prevent recalculation on every render
+  const visibleMenus = useMemo(() => {
+    return filteredMenus.slice(0, visibleMenuCount);
+  }, [filteredMenus, visibleMenuCount]);
+
+  // One-time effect to set default category
+  useEffect(() => {
+    if (categoriesData.categories.length > 0 && selectedCategoryId === null) {
+      setSelectedCategoryId("all");
+    }
+  }, [categoriesData.categories.length]);
+
+  // Reset visible count when filters change
   useEffect(() => {
     setVisibleMenuCount(10);
-  }, [filteredMenuItems, isSearching, selectedCategoryId, activeMenuFilter]);
+  }, [selectedCategoryId, activeMenuFilter, searchQuery]);
 
   // Helper for lazy loading
   const getVisibleMenus = () => {
-    return getFilteredMenus().slice(0, visibleMenuCount);
+    return filteredMenus.slice(0, visibleMenuCount);
   };
 
   const handleLoadMoreMenus = () => {
@@ -143,9 +384,18 @@ function Home() {
     // Will implement cart functionality later
   };
 
-  const handleFavoriteClick = (menuId) => {
-    console.log("Toggle favorite:", menuId);
-    // Will implement favorite functionality later
+  // Update the handleFavoriteClick function
+  const handleFavoriteClick = async (menuId, isFavorite) => {
+    if (!userId) {
+      // Handle unauthenticated users - maybe show login modal
+      return;
+    }
+    
+    try {
+      await toggleFavorite.mutateAsync({ menuId, isFavorite: !isFavorite });
+    } catch (error) {
+      console.error("Failed to update favorite status:", error);
+    }
   };
 
   const handleQuantityChange = (menuId, newQuantity) => {
@@ -159,86 +409,20 @@ function Home() {
     return cartItem ? cartItem.quantity : 0;
   };
 
-  // Refactored fetchSpecialMenuItems using axios
-  const fetchSpecialMenuItems = async () => {
-    console.log("🔄 Fetching special menu items...");
-    try {
-      const userData = getAuthData();
-      const userId = userData?.userId || null;
-      console.log("📦 Using outlet ID:", outletId);
-
-      // Add a guard clause
-      if (!outletId) {
-        console.log("❌ No outletId available, skipping special menu fetch");
-        return;
-      }
-
-      const { data } = await api.post("/user/get_special_menu_list", {
-        user_id: userId,
-        outlet_id: outletId,
-        app_source: "user_app",
-      });
-
-      if (data.detail && data.detail.special_menu_list) {
-        console.log(
-          "✨ Setting special menu items:",
-          data.detail.special_menu_list
-        );
-        setSpecialMenuItems(data.detail.special_menu_list);
-      }
-    } catch (error) {
-      console.error(
-        "❌ Error fetching special menu items:",
-        error.response?.data || error.message
-      );
-    }
-  };
-
-  // Instead, only use the effect that depends on outletId
-  useEffect(() => {
-    if (outletId) {
-      // Only fetch if we have an outletId
-      console.log("🏁 OutletId available, fetching special menu items...");
-      fetchSpecialMenuItems();
-    } else {
-      console.log(
-        "⏳ Waiting for outletId before fetching special menu items..."
-      );
-    }
-  }, [outletId]); // Depend on outletId
-
-  // Add this function to handle favorite updates
-  const handleFavoriteUpdate = (menuId, isFavorite) => {
-    setFavoriteMenuIds((prevIds) => {
-      const newIds = new Set(prevIds);
-      if (isFavorite) {
-        newIds.add(menuId);
-      } else {
-        newIds.delete(menuId);
-      }
-      return newIds;
-    });
-    // Update filteredMenuItems so isFavourite persists
-    setFilteredMenuItems((prev) =>
-      prev.map((item) =>
-        item.menuId === menuId || item.menu_id === menuId
-          ? { ...item, isFavourite: isFavorite ? 1 : 0 }
-          : item
-      )
-    );
-  };
-
-  const outletParams = extractOutletParamsFromPath(location.pathname);
-
-  useEffect(() => {
-    if (outletParams) {
-      console.log("Extracted outlet params:", outletParams);
-      // You can use outletParams.outletCode, etc. for your API calls here
-      // Optionally, update context or localStorage if needed
-    } else {
-      console.log("No outlet params found in path:", location.pathname);
-    }
-  }, [location.pathname]);
+  // // Special menus query remains unchanged
+  // const {
+  //   data: specialMenuItems = [],
+  //   isLoading: isSpecialMenusLoading,
+  //   error: specialMenusError,
+  // } = useQuery({
+  //   queryKey: ["specialMenus", outletId, userId],
+  //   queryFn: async () => {
+  //     if (!outletId) return [];
+  //     const data = await apiService.menus.getSpecialMenus({ outletId, userId });
+  //     return data?.special_menu_list || [];
+  //   },
+  //   enabled: !!outletId,
+  // });
 
   // Only show modal on outlet-only URL if no order type is set
   useEffect(() => {
@@ -247,130 +431,46 @@ function Home() {
     }
   }, [isOutletOnlyUrl, orderSettings.order_type]);
 
-  // Add this handler function
+  // Handler functions remain the same but are simplified
   const handleSearch = (searchResults) => {
-    setIsSearching(searchResults.length > 0);
-    setFilteredMenuItems(searchResults);
+    setSearchQuery(searchResults.query || ""); // Store the query
+    setIsSearching(!!searchResults.length);
   };
 
-  // Refactored fetchMenuListByCategory using axios
-  const fetchMenuListByCategory = async () => {
-    try {
-      const { data } = await api.post("/user/get_all_menu_list_by_category", {
-        outlet_id: outletId,
-        app_source: "user_app",
+  // Add this at the component level
+  const [swiperInstance, setSwiperInstance] = useState(null);
+
+  // Update the Swiper component with detailed logging
+  useEffect(() => {
+    if (swiperInstance) {
+      console.log("=== Swiper Instance State ===");
+      console.log("Is Swiper mounted:", swiperInstance.mounted);
+      console.log("Is Swiper initialized:", swiperInstance.initialized);
+      console.log("Current breakpoint:", swiperInstance.currentBreakpoint);
+      console.log("Current parameters:", swiperInstance.params);
+      console.log("DOM elements:", {
+        wrapper: swiperInstance.wrapperEl,
+        navigation: {
+          nextEl: swiperInstance.navigation?.nextEl,
+          prevEl: swiperInstance.navigation?.prevEl
+        },
+        pagination: swiperInstance.pagination?.el
       });
 
-      if (data.detail) {
-        // Transform the data into a more usable format
-        const menusByCategory = {};
-        let totalMenuCount = 0; // Initialize total menu count
-
-        if (data.detail.menus) {
-          data.detail.menus.forEach((menu) => {
-            if (!menusByCategory[menu.menu_cat_id]) {
-              menusByCategory[menu.menu_cat_id] = [];
-            }
-            menusByCategory[menu.menu_cat_id].push({
-              menuId: menu.menu_id,
-              menuName: menu.menu_name,
-              menuFoodType: menu.menu_food_type,
-              menuCatId: menu.menu_cat_id,
-              categoryName: menu.category_name,
-              spicyIndex: menu.spicy_index,
-              portions: menu.portions,
-              rating: menu.rating,
-              price: menu.price,
-              offer: menu.offer,
-              isSpecial: menu.is_special,
-              isFavourite: menu.is_favourite,
-              isActive: menu.is_active,
-              image:
-                Array.isArray(menu.images) && menu.images.length > 0
-                  ? menu.images[0].image
-                  : null,
-              imageId:
-                Array.isArray(menu.images) && menu.images.length > 0
-                  ? menu.images[0].image_id
-                  : null,
-            });
-            totalMenuCount++; // Increment total count for each menu item
-          });
-        }
-
-        // Transform categories data
-        const categories = data.detail.category.map((cat) => ({
-          menuCatId: cat.menu_cat_id,
-          categoryName: cat.category_name,
-          menuCount: cat.menu_count,
-        }));
-
-        // Add "All" category at the beginning
-        const allCategory = {
-          menuCatId: "all",
-          categoryName: "All",
-          menuCount: totalMenuCount,
-        };
-        categories.unshift(allCategory);
-
-        setCategoriesData({
-          categories: categories,
-          menusByCategory: menusByCategory,
-        });
-
-        // Set initial filtered menu items to all menus from all categories
-        setFilteredMenuItems(data.detail.menus || []);
+      // Check for potential issues
+      const issues = [];
+      if (!swiperInstance.mounted) issues.push("Swiper not mounted");
+      if (!swiperInstance.initialized) issues.push("Swiper not initialized");
+      if (!swiperInstance.navigation?.nextEl) issues.push("Next button not found");
+      if (!swiperInstance.navigation?.prevEl) issues.push("Prev button not found");
+      if (!swiperInstance.pagination?.el) issues.push("Pagination not found");
+      
+      if (issues.length > 0) {
+        console.warn("=== Swiper Issues Detected ===");
+        issues.forEach(issue => console.warn(`- ${issue}`));
       }
-    } catch (error) {
-      console.error(
-        "❌ Error fetching menu list by category:",
-        error.response?.data || error.message
-      );
     }
-  };
-
-  // Add this effect to fetch menu list when outletId changes
-  useEffect(() => {
-    if (outletId) {
-      fetchMenuListByCategory();
-    }
-  }, [outletId]);
-
-  // Filter menu items based on selected category
-  useEffect(() => {
-    if (selectedCategoryId === "all") {
-      // Display all menus if "All" is selected
-      const allMenus = Object.values(categoriesData.menusByCategory).flat();
-      setFilteredMenuItems(allMenus);
-    } else if (selectedCategoryId) {
-      // Display menus for the selected category
-      setFilteredMenuItems(
-        categoriesData.menusByCategory[selectedCategoryId] || []
-      );
-    } else if (
-      categoriesData.categories.length > 0 &&
-      selectedCategoryId === null
-    ) {
-      // If no category is selected initially, default to "All" (first category)
-      setSelectedCategoryId("all");
-    }
-  }, [
-    selectedCategoryId,
-    categoriesData.menusByCategory,
-    categoriesData.categories,
-  ]);
-
-  const getFilteredMenus = () => {
-    if (activeMenuFilter === "special") {
-      return filteredMenuItems.filter(
-        (item) => item.isSpecial === true || item.isSpecial === 1
-      );
-    }
-    if (activeMenuFilter === "offer") {
-      return filteredMenuItems.filter((item) => Number(item.offer) > 0);
-    }
-    return filteredMenuItems;
-  };
+  }, [swiperInstance]);
 
   return (
     <>
@@ -379,13 +479,93 @@ function Home() {
         <div className="page-content">
           <div className=" pt-0">
             <div className="container p-b40 p-t0">
-              {/* <SearchBar onSearch={handleSearch} menuItems={menuItems || []} /> */}
 
-              {/* Outlet Info Banner (Hotel Name, etc.) */}
-              {/* <OutletInfoBanner /> */}
+              <div className="">
+                <div className="swiper-btn-center-lr position-relative my-0 py-0">
+                  <Swiper
+                    modules={[Navigation, Pagination, Autoplay]}
+                    slidesPerView={1}
+                    spaceBetween={10}
+                    loop={true}
+                    autoplay={{
+                      delay: 3000,
+                      disableOnInteraction: true,
+                    }}
+                    breakpoints={{
+                      // Bootstrap breakpoints
+                      576: { slidesPerView: 1 },
+                      768: { slidesPerView: 2 },
+                      992: { slidesPerView: 3 },
+                      1200: { slidesPerView: 4 }
+                    }}
+               
+                    // style={{
+                    //   // padding: '10px 0',
+                    //   position: 'relative',
+                    //   overflow: 'hidden'
+                    // }}
+                  >
+                  
 
-              {/* Offer Banner Swiper - Inserted here */}
-              <OfferBanner />
+                    {/* Slides */}
+                    {bannerData.map((banner) => (
+                      <SwiperSlide 
+                        key={banner.id}
+                        style={{
+                          padding: '15px',
+                          borderRadius: '12px',
+                          boxSizing: 'border-box',
+                        }}
+                      >
+                        <div 
+                          className="card h-100 border-0 shadow-sm"
+                          style={{
+                            borderRadius: '8px',
+                            overflow: 'hidden',
+                            height: '100%'
+                          }}
+                        >
+                          <div 
+                            className="position-relative"
+                            style={{
+                              paddingTop: '56.25%', // 16:9 aspect ratio
+                              overflow: 'hidden'
+                            }}
+                          >
+                            <img 
+                              src={banner.imageUrl} 
+                              alt={banner.title}
+                              className="position-absolute top-0 start-0 w-100 h-100"
+                              style={{
+                                objectFit: 'cover',
+                              }}
+                            />
+                            {/* Overlay with gradient */}
+                            <div 
+                              className="position-absolute top-0 start-0 w-100 h-100"
+                              style={{
+                                background: 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.6))'
+                              }}
+                            ></div>s
+                          </div>
+                        </div>
+                      </SwiperSlide>
+                    ))}
+
+                    {/* Pagination */}
+                    <div 
+                      className="swiper-pagination"
+                      style={{
+                        position: 'absolute',
+                        bottom: '10px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        zIndex: 10
+                      }}
+                    ></div>
+                  </Swiper>
+                </div>
+              </div>
 
               <div
                 className="title-bar d-flex justify-content-between align-items-center"
@@ -520,8 +700,8 @@ function Home() {
                     </div>
                   ))
                 ) : isSearching ? (
-                  filteredMenuItems.length > 0 ? (
-                    getVisibleMenus().map((menuItem) => (
+                  filteredMenus.length > 0 ? (
+                    visibleMenus.map((menuItem) => (
                       <div className="col-6" key={menuItem.menuId}>
                         <VerticalMenuCard
                           image={
@@ -541,7 +721,7 @@ function Home() {
                             menuItem.offer > 0 ? `${menuItem.offer}%` : null
                           }
                           menuItem={menuItem}
-                          onFavoriteUpdate={handleFavoriteUpdate}
+                          onFavoriteUpdate={handleFavoriteClick}
                         />
                       </div>
                     ))
@@ -551,7 +731,7 @@ function Home() {
                     </div>
                   )
                 ) : (
-                  getVisibleMenus().map((menuItem) => (
+                  visibleMenus.map((menuItem) => (
                     <div className="col-6" key={menuItem.menuId}>
                       <VerticalMenuCard
                         image={
@@ -568,20 +748,20 @@ function Home() {
                         }
                         isFavorite={
                           favoriteMenuIds.has(menuItem.menuId) ||
-                          menuItem.isFavourite === 1
+                          menuItem.is_favourite === 1
                         }
                         discount={
                           menuItem.offer > 0 ? `${menuItem.offer}%` : null
                         }
                         menuItem={menuItem}
-                        onFavoriteUpdate={handleFavoriteUpdate}
+                        onFavoriteUpdate={handleFavoriteClick}
                       />
                     </div>
                   ))
                 )}
               </div>
               {/* Lazy Load Button */}
-              {getFilteredMenus().length > visibleMenuCount && (
+              {filteredMenus.length > visibleMenuCount && (
                 <div className="text-center mb-4">
                   <button
                     className="btn btn-outline-primary px-4 py-2"
@@ -608,204 +788,6 @@ function Home() {
                   ))}
                 </div>
               )}
-
-              {/* Special Menus Section */}
-              {(specialMenuItems && specialMenuItems.length > 0) ||
-              isLoading ? (
-                <>
-                  <div className="title-bar mt-4">
-                    <span className="title mb-0 font-18">Special Menus</span>
-                  </div>
-                  <div className="categories-box p-0 m-0">
-                    {specialMenuItems && specialMenuItems.length > 0 ? (
-                      <div className="horizontal-menu-container">
-                        {specialMenuItems.map((menuItem) => (
-                          <div
-                            key={menuItem.menu_id}
-                            className="horizontal-menu-card"
-                          >
-                            <HorizontalMenuCard
-                              image={
-                                menuItem.image ? (
-                                  menuItem.image
-                                ) : (
-                                  <i
-                                    className="fa-solid fa-utensils"
-                                    style={{
-                                      fontSize: 56,
-                                      opacity: 0.15,
-                                      color: "#888",
-                                    }}
-                                  ></i>
-                                )
-                              }
-                              title={menuItem.menu_name}
-                              currentPrice={
-                                menuItem.portions && menuItem.portions[0]
-                                  ? menuItem.portions[0].price
-                                  : 0
-                              }
-                              reviewCount={
-                                menuItem.rating
-                                  ? parseFloat(menuItem.rating)
-                                  : null
-                              }
-                              isFavorite={menuItem.is_favourite === 1}
-                              discount={
-                                menuItem.offer > 0 ? `${menuItem.offer}%` : null
-                              }
-                              menuItem={{
-                                menuId: menuItem.menu_id,
-                                menuCatId: menuItem.menu_cat_id,
-                                menuName: menuItem.menu_name,
-                                menuFoodType: menuItem.menu_food_type,
-                                categoryName: menuItem.category_name,
-                                spicyIndex: menuItem.spicy_index,
-                                portions: menuItem.portions,
-                                rating: menuItem.rating,
-                                offer: menuItem.offer,
-                                isSpecial: menuItem.is_special,
-                                isFavourite: menuItem.is_favourite === 1,
-                                isActive: true,
-                                image: menuItem.image,
-                                outletName: menuItem.outlet_name,
-                                outletId: menuItem.outlet_id,
-                              }}
-                              onFavoriteUpdate={handleFavoriteClick}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    ) : isLoading ? (
-                      // Skeleton loader with horizontal scrolling
-                      <div className="horizontal-menu-container">
-                        {[...Array(4)].map((_, index) => (
-                          <div
-                            key={`skeleton-${index}`}
-                            className="horizontal-menu-card"
-                          >
-                            <div
-                              style={{
-                                borderRadius: "16px",
-                                overflow: "hidden",
-                                backgroundColor: "#fff",
-                                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                                display: "flex",
-                                height: "120px",
-                              }}
-                            >
-                              {/* Image Section */}
-                              <div
-                                style={{
-                                  width: "120px",
-                                  position: "relative",
-                                  flexShrink: 0,
-                                }}
-                              >
-                                <Skeleton
-                                  height="100%"
-                                  width="100%"
-                                  baseColor="#C8C8C8"
-                                  highlightColor="#E0E0E0"
-                                  style={{
-                                    position: "absolute",
-                                    top: 0,
-                                    left: 0,
-                                    borderRadius: "16px 0 0 16px",
-                                  }}
-                                />
-                                {/* Discount Badge */}
-                                <div
-                                  style={{
-                                    position: "absolute",
-                                    top: "8px",
-                                    left: "8px",
-                                    zIndex: 1,
-                                  }}
-                                >
-                                  <Skeleton
-                                    height={20}
-                                    width={40}
-                                    baseColor="#C8C8C8"
-                                    highlightColor="#E0E0E0"
-                                    style={{ borderRadius: "10px" }}
-                                  />
-                                </div>
-                              </div>
-
-                              {/* Content Section */}
-                              <div
-                                style={{
-                                  flex: 1,
-                                  padding: "12px",
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  justifyContent: "space-between",
-                                }}
-                              >
-                                {/* Top Section */}
-                                <div>
-                                  {/* Title */}
-                                  <Skeleton
-                                    height={20}
-                                    width="80%"
-                                    baseColor="#C8C8C8"
-                                    highlightColor="#E0E0E0"
-                                    style={{ marginBottom: "8px" }}
-                                  />
-
-                                  {/* Price */}
-                                  <div
-                                    className="d-flex align-items-center"
-                                    style={{ gap: "8px" }}
-                                  >
-                                    <Skeleton
-                                      height={16}
-                                      width={60}
-                                      baseColor="#C8C8C8"
-                                      highlightColor="#E0E0E0"
-                                    />
-                                    <Skeleton
-                                      height={16}
-                                      width={40}
-                                      baseColor="#C8C8C8"
-                                      highlightColor="#E0E0E0"
-                                      style={{ opacity: 0.5 }}
-                                    />
-                                  </div>
-                                </div>
-
-                                {/* Bottom Section */}
-                                <div className="d-flex justify-content-between align-items-center">
-                                  {/* Favorite Button */}
-                                  <Skeleton
-                                    circle
-                                    height={32}
-                                    width={32}
-                                    baseColor="#C8C8C8"
-                                    highlightColor="#E0E0E0"
-                                  />
-
-                                  {/* Add/Remove Buttons */}
-                                  <div style={{ display: "flex", gap: "8px" }}>
-                                    <Skeleton
-                                      height={32}
-                                      width={80}
-                                      baseColor="#C8C8C8"
-                                      highlightColor="#E0E0E0"
-                                      style={{ borderRadius: "8px" }}
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                </>
-              ) : null}
             </div>
           </div>
         </div>

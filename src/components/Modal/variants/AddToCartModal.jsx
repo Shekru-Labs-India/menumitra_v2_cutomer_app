@@ -12,21 +12,15 @@ export const AddToCartModal = () => {
   const { user, setShowAuthOffcanvas, getAccessToken } = useAuth();
   const { outletId } = useOutlet();
 
-  console.log("Modal Config Data:", modalConfig.data);
-  console.log("Current Cart Items:", cartItems);
+  // First, fix the initial states
+  const [selectedPortion, setSelectedPortion] = useState(null); // Start with null instead of assuming a portion ID
 
-  // Track quantities for all portions
-  const [quantities, setQuantities] = useState(() => {
-    const initial = {};
-    modalConfig.data?.portions?.forEach((portion) => {
-      const cartItem = cartItems.find(
-        (item) =>
-          item.menuId === modalConfig.data?.menuId &&
-          item.portionId === portion.portion_id
-      );
-      initial[portion.portion_id] = cartItem?.quantity || 1;
-    });
-    return initial;
+  // Initialize quantities with empty object
+  const [quantities, setQuantities] = useState({});
+
+  // Initialize menuDetails
+  const [menuDetails, setMenuDetails] = useState({
+    portions: []
   });
 
   // Track comments for all portions
@@ -43,13 +37,6 @@ export const AddToCartModal = () => {
     return initial;
   });
 
-  const [selectedPortion, setSelectedPortion] = useState(
-    modalConfig.data?.portions?.[0]?.portion_id
-  );
-
-  console.log("Initial Selected Portion:", selectedPortion);
-  console.log("Initial Quantities:", quantities);
-
   // Check if item exists in cart
   const isInCart = cartItems.some(
     (item) => item.menuId === modalConfig.data?.menuId
@@ -65,11 +52,6 @@ export const AddToCartModal = () => {
 
   // Update quantity when portion changes
   const handlePortionChange = (portionId) => {
-    console.log("Portion Change:", {
-      from: selectedPortion,
-      to: portionId,
-    });
-
     setSelectedPortion(portionId);
 
     // Set quantity to 1 if it's 0 or undefined
@@ -102,13 +84,6 @@ export const AddToCartModal = () => {
       setShowAuthOffcanvas(true); // Show auth modal
       return;
     }
-
-    console.log("Quantity Change:", {
-      currentQuantity: quantities[selectedPortion],
-      newQuantity: newQuantity,
-      selectedPortion: selectedPortion,
-      isInCart,
-    });
 
     const finalQuantity = Math.max(0, newQuantity);
     setQuantities((prev) => ({
@@ -174,18 +149,21 @@ export const AddToCartModal = () => {
       return;
     }
 
-    console.log("Final Cart Update:", {
-      menuData: modalConfig.data,
-      selectedPortion: selectedPortion,
-      quantity: quantities[selectedPortion],
-      comment: comments[selectedPortion],
-      isInCart,
-    });
-
-    // Only add/update the selected portion
+    // Only add/update the selected portion if we have valid data
     if (selectedPortion && quantities[selectedPortion] > 0) {
+      // Ensure modalConfig.data has all required fields
+      const menuItemData = {
+        ...modalConfig.data,
+        menuId: modalConfig.data.menuId || modalConfig.data.menu_id,
+        menuName: modalConfig.data.menuName || modalConfig.data.menu_name,
+        menu_cat_id: modalConfig.data.menu_cat_id || modalConfig.data.category_id,
+        category_name: modalConfig.data.category_name,
+        offer: modalConfig.data.offer, // This will be undefined if not present
+        portions: menuDetails.portions || modalConfig.data.portions, // Use updated portions if available
+      };
+
       addToCart(
-        modalConfig.data,
+        menuItemData,
         Number(selectedPortion),
         quantities[selectedPortion],
         comments[selectedPortion] || ""
@@ -200,12 +178,7 @@ export const AddToCartModal = () => {
     return Object.values(quantities).some((quantity) => quantity > 0);
   };
 
-  // Initialize menuDetails with modalConfig.data instead of null
-  const [menuDetails, setMenuDetails] = useState({
-    portions: modalConfig.data?.portions || [],
-  });
-
-  // Update the useEffect to silently update the UI
+  // Update the useEffect to properly handle the API response
   useEffect(() => {
     const fetchMenuDetails = async () => {
       try {
@@ -216,6 +189,7 @@ export const AddToCartModal = () => {
           {
             outlet_id: outletId,
             menu_id: modalConfig.data?.menuId || modalConfig.data?.menu_id,
+            app_source: "user_app",
           },
           {
             headers: {
@@ -226,57 +200,46 @@ export const AddToCartModal = () => {
         );
 
         if (response.data?.detail?.menu_detail) {
-          // Silently update the state without affecting the UI
-          setMenuDetails(response.data.detail.menu_detail);
+          const newPortions = response.data.detail.menu_detail.portions.map(portion => ({
+            ...portion,
+            price: parseFloat(portion.price) || 0
+          }));
 
-          // Update quantities and comments only if they don't exist
-          const newPortions = response.data.detail.menu_detail.portions;
-
-          setQuantities((prev) => {
-            const updated = { ...prev };
-            newPortions.forEach((portion) => {
-              if (!(portion.portion_id in updated)) {
-                const cartItem = cartItems.find(
-                  (item) =>
-                    item.menuId === modalConfig.data?.menuId &&
-                    item.portionId === portion.portion_id
-                );
-                updated[portion.portion_id] = cartItem?.quantity || 1;
-              }
-            });
-            return updated;
-          });
-
-          setComments((prev) => {
-            const updated = { ...prev };
-            newPortions.forEach((portion) => {
-              if (!(portion.portion_id in updated)) {
-                const cartItem = cartItems.find(
-                  (item) =>
-                    item.menuId === modalConfig.data?.menuId &&
-                    item.portionId === portion.portion_id
-                );
-                updated[portion.portion_id] = cartItem?.comment || "";
-              }
-            });
-            return updated;
-          });
-
-          // Only set selected portion if none is selected
+          // Set the first portion as selected if none is selected
           if (!selectedPortion && newPortions.length > 0) {
             setSelectedPortion(newPortions[0].portion_id);
           }
+
+          // Initialize quantities for new portions
+          setQuantities(prev => {
+            const newQuantities = { ...prev };
+            newPortions.forEach(portion => {
+              if (!(portion.portion_id in newQuantities)) {
+                const cartItem = cartItems.find(
+                  item => item.menuId === modalConfig.data?.menuId && 
+                         item.portionId === portion.portion_id
+                );
+                newQuantities[portion.portion_id] = cartItem?.quantity || 1;
+              }
+            });
+            return newQuantities;
+          });
+
+          // Update menuDetails
+          setMenuDetails(prev => ({
+            ...prev,
+            portions: newPortions
+          }));
         }
       } catch (err) {
-        // Just log the error without updating UI
-        console.error("Error fetching menu details:", err);
+        console.error("API Error:", err);
       }
     };
 
     if (modalConfig.data?.menuId || modalConfig.data?.menu_id) {
       fetchMenuDetails();
     }
-  }, [modalConfig.data, cartItems, getAccessToken, outletId, selectedPortion]);
+  }, [modalConfig.data, cartItems, getAccessToken, outletId]); // Remove selectedPortion from dependencies
 
   // Add state for dropdown
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -300,15 +263,9 @@ export const AddToCartModal = () => {
     if (portions.length === 0) {
       return (
         <div
-          className="form-control d-flex justify-content-between align-items-center"
+          className="form-control d-flex justify-content-between align-items-center border border-2 rounded-3 p-3 fs-6 text-dark disabled"
           style={{
-            border: "1.5px solid #e9ecef",
-            borderRadius: "12px",
-            padding: "12px 16px",
-            fontSize: "14px",
-            backgroundColor: "#f8f9fa",
-            color: "#6c757d",
-            cursor: "not-allowed",
+            cursor: "not-allowed"
           }}
         >
           <span>No portion sizes available</span>
@@ -316,50 +273,36 @@ export const AddToCartModal = () => {
       );
     }
 
+    // Find the selected portion object
+    const selectedPortionObj = portions.find(p => p.portion_id === selectedPortion);
+
     return (
       <div className="position-relative">
         <div
-          className="form-control d-flex justify-content-between align-items-center"
+          className="form-control d-flex justify-content-between align-items-center rounded-3 p-3 fs-6 text-dark user-select-none"
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           style={{
             border: "1.5px solid #e9ecef",
-            borderRadius: "12px",
-            padding: "12px 16px",
-            fontSize: "14px",
-            cursor: "pointer",
-            backgroundColor: "white",
-            color: "#212529",
-            userSelect: "none",
+            cursor: "pointer"
           }}
         >
           <span>
-            {selectedPortion && portions.length > 0
-              ? `${
-                  portions.find((p) => p.portion_id === selectedPortion)
-                    ?.portion_name
-                } - ₹${
-                  portions.find((p) => p.portion_id === selectedPortion)?.price
-                } (${
-                  portions.find((p) => p.portion_id === selectedPortion)
-                    ?.unit_value
-                })`
+            {selectedPortionObj
+              ? `${selectedPortionObj.portion_name} - ₹${selectedPortionObj.price} (${selectedPortionObj.unit_value}${selectedPortionObj.unit_type ? ` ${selectedPortionObj.unit_type}` : ''})`
               : "Select a portion size"}
           </span>
           <i
-            className={`fas fa-chevron-${isDropdownOpen ? "up" : "down"}`}
-            style={{ color: "#6c757d" }}
+            className={`fas fa-chevron-${isDropdownOpen ? "up" : "down"} text-secondary`}
           ></i>
         </div>
 
         {isDropdownOpen && portions.length > 0 && (
           <div
-            className="position-absolute w-100 mt-1 shadow-sm"
+            className="position-absolute w-100 mt-1 shadow-sm bg-transparent rounded-3 border"
             style={{
-              backgroundColor: "white",
-              borderRadius: "12px",
               border: "1.5px solid #e9ecef",
               zIndex: 1000,
-              overflow: "hidden",
+              overflow: "hidden"
             }}
           >
             {portions.map((portion) => (
@@ -369,34 +312,28 @@ export const AddToCartModal = () => {
                   handlePortionChange(portion.portion_id);
                   setIsDropdownOpen(false);
                 }}
-                className="d-flex justify-content-between align-items-center"
+                className={`d-flex justify-content-between align-items-center p-3 border-bottom bg-light`}
                 style={{
-                  padding: "12px 16px",
                   cursor: "pointer",
-                  backgroundColor:
-                    selectedPortion === portion.portion_id
-                      ? "#f8fff8"
-                      : "white",
-                  borderBottom: "1px solid #e9ecef",
-                  transition: "all 0.2s ease",
+                  transition: "all 0.2s ease"
                 }}
               >
                 <div className="d-flex flex-column">
                   <span
                     style={{
-                      fontSize: "14px",
-                      color: "#212529",
-                      fontWeight:
-                        selectedPortion === portion.portion_id
-                          ? "500"
-                          : "normal",
+                      color: "#212529"
                     }}
+                    className={`fs-6 ${
+                      selectedPortion === portion.portion_id ? "fw-medium" : "fw-normal"
+                    }`}
                   >
-                    {`${portion.portion_name} - ₹${portion.price} (${portion.unit_value})`}
+                    {`${portion.portion_name ? `${portion.portion_name} - ` : ''}₹${portion.price} (${
+                      portion.unit_value
+                    }${portion.unit_type ? ` ${portion.unit_type}` : ''})`}
                   </span>
                 </div>
                 {selectedPortion === portion.portion_id && (
-                  <i className="fas fa-check" style={{ color: "#28a745" }}></i>
+                  <i className="fas fa-check text-success"></i>
                 )}
               </div>
             ))}
@@ -421,11 +358,20 @@ export const AddToCartModal = () => {
         <label className="text-secondary mb-2 d-flex justify-content-between align-items-center">
           <span style={{ fontSize: "14px" }}>
             Special Instructions for{" "}
-            {
-              menuDetails?.portions?.find(
-                (p) => p.portion_id === selectedPortion
-              )?.portion_name
-            }
+            {(() => {
+              if (!selectedPortion || !menuDetails?.portions?.length) {
+                return "selected portion";
+              }
+
+              const portion = menuDetails.portions.find(p => p.portion_id === selectedPortion);
+
+              if (!portion) {
+                return "selected portion";
+              }
+
+              const label = `${portion.portion_name || ''} (${portion.unit_value}${portion.unit_type ? ` ${portion.unit_type}` : ''})`;
+              return label;
+            })()}
           </span>
           <small
             style={{
@@ -495,12 +441,18 @@ export const AddToCartModal = () => {
         {/* Comment textarea */}
         <div className="position-relative">
           <div className="d-flex justify-content-end mb-1">
-            <span className="text-muted small">
+            <span className="text-muted small me-2">
               {comments[selectedPortion]?.length || 0}/50
             </span>
           </div>
           <textarea
-            className="form-control"
+            className={`form-control rounded-3 p-3 fs-6 ${
+              comments[selectedPortion]?.length < 5 && comments[selectedPortion]?.length > 0
+                ? "border-danger"
+                : comments[selectedPortion]?.length > 50
+                ? "border-danger"
+                : "border-light"
+            }`}
             value={comments[selectedPortion] || ""}
             onChange={(e) => handleCommentChange(e.target.value)}
             placeholder={`Add instructions for ${
@@ -509,23 +461,11 @@ export const AddToCartModal = () => {
               )?.portion_name
             } portion...`}
             style={{
-              border: `1.5px solid ${
-                comments[selectedPortion]?.length < 5 &&
-                comments[selectedPortion]?.length > 0
-                  ? "#dc3545"
-                  : comments[selectedPortion]?.length > 50
-                  ? "#dc3545"
-                  : "#e9ecef"
-              }`,
-              borderRadius: "12px",
-              padding: "12px",
               paddingRight: "60px",
-              fontSize: "14px",
               minHeight: "60px",
               maxHeight: "120px",
               resize: "vertical",
-              backgroundColor: "#f8f9fa",
-              transition: "all 0.2s ease",
+              transition: "all 0.2s ease"
             }}
             onFocus={(e) => {
               if (comments[selectedPortion]?.length <= 50) {
@@ -541,28 +481,18 @@ export const AddToCartModal = () => {
             }}
           />
 
-          {/* Clear button */}
-          {comments[selectedPortion] && (
+          {/* {comments[selectedPortion] && (
             <button
               onClick={() => handleCommentChange("")}
-              className="d-flex align-items-center gap-1"
+              className="position-absolute end-0 top-0 mt-2 me-2 btn btn-light btn-sm rounded-pill"
               style={{
-                position: "absolute",
-                right: "12px",
-                top: "12px",
-                background: "#f1f3f5",
-                border: "1px solid #e9ecef",
-                borderRadius: "16px",
-                padding: "4px 8px",
-                color: "#6c757d",
-                cursor: "pointer",
                 fontSize: "12px",
-                zIndex: 2,
+                zIndex: 2
               }}
             >
               Clear
             </button>
-          )}
+          )} */}
         </div>
 
         {/* Validation message */}

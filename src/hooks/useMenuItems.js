@@ -1,96 +1,107 @@
-import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOutlet } from '../contexts/OutletContext';
-
-const API_BASE_URL = 'https://men4u.xyz/v2';
+import apiService from '../api/apiService';
 
 export const useMenuItems = () => {
-  const [menuCategories, setMenuCategories] = useState([]);
-  const [menuItems, setMenuItems] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
   const { outletId } = useOutlet();
+  const queryClient = useQueryClient();
 
-  const fetchMenusByCategory = async () => {
-    if (!outletId) {
-      console.log('No outlet ID available, skipping menu fetch');
-      return;
-    }
+  // Main query for menu items
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['menuItems', outletId],
+    queryFn: async () => {
+      if (!outletId) return null;
+      const data = await apiService.common.getAllMenuListByCategory({ outletId });
+      
+      if (!data) return null;
 
-    console.log('🔄 Fetching menu items for outlet:', outletId);
-    try {
-      const authData = localStorage.getItem('auth');
-      const userData = authData ? JSON.parse(authData) : null;
-
-      const response = await fetch(`${API_BASE_URL}/user/get_all_menu_list_by_category`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${userData?.accessToken}`
-        },
-        body: JSON.stringify({
-          outlet_id: outletId,
-          user_id: userData?.userId || null,
-          app_source: "user_app",
-        })
-      });
-
-      const data = await response.json();
-      console.log('✅ Menu API Response:', data);
-
-      if (data.detail) {
-        // Update categories
-        const categories = data.detail.category?.map(category => ({
+      return {
+        categories: data.category?.map(category => ({
           menuCatId: category.menu_cat_id,
           categoryName: category.category_name,
           menuCount: category.menu_count
-        })) || [];
-
-        // Update menu items
-        const menus = data.detail.menus?.map(menu => ({
+        })) || [],
+        menus: data.menus?.map(menu => ({
           menuId: menu.menu_id,
           menuName: menu.menu_name,
           menuFoodType: menu.menu_food_type,
-          outletId: 1,
+          outletId: menu.outlet_id,
           menuCatId: menu.menu_cat_id,
           categoryName: menu.category_name,
           spicyIndex: menu.spicy_index,
-          portions: menu.portions,
-          price: menu.price,
+          portions: menu.portions?.map(portion => ({
+            portion_id: portion.portion_id || Math.random().toString(36).substr(2, 9),
+            portion_name: portion.portion_name,
+            price: portion.price,
+            unit_value: portion.unit_value,
+            unit_type: portion.unit_type
+          })),
+          price: menu.portions?.[0]?.price ?? 0,
           rating: menu.rating,
           offer: menu.offer,
           isSpecial: menu.is_special,
-          isFavourite: menu.is_favourite,
+          is_favourite: menu.is_favourite,
+          isFavourite: menu.is_favourite === 1,
           isActive: menu.is_active,
-          image: menu.image
-        })) || [];
+          image: menu.images?.[0]?.image
+        })) || []
+      };
+    },
+    enabled: !!outletId
+  });
 
-        // console.log('✨ Formatted categories:', categories);
-        // console.log('✨ Formatted menu items:', menus);
-
-        setMenuCategories(categories);
-        setMenuItems(menus);
+  // Add mutation for favorite toggle
+  const toggleFavoriteMutation = useMutation({
+    mutationFn: async ({ menuId, isFavorite, userId }) => {
+      if (isFavorite) {
+        return await apiService.favorites.remove({ outletId, userId, menuId });
+      } else {
+        return await apiService.favorites.add({ outletId, userId, menuId });
       }
-    } catch (error) {
-      console.error('❌ Error fetching menu data:', error);
-      setError(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    onMutate: async ({ menuId, isFavorite }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['menuItems', outletId] });
 
-  useEffect(() => {
-    if (outletId) {
-      console.log('🏁 OutletId changed, fetching menu data...');
-      fetchMenusByCategory();
+      // Snapshot the previous value
+      const previousData = queryClient.getQueryData(['menuItems', outletId]);
+
+      // Optimistically update the menu item
+      queryClient.setQueryData(['menuItems', outletId], (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          menus: old.menus.map(menu => 
+            menu.menuId === menuId 
+              ? {
+                  ...menu,
+                  is_favourite: !isFavorite ? 1 : 0,
+                  isFavourite: !isFavorite
+                }
+              : menu
+          )
+        };
+      });
+
+      return { previousData };
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      queryClient.setQueryData(['menuItems', outletId], context.previousData);
+    },
+    onSettled: () => {
+      // Refetch after error or success
+      queryClient.invalidateQueries(['menuItems', outletId]);
     }
-  }, [outletId]); // Depend on outletId
+  });
 
   return {
-    menuCategories,
-    menuItems,
+    menuCategories: data?.categories || [],
+    menuItems: data?.menus || [],
     isLoading,
     error,
-    refetch: fetchMenusByCategory
+    refetch,
+    toggleFavorite: toggleFavoriteMutation.mutate,
+    isFavoriteLoading: toggleFavoriteMutation.isLoading
   };
 };

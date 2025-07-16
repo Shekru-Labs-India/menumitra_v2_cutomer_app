@@ -1,11 +1,75 @@
 import React, { useState, useRef, useEffect } from "react";
 
-const QuickFilters = ({ onFilterChange }) => {
+const QuickFilters = ({ onFilterChange, menuList }) => {
   const [activeFilters, setActiveFilters] = useState({
     type: null,
     price: null,
     spicy: null,
   });
+
+  // Add this effect to handle initial filtering
+  useEffect(() => {
+    if (menuList && menuList.length > 0) {
+      filterMenus(activeFilters);
+    }
+  }, [menuList]); // Re-run when menuList changes
+
+  // Separate the filtering logic into its own function
+  const filterMenus = (filters) => {
+    if (!menuList) return [];
+    
+    let filtered = [...menuList];
+
+    // Type filter - check menu_food_type
+    if (filters.type && filters.type !== "all") {
+      filtered = filtered.filter(
+        (menu) => menu.menu_food_type.toLowerCase() === filters.type.toLowerCase()
+      );
+    }
+
+    // Price filter - use first portion's price
+    if (filters.price && filters.price !== "all") {
+      filtered = filtered.filter((menu) => {
+        // Get the first portion's price
+        const price = menu.portions[0]?.price || 0;
+        
+        switch (filters.price) {
+          case "50":
+            return price <= 50;
+          case "100":
+            return price <= 100;
+          case "200":
+            return price <= 200;
+          case "500":
+            return price <= 500;
+          case "1000":
+            return price <= 1000;
+          case "above1000":
+            return price > 1000;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Spicy filter - check spicy_index
+    if (filters.spicy && filters.spicy !== "all") {
+      filtered = filtered.filter((menu) => {
+        switch (filters.spicy) {
+          case "low":
+            return menu.spicy_index === "1";
+          case "medium":
+            return menu.spicy_index === "2";
+          case "high":
+            return menu.spicy_index === "3";
+          default:
+            return true;
+        }
+      });
+    }
+
+    return filtered;
+  };
 
   // Add state to track which dropdown is open
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -102,13 +166,13 @@ const QuickFilters = ({ onFilterChange }) => {
   ];
 
   const priceOptions = [
-    { id: "all", label: "All Prices", icon: "₹" },
-    { id: "50", label: "Under ₹50", icon: "₹" },
-    { id: "100", label: "Under ₹100", icon: "₹" },
-    { id: "200", label: "Under ₹200", icon: "₹" },
-    { id: "500", label: "Under ₹500", icon: "₹" },
-    { id: "1000", label: "Under ₹1000", icon: "₹" },
-    { id: "above1000", label: "Above ₹1000", icon: "₹" },
+    { id: "all", label: "All", buttonLabel: "All" },
+    { id: "50", label: "Under ₹50", buttonLabel: "₹50", icon: "₹" },
+    { id: "100", label: "Under ₹100", buttonLabel: "₹100", icon: "₹" },
+    { id: "200", label: "Under ₹200", buttonLabel: "₹200", icon: "₹" },
+    { id: "500", label: "Under ₹500", buttonLabel: "₹500", icon: "₹" },
+    { id: "1000", label: "Under ₹1000", buttonLabel: "₹1000", icon: "₹" },
+    { id: "above1000", label: "Above ₹1000", buttonLabel: "₹1000+", icon: "₹" },
   ];
 
   const spicyOptions = [
@@ -190,14 +254,17 @@ const QuickFilters = ({ onFilterChange }) => {
     },
   ];
 
+  // Modify handleFilterClick to use the new filtering function
   const handleFilterClick = (filterType, value) => {
     const newFilters = {
       ...activeFilters,
       [filterType]: activeFilters[filterType] === value ? null : value,
     };
     setActiveFilters(newFilters);
-    onFilterChange(newFilters);
-    setOpenDropdown(null); // Close dropdown after selection
+
+    // Apply filters and send results back to parent
+    const filteredResults = filterMenus(newFilters);
+    onFilterChange(filteredResults);
   };
 
   const getButtonIcon = (type) => {
@@ -228,13 +295,16 @@ const QuickFilters = ({ onFilterChange }) => {
     }
   };
 
+  // Modify the getButtonLabel function
   const getButtonLabel = (type, options, activeValue) => {
     if (!activeValue || activeValue === "all") {
-      return type; // Show default type name if no selection or 'all' is selected
+      // Return "All" instead of the type name when "all" is selected
+      const allOption = options.find(opt => opt.id === "all");
+      return allOption?.label || type;
     }
     const selectedOption = options.find((opt) => opt.id === activeValue);
-    // Return only the label text without the icon
-    return selectedOption?.label || type;
+    // Use buttonLabel if available, otherwise fall back to label
+    return selectedOption?.buttonLabel || selectedOption?.label || type;
   };
 
   const handleDropdownToggle = (dropdownName, isOpen) => {
@@ -268,44 +338,84 @@ const QuickFilters = ({ onFilterChange }) => {
             <div className="dropdown">
               <button
                 type="button"
-                className={`btn rounded-pill d-flex align-items-center gap-1 px-3 py-2 shadow-none border-0"
-                  style={{ background: '#ededed', color: '#22A45D', fontWeight: 500 }}
-                  dropdown-toggle ${
-                    activeValue && activeValue !== "all"
-                      ? "btn-success"
-                      : "btn-outline-success"
-                  }`}
+                className={`btn rounded-pill d-flex align-items-center gap-2 px-3 py-2 ${
+                  activeValue && activeValue !== "all"
+                    ? "filter-active"
+                    : "filter-default"
+                }`}
+                style={{
+                  border: activeValue && activeValue !== "all"
+                    ? "1.5px solid #22A45D"
+                    : "1.5px solid #eaeaea",
+                  minWidth: "110px",
+                  transition: "all 0.2s ease",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  boxShadow: activeValue && activeValue !== "all"
+                    ? "0 2px 8px rgba(34, 164, 93, 0.12)"
+                    : "0 1px 2px rgba(0, 0, 0, 0.04)",
+                }}
                 data-bs-toggle="dropdown"
                 aria-expanded={openDropdown === dropdownType}
                 onClick={(e) => {
                   e.preventDefault();
-                  handleDropdownToggle(
-                    dropdownType,
-                    openDropdown !== dropdownType
-                  );
+                  handleDropdownToggle(dropdownType, openDropdown !== dropdownType);
                 }}
               >
                 {getButtonIcon(type)}
-                <span style={{ color: "#22A45D" }}>
+                <span style={{
+                  color: activeValue && activeValue !== "all"
+                    ? "#22A45D"
+                    : "#555555",
+                }}>
                   {getButtonLabel(type, options, activeValue)}
                 </span>
+                <i 
+                  className="fas fa-chevron-down ms-1" 
+                  style={{ 
+                    fontSize: "10px",
+                    opacity: 0.6,
+                    transform: openDropdown === dropdownType ? "rotate(180deg)" : "rotate(0)",
+                    transition: "transform 0.2s ease"
+                  }}
+                />
               </button>
+
               <div
-                className={`dropdown-menu ${
+                className={`dropdown-menu shadow-sm border-0 mt-2 ${
                   openDropdown === dropdownType ? "show" : ""
                 }`}
+                style={{
+                  borderRadius: "16px",
+                  padding: "6px",
+                  minWidth: "160px",
+                  animation: "dropdownFade 0.2s ease",
+                }}
               >
                 {options.map((option) => (
                   <a
                     key={option.id}
-                    className={`dropdown-item ${
+                    className={`dropdown-item rounded-pill ${
                       activeValue === option.id ? "active" : ""
                     }`}
+                    style={{
+                      padding: "8px 16px",
+                      margin: "2px 0",
+                      display: "flex",
+                      alignItems: "center",
+                      color: activeValue === option.id ? "#22A45D" : "#555555",
+                      backgroundColor: activeValue === option.id ? "#F0F9F4" : "transparent",
+                      transition: "all 0.15s ease",
+                    }}
                     href="javascript:void(0);"
                     onClick={() => handleFilterClick(dropdownType, option.id)}
                   >
-                    <span className="me-2">{option.icon}</span>
-                    {option.label}
+                    <span className="me-2" style={{ opacity: 0.9 }}>{option.icon}</span>
+                    <span style={{ 
+                      fontWeight: activeValue === option.id ? "500" : "400"
+                    }}>
+                      {option.label}
+                    </span>
                   </a>
                 ))}
               </div>
@@ -315,6 +425,38 @@ const QuickFilters = ({ onFilterChange }) => {
       </div>
     );
   };
+
+  // Add these styles to your CSS
+  const styles = `
+    .filter-active {
+      background-color: #F7FBF9 !important;
+    }
+
+    .filter-default {
+      background-color: white !important;
+    }
+
+    .dropdown-item:hover {
+      background-color: #F8F8F8 !important;
+      color: #22A45D !important;
+    }
+
+    @keyframes dropdownFade {
+      from {
+        opacity: 0;
+        transform: translateY(-5px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  `;
+
+  // Add the styles to the document
+  const styleSheet = document.createElement("style");
+  styleSheet.innerText = styles;
+  document.head.appendChild(styleSheet);
 
   return (
     <div className="d-flex gap-2">

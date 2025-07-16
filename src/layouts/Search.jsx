@@ -10,10 +10,18 @@ import { debounce } from "lodash"; // Make sure to install lodash
 import { useOutlet } from "../contexts/OutletContext";
 import QuickFilters from "../components/QuickFilters";
 import axios from "axios";
+import apiService from "../api/apiService";
+import { useQuery } from '@tanstack/react-query';
 
 function Search() {
-  const [searchResults, setSearchResults] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  // Add this at the start of the component, with other useEffects
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = styles;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
+
   const [error, setError] = useState(null);
   const [showFilter, setShowFilter] = useState(false);
   const [activeFilters, setActiveFilters] = useState(null);
@@ -21,6 +29,8 @@ function Search() {
   const [searchInputValue, setSearchInputValue] = useState("");
   const [originalSearchResults, setOriginalSearchResults] = useState([]);
   const [hasSearched, setHasSearched] = useState(false);
+  const [searchResults, setSearchResults] = useState([]); // Keep this state
+  const [filteredResults, setFilteredResults] = useState([]); // Add this state ONCE
 
   const searchInputRef = useRef(null);
 
@@ -123,148 +133,48 @@ function Search() {
     []
   );
 
-  // Modified handleSearch to handle the specific API response format
-  const handleSearch = async (searchTerm) => {
+  // Tanstack Query: only run when refetch() is called
+  const {
+    data: searchData,
+    isLoading,
+    error: searchError,
+    refetch,
+    isFetching,
+  } = useQuery({
+    queryKey: ['searchMenus', outletId, userId, searchInputValue.trim()],
+    queryFn: () =>
+      apiService.menus.searchMenus({
+        outletId,
+        userId,  // Make sure userId is passed
+        keyword: searchInputValue.trim(),
+      }),
+    enabled: false,
+    // staleTime: 5 * 60 * 1000,
+    keepPreviousData: true,
+  });
+
+  // Update searchResults when searchData changes
+  useEffect(() => {
+    if (searchData?.detail?.menu_list) {
+      setSearchResults(searchData.detail.menu_list);
+      setFilteredResults([]); // Reset filtered results when new search happens
+    }
+  }, [searchData]);
+
+  // Only trigger search on Enter or search icon
+  const handleSearch = async () => {
     setHasSearched(true);
-    if (!searchTerm || searchTerm.trim().length === 0) {
-      // Fetch all menus when search term is empty
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const payload = {
-          outlet_id: outletId,
-          app_source: "user_app",
-        };
-
-        if (userId) {
-          payload.user_id = userId;
-        
-        }
-
-        const response = await axios({
-          method: "POST",
-          url: "https://men4u.xyz/v2/user/search_menu",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          data: payload,
-        });
-
-        if (
-          response.data &&
-          response.data.detail &&
-          Array.isArray(response.data.detail.menu_list)
-        ) {
-          const menuList = response.data.detail.menu_list;
-          setOriginalSearchResults(menuList);
-          setSearchResults(menuList);
-        } else {
-          setOriginalSearchResults([]);
-          setSearchResults([]);
-          setError("No menu items available at the moment.");
-        }
-      } catch (err) {
-        console.error("Search error:", err);
-        setError("Menu Not Found");
-        setOriginalSearchResults([]);
-        setSearchResults([]);
-      } finally {
-        setIsLoading(false);
-      }
-      return;
-    }
-
-    setIsLoading(true);
     setError(null);
-
-    try {
-      const payload = {
-        outlet_id: outletId,
-        keyword: searchTerm.trim(),
-        app_source: "user_app",
-      };
-
-      if (userId) {
-        payload.user_id = userId;
-      }
-
-      const response = await axios({
-        method: "POST",
-        url: "https://men4u.xyz/v2/user/search_menu",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        data: payload,
-      });
-
-      // Handle the specific API response format
-      if (
-        response.data &&
-        response.data.detail &&
-        Array.isArray(response.data.detail.menu_list)
-      ) {
-        const menuList = response.data.detail.menu_list;
-
-        if (menuList.length > 0) {
-          setOriginalSearchResults(menuList);
-          setSearchResults(menuList);
-          debouncedUpdateRecentSearches(searchTerm, menuList);
-        } else {
-          setOriginalSearchResults([]);
-          setSearchResults([]);
-          setError("No menu items found matching your search.");
-        }
-      } else {
-        setOriginalSearchResults([]);
-        setSearchResults([]);
-        setError("No menu items available at the moment.");
-      }
-    } catch (err) {
-      console.error("Search error:", err);
-
-      // Handle different error scenarios
-      if (err.response) {
-        // API returned an error response
-        const errorMessage =
-          err.response.data?.message ||
-          err.response.data?.detail?.message ||
-          "Unable to find menu items. Please try again.";
-        setError(errorMessage);
-      } else if (err.request) {
-        // Network error
-        setError(
-          "Unable to connect to the server. Please check your internet connection and try again."
-        );
-      } else {
-        // Other errors
-        setError(
-          "Something went wrong while searching. Please try again later."
-        );
-      }
-
-      setOriginalSearchResults([]);
-      setSearchResults([]);
-    } finally {
-      setIsLoading(false);
-    }
+    const { error: queryError } = await refetch();
+    if (queryError) setError(queryError);
   };
 
-  // Modified handleSearchChange
+  // Input change handler (does NOT trigger search)
   const handleSearchChange = (event) => {
-    const searchTerm = event.target.value;
-    setSearchInputValue(searchTerm); // Update the input value state
-
-    // If user clears the search, show empty state without error
-    if (!searchTerm || searchTerm.trim() === "") {
-      setSearchResults([]);
-      setOriginalSearchResults([]);
-      setError(null);
-      setIsLoading(false);
-      return;
+    setSearchInputValue(event.target.value);
+    if (!event.target.value.trim()) {
+      setHasSearched(false); // Reset search state if input is cleared
     }
-
-    handleSearch(searchTerm);
   };
 
   // Modified handleRecentSearchClick
@@ -321,8 +231,23 @@ function Search() {
     }
   };
 
-  const handleFavoriteClick = (menuId) => {
-    // Implement favorite toggle logic
+  const handleFavoriteClick = async (menuId, isFavorite) => {
+    if (!userId) {
+      // setShowAuthOffcanvas(true); // This state is not defined in the original file
+      return;
+    }
+
+    try {
+      if (isFavorite) {
+        await apiService.favorites.remove({ outletId, userId, menuId });
+      } else {
+        await apiService.favorites.add({ outletId, userId, menuId });
+      }
+      // Refetch search results to get updated is_favourite status
+      refetch();
+    } catch (error) {
+      console.error("Failed to update favorite status:", error);
+    }
   };
 
   // Add this helper function
@@ -339,8 +264,7 @@ function Search() {
 
   // Modified handleApplyFilter to filter locally
   const handleApplyFilter = (filters) => {
-    setIsLoading(true);
-    setActiveFilters(filters);
+    setError(null);
 
     try {
       let filteredResults = [...originalSearchResults]; // Start with original results
@@ -390,12 +314,11 @@ function Search() {
         ); // Assuming this property exists
       }
 
-      setSearchResults(filteredResults);
+      // setSearchResults(filteredResults); // This line is removed
     } catch (err) {
       setError(err.message);
-      setSearchResults(originalSearchResults); // Reset to original results on error
+      // setSearchResults(originalSearchResults); // This line is removed
     } finally {
-      setIsLoading(false);
     }
   };
 
@@ -405,52 +328,10 @@ function Search() {
     return "all";
   };
 
-  // Add handler for quick filter changes
-  const handleQuickFilterChange = (filters) => {
-    setQuickFilters(filters);
-
-    // Filter the results based on the quick filters
-    let filtered = [...originalSearchResults];
-
-    if (filters.type) {
-      filtered = filtered.filter((item) => {
-        if (filters.type === "all") return true;
-        return item.menu_food_type.toLowerCase() === filters.type.toLowerCase();
-      });
-    }
-
-    if (filters.price) {
-      filtered = filtered.filter((item) => {
-        const price = item.portions?.[0]?.price || 0;
-        const priceMap = {
-          50: 50,
-          100: 100,
-          200: 200,
-          500: 500,
-          1000: 1000,
-          above1000: 1001,
-        };
-
-        if (filters.price === "all") return true;
-        if (filters.price === "above1000") return price >= 1000;
-        return price <= priceMap[filters.price];
-      });
-    }
-
-    if (filters.spicy) {
-      filtered = filtered.filter((item) => {
-        if (filters.spicy === "all") return true;
-        return item.spicy_level === filters.spicy;
-      });
-    }
-
-    setSearchResults(filtered);
+  // Handle quick filter changes
+  const handleQuickFilterChange = (filtered) => {
+    setFilteredResults(filtered);
   };
-
-  // Add useEffect to load all menus on component mount
-  useEffect(() => {
-    handleSearch(""); // This will fetch all menus
-  }, [outletId]); // Re-fetch when outletId changes
 
   // Focus the search input on mount
   useEffect(() => {
@@ -458,6 +339,9 @@ function Search() {
       searchInputRef.current.focus();
     }
   }, []);
+
+  // Use filteredResults if available, otherwise use searchResults
+  const displayResults = filteredResults.length > 0 ? filteredResults : searchResults;
 
   return (
     <>
@@ -469,7 +353,11 @@ function Search() {
               <div className="w-100">
                 <div className="mb-0 input-group input-group-icon">
                   <div className="input-group-text">
-                    <div className="input-icon search-icon">
+                    <div
+                      className="input-icon search-icon"
+                      onClick={handleSearch}
+                      style={{ cursor: 'pointer' }}
+                    >
                       <i
                         className="fas fa-search"
                         style={{ fontSize: "20px", color: "#7D8FAB" }}
@@ -485,19 +373,42 @@ function Search() {
                     value={searchInputValue}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
-                        handleSearch(searchInputValue);
+                        handleSearch();
                       }
                     }}
+                    autoComplete="off"
+                    results="0"
+                    data-search-input
                   />
                 </div>
               </div>
             </div>
-            <QuickFilters onFilterChange={handleQuickFilterChange} />
+            <QuickFilters 
+              onFilterChange={handleQuickFilterChange} 
+              menuList={searchResults} // Pass the original search results
+            />
            
-            {isLoading ? (
+            {isLoading || isFetching ? (
               <div className="text-center py-4">
                 <div className="spinner-border text-primary" role="status">
                   <span className="visually-hidden">Loading...</span>
+                </div>
+              </div>
+            ) : error || searchError ? (
+              <div className="text-center py-4">
+                <div className="empty-search-state">
+                  <i
+                    className="fas fa-exclamation-circle"
+                    style={{
+                      fontSize: "64px",
+                      color: "#dc3545",
+                      opacity: "0.5",
+                      marginBottom: "1rem",
+                    }}
+                  ></i>
+                  <p className="mt-3 text-muted">
+                    Error: {error?.message || searchError?.message || "Failed to fetch"}
+                  </p>
                 </div>
               </div>
             ) : !hasSearched || searchInputValue.trim() === "" ? (
@@ -506,7 +417,7 @@ function Search() {
                   <p className="mt-3 text-muted">Search the menu</p>
                 </div>
               </div>
-            ) : searchResults && searchResults.length === 0 ? (
+            ) : displayResults.length === 0 ? (
               <div className="text-center py-4">
                 <div className="empty-search-state">
                   <i
@@ -524,27 +435,27 @@ function Search() {
             ) : (
               <div className="item-list style-2">
                 <div className="saprater" />
-                <div className="title-bar">
+                {/* <div className="title-bar">
                   <span className="title mb-0 font-18">
-                    {searchInputValue.trim() !== ""
-                      ? "Search Results"
-                      : "All Menu Items"}{" "}
-                    ({searchResults.length})
+                    Search Results ({searchResults.length})
                   </span>
-                </div>
+                </div> */}
                 <ul>
-                  {searchResults.map((menu) => (
+                  {displayResults.map((menu) => (
                     <li key={menu.menu_id}>
                       <HorizontalMenuCard
-                        image={menu.image || null}
-                        title={menu.menu_name}
-                        currentPrice={menu.portions?.[0]?.price || 0}
-                        originalPrice={
-                          menu.portions?.[0]?.price && menu.offer
-                            ? menu.portions[0].price +
-                              (menu.portions[0].price * menu.offer) / 100
-                            : null
+                        image={
+                          menu.images && Array.isArray(menu.images) && menu.images.length > 0
+                            ? menu.images[0].image
+                            : menu.image || null
                         }
+                        title={menu.menu_name}
+                        currentPrice={
+                          menu.offer > 0 
+                          ? Math.round(menu.portions?.[0]?.price * (1 - menu.offer / 100))
+                          : menu.portions?.[0]?.price || 0
+                        }
+                        originalPrice={menu.offer > 0 ? menu.portions?.[0]?.price : null}
                         discount={menu.offer > 0 ? `${menu.offer}%` : null}
                         menuItem={{
                           menuId: menu.menu_id,
@@ -558,15 +469,18 @@ function Search() {
                               unit_value: portion.unit_value,
                               unit_type: portion.unit_type,
                             })) || [],
-                          image: menu.image,
+                          image:
+                            menu.images && Array.isArray(menu.images) && menu.images.length > 0
+                              ? menu.images[0].image
+                              : menu.image || null,
                           menuFoodType: menu.menu_food_type,
                           category: menu.category_name,
                           rating: menu.rating,
                           isSpecial: menu.is_special,
+                          spicyIndex: menu.spicy_index, // Add this line
+                          categoryName: menu.category_name // Add this line
                         }}
-                        onFavoriteClick={() =>
-                          handleFavoriteClick(menu.menu_id)
-                        }
+                        onFavoriteClick={() => handleFavoriteClick(menu.menu_id, menu.is_favourite === 1)}
                         isFavorite={menu.is_favourite === 1}
                         rating={menu.rating}
                         categoryName={menu.category_name}
@@ -581,7 +495,7 @@ function Search() {
         </div>
       </div>
 
-      {hasSearchResults() && (
+      {/* {hasSearchResults() && (
         <div
           className={`offcanvas offcanvas-start be-0 ${
             showFilter ? "show" : ""
@@ -596,7 +510,7 @@ function Search() {
             onApplyFilter={handleApplyFilter}
           />
         </div>
-      )}
+      )} */}
 
       <Footer />
     </>
@@ -634,6 +548,62 @@ const styles = `
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  /* Remove the clear (x) button from search inputs - Comprehensive solution */
+  input[type="search"]::-webkit-search-decoration,
+  input[type="search"]::-webkit-search-cancel-button,
+  input[type="search"]::-webkit-search-results-button,
+  input[type="search"]::-webkit-search-results-decoration,
+  input[type="search"]::-webkit-clear-button {
+    -webkit-appearance: none;
+    appearance: none;
+    display: none;
+  }
+  
+  /* For Edge/IE */
+  input[type="search"]::-ms-clear,
+  input[type="search"]::-ms-reveal {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  /* For Firefox */
+  input[type="search"] {
+    -moz-appearance: none;
+  }
+
+  /* Global override */
+  input[type="search"] {
+    appearance: none;
+  }
+
+  /* Additional safety measure */
+  .main-in::-webkit-search-cancel-button {
+    display: none !important;
+    -webkit-appearance: none !important;
+  }
+
+  /* QuickFilters styles */
+  .basic-dropdown {
+    position: relative;
+    z-index: 1050; /* Higher z-index to ensure visibility */
+  }
+
+  .basic-dropdown .dropdown-menu {
+    z-index: 1051; /* Even higher z-index for the dropdown menu */
+  }
+
+  .basic-dropdown .dropdown-menu.show {
+    display: block;
+    margin-top: 5px;
+  }
+
+  /* Ensure the search container doesn't overlap */
+  .serach-area {
+    position: relative;
+    z-index: 1;
   }
 `;
 

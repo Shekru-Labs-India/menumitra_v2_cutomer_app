@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { parseRestoUrl } from "../utils/urlParser";
+import apiService from "../api/apiService";
 
 const VegIcon = () => (
   <svg
@@ -48,86 +50,52 @@ const NonVegIcon = () => (
 
 function AllOutlets() {
   const navigate = useNavigate();
-  const [outlets, setOutlets] = useState([]);
-  const [filteredOutlets, setFilteredOutlets] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
     type: "all", // 'all', 'veg', 'nonveg'
     status: "all", // 'all', 'open', 'closed'
   });
 
+  // Replace useState and useEffect with useQuery
+  const { 
+    data: outlets = [], 
+    isLoading, 
+    error 
+  } = useQuery({
+    queryKey: ['outlets'],
+    queryFn: apiService.customer.getAllRestaurants,
+  });
+
+  // Log closed outlets
   useEffect(() => {
-    fetchOutlets();
-  }, []);
+    const closedOutlets = outlets.filter(outlet => !outlet.is_open);
+    console.log("Closed Outlets:", closedOutlets);
+  }, [outlets]);
 
-  useEffect(() => {
-    // Apply filters whenever outlets or filters change
-    applyFilters();
-  }, [outlets, filters]);
-
-  const applyFilters = () => {
-    let result = [...outlets];
-
-    // Filter by veg/non-veg
-    if (filters.type !== "all") {
-      result = result.filter((outlet) => outlet.veg_nonveg === filters.type);
+  // Filter outlets based on current filters
+  const filteredOutlets = outlets.filter(outlet => {
+    if (filters.type !== "all" && outlet.veg_nonveg !== filters.type) {
+      return false;
     }
-
-    // Filter by open/closed status
     if (filters.status !== "all") {
-      result = result.filter((outlet) =>
-        filters.status === "open" ? outlet.is_open : !outlet.is_open
-      );
+      return filters.status === "open" ? outlet.is_open : !outlet.is_open;
+    }
+    return true;
+  });
+
+  const handleRestoUrl = (url, isOpen) => {
+    // If outlet is closed, don't process the click
+    if (!isOpen) {
+      return;
     }
 
-    setFilteredOutlets(result);
-  };
-
-  const fetchOutlets = async () => {
-    try {
-      const authData = localStorage.getItem("auth");
-      const userData = authData ? JSON.parse(authData) : null;
-
-      const response = await fetch(
-        "https://men4u.xyz/v2/user/get_all_restaurants",
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${userData?.accessToken}`,
-            app_source: "customer_app",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch outlets");
-      }
-
-      const data = await response.json();
-      setOutlets(data.detail.outlets);
-      setIsLoading(false);
-    } catch (err) {
-      console.error("Error fetching outlets:", err);
-      setError(err.message);
-      setIsLoading(false);
-    }
-  };
-
-  const handleRestoUrl = (url) => {
     const parsed = parseRestoUrl(url);
 
     if (!parsed.isValid) {
       console.error("Invalid resto URL format:", url);
-      // Show error message to user
       return;
     }
 
     const { outletCode, sectionId, tableId } = parsed;
-
-    // Navigate using the expected path format for Home.jsx
     navigate(`/o${outletCode}/s${sectionId}/t${tableId}`);
   };
 
@@ -275,13 +243,13 @@ function AllOutlets() {
             </div>
           </div>
 
-          {/* Results Section */}
+          {/* Updated Results Section */}
           {isLoading ? (
             <div className="text-center py-4">Loading restaurants...</div>
           ) : error ? (
             <div className="alert alert-danger">
               <i className="fas fa-exclamation-circle me-2"></i>
-              {error}
+              {error instanceof Error ? error.message : 'An error occurred'}
             </div>
           ) : filteredOutlets.length === 0 ? (
             <div className="alert alert-info">
@@ -294,20 +262,25 @@ function AllOutlets() {
                 <div
                   key={outlet.outlet_id}
                   className="card border-0 mb-2"
-                  onClick={() => handleRestoUrl(outlet.resto_url)}
+                  onClick={() => handleRestoUrl(outlet.resto_url, outlet.is_open)}
                   style={{
-                    cursor: outlet.resto_url ? "pointer" : "default",
+                    cursor: outlet.is_open ? "pointer" : "not-allowed", // Change cursor for closed outlets
                     transition: "all 0.3s ease",
+                    opacity: outlet.is_open ? 1 : 0.7, // Make closed outlets appear faded
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow =
-                      "0 .5rem 1rem rgba(0,0,0,.15)";
+                    if (outlet.is_open) { // Only apply hover effect for open outlets
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                      e.currentTarget.style.boxShadow =
+                        "0 .5rem 1rem rgba(0,0,0,.15)";
+                    }
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "none";
-                    e.currentTarget.style.boxShadow =
-                      "0 .125rem .25rem rgba(0,0,0,.075)";
+                    if (outlet.is_open) { // Only remove hover effect for open outlets
+                      e.currentTarget.style.transform = "none";
+                      e.currentTarget.style.boxShadow =
+                        "0 .125rem .25rem rgba(0,0,0,.075)";
+                    }
                   }}
                 >
                   <div className="card-body p-3 rounded border border-1">

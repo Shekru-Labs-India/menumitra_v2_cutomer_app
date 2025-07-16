@@ -1,15 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
-import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
 import { useCart } from "../contexts/CartContext";
 import { useModal } from "../contexts/ModalContext";
 import { useOutlet } from "../contexts/OutletContext";
 import { useAuth } from "../contexts/AuthContext";
 import LazyImage from "../components/Shared/LazyImage";
+import apiService from "../api/apiService";
+import { useMenuItems } from '../hooks/useMenuItems';
+import TripleSlider from '../components/TripleSlider/TripleSlider';
 
 // Import Swiper styles
 import "swiper/css";
@@ -115,7 +118,7 @@ const FoodTypeIcon = ({ foodType }) => {
               style={{
                 color: "#B0BEC5",
                 fontSize: "10px",
-                transform: "rotate(-15deg)",
+                // transform: "rotate(-15deg)",
               }}
             ></i>
           </div>
@@ -130,42 +133,25 @@ const FoodTypeIcon = ({ foodType }) => {
 
 function ProductDetail() {
   const { menuId, menuCatId } = useParams();
-  const [menuDetails, setMenuDetails] = useState(null);
   const { openModal } = useModal();
   const { cartItems, removeFromCart, updateQuantity } = useCart();
   const { outletId } = useOutlet();
-  const { user, setShowAuthOffcanvas } = useAuth();
+  const { user, getUserId, setShowAuthOffcanvas } = useAuth();
   const navigate = useNavigate();
+  const userId = getUserId();
+  const { toggleFavorite, isFavoriteLoading } = useMenuItems();
 
-  useEffect(() => {
-    const fetchMenuDetails = async () => {
-      try {
-        const auth = JSON.parse(localStorage.getItem("auth") || "{}");
-        const user_id = auth.userId;
-
-        const response = await axios.post(
-          "https://men4u.xyz/v2/user/get_menu_details",
-          {
-            outlet_id: outletId,
-            menu_id: Number(menuId),
-            menu_cat_id: Number(menuCatId),
-            user_id: Number(user_id) || null,
-            app_source: "user_app",
-          }
-        );
-
-        setMenuDetails({
-          ...response.data.details,
-          images:
-            response.data.details.menu_images?.map((img) => img.image) || [],
-        });
-      } catch (error) {
-        console.error("Error fetching menu details:", error);
-      }
-    };
-
-    fetchMenuDetails();
-  }, [menuId, menuCatId, outletId]);
+  // Replace useEffect with useQuery
+  const { data: menuDetails, isLoading, error } = useQuery({
+    queryKey: ['menuDetails', outletId, menuId, menuCatId, userId],
+    queryFn: () => apiService.menus.getDetails({ 
+      outletId, 
+      menuId: Number(menuId), 
+      menuCatId: Number(menuCatId),
+      userId 
+    }),
+    enabled: !!outletId && !!menuId && !!menuCatId,
+  });
 
   // Check if item exists in cart with proper menuId comparison
   const cartItem = cartItems.find(
@@ -199,84 +185,190 @@ function ProductDetail() {
     openModal("addToCart", formattedMenuDetails);
   };
 
-  if (!menuDetails) return <div>Loading...</div>;
+  const handleFavoriteToggle = async (e) => {
+    e.preventDefault();
+
+    if (!user) {
+      setShowAuthOffcanvas(true);
+      return;
+    }
+
+    if (isFavoriteLoading || !menuId) return;
+
+    try {
+      const authData = localStorage.getItem("auth");
+      const auth = authData ? JSON.parse(authData) : null;
+
+      if (!auth || !auth.userId || !auth.accessToken) {
+        openModal("LOGIN_REQUIRED");
+        return;
+      }
+
+      // Use the mutation
+      toggleFavorite(
+        {
+          menuId: Number(menuId),
+          isFavorite: menuDetails?.is_favourite === 1, // Changed from is_favorite to is_favourite
+          userId: auth.userId
+        },
+        {
+          onSuccess: () => {
+            // The query will automatically refetch and update the UI
+          },
+          onError: (error) => {
+            console.error("Error updating favorite status:", error);
+            openModal("ERROR", {
+              message: error.message || "Failed to update favorite status",
+            });
+          }
+        }
+      );
+    } catch (error) {
+      console.error("Error updating favorite status:", error);
+      openModal("ERROR", {
+        message: error.message || "Failed to update favorite status",
+      });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <>
+        <Header />
+        <div className="page-content">
+          <div className="container">
+            <div className="text-center p-5">Loading...</div>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <>
+        <Header />
+        <div className="page-content">
+          <div className="container">
+            <div className="alert alert-danger">
+              {error.message || 'Failed to load menu details'}
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  if (!menuDetails) return null;
 
   return (
     <>
       <Header />
       <div className="page-content">
         <div className="content-body bottom-content">
-          <div className="swiper-btn-center-lr my-0">
-            <Swiper
-              modules={[Pagination, Autoplay]}
-              pagination={{
-                el: ".swiper-pagination",
-                clickable: true,
-              }}
-              autoplay={{
-                delay: 3000,
-                disableOnInteraction: false,
-              }}
-              className="demo-swiper swiper-initialized swiper-horizontal swiper-pointer-events swiper-watch-progress swiper-backface-hidden"
-            >
-              {(menuDetails.images?.length ? menuDetails.images : [null]).map(
-                (image, index) => (
-                  <SwiperSlide
-                    key={index}
-                    role="group"
-                    aria-label={`${index + 1} / ${
-                      menuDetails.images?.length || 1
-                    }`}
-                    className={
-                      index === 0
-                        ? "swiper-slide-visible swiper-slide-active"
-                        : ""
-                    }
-                  >
-                    <div className="dz-banner-heading">
-                      <div className="overlay-black-light">
-                        {image ? (
-                          <LazyImage
-                            src={image}
-                            alt={`${menuDetails.menu_name} image ${index + 1}`}
-                            className="bnr-img"
-                            aspectRatio="16/9"
-                            blur={true}
-                          />
-                        ) : (
-                          <div
-                            className="bnr-img d-flex justify-content-center align-items-center border border-2 border-light-subtle"
-                            style={{ aspectRatio: "16/9" }}
-                          >
-                            <i className="fa-solid fa-utensils font-100 opacity-50 text-muted"></i>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </SwiperSlide>
-                )
+          {/* Comment out or remove the existing code:
+<div className="swiper-btn-center-lr my-0">
+  <Swiper
+    modules={[Pagination, Autoplay]}
+    pagination={{
+      el: ".swiper-pagination",
+      clickable: true,
+    }}
+    autoplay={{
+      delay: 3000,
+      disableOnInteraction: false,
+    }}
+    className="demo-swiper swiper-initialized swiper-horizontal swiper-pointer-events swiper-watch-progress swiper-backface-hidden"
+  >
+    {(menuDetails.images?.length ? menuDetails.images : [null]).map(
+      (image, index) => (
+        <SwiperSlide
+          key={index}
+          role="group"
+          aria-label={`${index + 1} / ${menuDetails.images?.length || 1}`}
+          className={index === 0 ? "swiper-slide-visible swiper-slide-active" : ""}
+        >
+          <div className="dz-banner-heading">
+            <div className="overlay-black-light">
+              {image ? (
+                <LazyImage
+                  src={image}
+                  alt={`${menuDetails.menu_name} image ${index + 1}`}
+                  className="bnr-img"
+                  aspectRatio="16/9"
+                  blur={true}
+                />
+              ) : (
+                <div
+                  className="bnr-img d-flex justify-content-center align-items-center border border-2 border-light-subtle"
+                  style={{ aspectRatio: "16/9" }}
+                >
+                  <i className="fa-solid fa-utensils font-100 opacity-50 text-muted"></i>
+                </div>
               )}
-              <div className="swiper-btn">
-                <div className="swiper-pagination style-2 flex-1"></div>
-              </div>
-              <span
-                className="swiper-notification"
-                aria-live="assertive"
-                aria-atomic="true"
-              ></span>
-            </Swiper>
+            </div>
           </div>
+        </SwiperSlide>
+      )
+    )}
+    <div className="swiper-btn">
+      <div className="swiper-pagination style-2 flex-1"></div>
+    </div>
+    <span className="swiper-notification" aria-live="assertive" aria-atomic="true"></span>
+  </Swiper>
+</div>
+*/}
+
+{/* Add the new TripleSlider implementation */}
+<TripleSlider
+  slides={
+    menuDetails.images?.length
+      ? menuDetails.images.map((image) => ({
+          backgroundImage: image,
+          title: menuDetails.menu_name,
+        }))
+      : [{
+          backgroundImage: 'https://via.placeholder.com/800x800', // Updated to square placeholder
+          title: menuDetails.menu_name,
+        }]
+  }
+/>
 
           <div className="account-box style-1">
             <div className="container p-b60">
               <div className="company-detail">
                 <div className="detail-content">
                   <div className="flex-1">
-                    <h3 className="text-secondary sub-title small d-flex align-items-center">
-                      <FoodTypeIcon foodType={menuDetails.menu_food_type} />
-                      <span className="ms-2">
-                        {menuDetails.category_name?.toUpperCase()}
-                      </span>
+                    <h3 className="text-secondary sub-title small d-flex align-items-center justify-content-between">
+                      <div className="d-flex align-items-center">
+                        <FoodTypeIcon foodType={menuDetails.menu_food_type} />
+                        <span className="ms-2">
+                          {menuDetails.category_name?.toUpperCase()}
+                        </span>
+                      </div>
+                      <a
+                        href="javascript:void(0);"
+                        className={`${isFavoriteLoading ? "disabled" : ""}`}
+                        onClick={handleFavoriteToggle}
+                        style={{
+                          pointerEvents: isFavoriteLoading ? "none" : "auto",
+                          cursor: "pointer",
+                          textDecoration: "none",
+                        }}
+                      >
+                        <div className={`like-button ${menuDetails?.is_favourite === 1 ? "active" : ""}`}>
+                          <i
+                            className={`fa-${menuDetails?.is_favourite === 1 ? "solid" : "regular"} fa-heart`}
+                            style={{
+                              fontSize: "20px",
+                              color: menuDetails?.is_favourite === 1 ? "#dc3545" : "#6c757d",
+                              lineHeight: 1,
+                            }}
+                          />
+                        </div>
+                      </a>
                     </h3>
                     <h4 className="d-flex justify-content-between align-items-center">
                       {menuDetails.menu_name}
@@ -295,20 +387,19 @@ function ProductDetail() {
                 </ul> */}
               </div>
 
-              <div className="item-list-2">
+              <div className="item-list-2 my-2">
                 <div className="price">
                   <span className="text-style text-soft">Price</span>
                   <div className="d-flex justify-content-between align-items-center">
                     <h3 className="sub-title mb-0">
-                      ₹
-                      {menuDetails.offer > 0
-                        ? menuDetails.portions[0]?.price -
-                          (menuDetails.portions[0]?.price * menuDetails.offer) /
-                            100
-                        : menuDetails.portions[0]?.price}
+                      ₹{menuDetails.portions[0]?.price}
                       {menuDetails.offer > 0 && (
                         <del className="ms-2 text-muted">
-                          ₹{menuDetails.portions[0]?.price}
+                          ₹
+                          {Math.round(
+                            menuDetails.portions[0]?.price /
+                              (1 - menuDetails.offer / 100)
+                          )}
                         </del>
                       )}
                     </h3>

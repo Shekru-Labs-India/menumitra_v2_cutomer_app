@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import OrderAccordionItem from "../components/OrderAccordionItem";
 import { useOutlet } from "../contexts/OutletContext";
 import Timer from "../components/Timer";
 import CancelOrderModal from "../components/Modal/variants/CancelOrderModal";
-import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import apiService from "../api/apiService";
+import { useQuery } from '@tanstack/react-query';
 
 // Update the NoOrders component with new icon
 const NoOrders = ({ message }) => {
@@ -56,50 +57,120 @@ const NoOrders = ({ message }) => {
 function Orders() {
   const { outletId } = useOutlet();
   const { user, setShowAuthOffcanvas } = useAuth();
-  const [ordersData, setOrdersData] = useState({
-    paid: {},
-    complimentary_paid: {},
-    cancelled: {},
-  });
-  const [ongoingOrders, setOngoingOrders] = useState([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
-  const [error, setError] = useState({
-    ongoing: null,
-    history: null,
-  });
-  const [showCancelModal, setShowCancelModal] = useState(false);
-  const [selectedOrderId, setSelectedOrderId] = useState(null);
-  const [selectedOrderNumber, setSelectedOrderNumber] = useState(null);
-  const [cancelOrderStatus, setCancelOrderStatus] = useState(true);
   const navigate = useNavigate();
+
+  // Get userId from auth
+  const auth = JSON.parse(localStorage.getItem("auth")) || {};
+  const userId = auth.userId;
 
   // State for managing expansion of date accordions
   const [expandedCompletedDates, setExpandedCompletedDates] = useState({});
   const [expandedCancelledDates, setExpandedCancelledDates] = useState({});
-
-  const [udhariPaidOrders, setUdhariPaidOrders] = useState([]);
-
-  const [expandedUdhariPaidDates, setExpandedUdhariPaidDates] = useState({});
-
-  // Add state for udhariPendingOrders
-  const [udhariPendingOrders, setUdhariPendingOrders] = useState([]);
-
-  // Add state for managing expansion of date accordions for pending orders
   const [expandedPendingDates, setExpandedPendingDates] = useState({});
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [selectedOrderNumber, setSelectedOrderNumber] = useState(null);
+  const [cancelOrderStatus, _setCancelOrderStatus] = useState(true);
 
-  useEffect(() => {
-    // Call both APIs independently
-    fetchOngoingOrders();
-    fetchCompletedOrders();
-  }, []);
+  // Query for ongoing orders
+  const {
+    data: ongoingOrdersData,
+    isLoading: isLoadingOngoing,
+    error: ongoingError,
+    refetch: refetchOngoingOrders
+  } = useQuery({
+    queryKey: ['ongoingOrders', outletId, userId],
+    queryFn: async () => {
+      if (!userId || !outletId) return [];
+      
+      const response = await apiService.customer.getOngoingOrders({
+        userId: parseInt(userId),
+        outletId
+      });
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchOngoingOrders();
-    }, 10000); // every 10 seconds
+      return response.map((order) => ({
+        id: order.order_number,
+        orderId: order.order_id,
+        orderNumber: order.order_number,
+        itemCount: order.menu_count,
+        status: order.status,
+        iconColor: "#FFA902",
+        iconBgClass: "bg-warning",
+        isExpanded: false,
+        parentId: "accordionExample1",
+        orderType: order.order_type,
+        outletName: order.outlet_name,
+        totalAmount: order.final_grand_total,
+        paymentMethod: order.payment_method || "Not selected",
+        time: order.time,
+        tableNumber: order.table_number,
+        sectionName: order.section_name
+      }));
+    },
+    enabled: !!userId && !!outletId,
+    refetchInterval: 10000,
+  });
 
-    return () => clearInterval(interval);
-  }, []);
+  // Query for order history
+  const {
+    data: orderHistoryData,
+    isLoading: isLoadingOrderHistory,
+    error: orderHistoryError,
+    refetch: refetchOrderHistory
+  } = useQuery({
+    queryKey: ['orderHistory', outletId, userId],
+    queryFn: async () => {
+      if (!userId || !outletId) return null;
+      
+      const data = await apiService.customer.getOrderHistory({
+        userId: parseInt(userId),
+        outletId
+      });
+
+      if (!data) return null;
+
+      const complementaryOrders = {
+        ...(data.complementary_paid || {}),
+        ...(data.complimentary_paid || {})
+      };
+
+      const transformedData = {
+        paid: data.paid || {},
+        complimentary_paid: complementaryOrders,
+        cancelled: data.cancelled || {},
+        udhari_paid: data.udhari_paid || {},
+        udhari_pending: data.udhari_pending || {},
+      };
+
+      const udhariPendingRaw = data.udhari_pending || {};
+      const udhariPendingList = Object.values(udhariPendingRaw).flat();
+      const mappedUdhariPending = udhariPendingList.map((order) => ({
+        id: order.order_number,
+        orderId: order.order_id,
+        orderNumber: order.order_number,
+        itemCount: order.menu_count,
+        status: order.order_status,
+        iconColor: "#FFA902",
+        iconBgClass: "bg-warning",
+        isExpanded: false,
+        parentId: "accordionExamplePending",
+        orderType: order.order_type,
+        outletName: order.outlet_name,
+        totalAmount: order.final_grand_total,
+        paymentMethod: order.payment_method || "Not selected",
+        time: order.time,
+        tableNumber: order.table_number,
+        sectionName: order.section_name,
+        datetime: order.datetime,
+      }));
+
+      return {
+        orders: transformedData,
+        udhariPending: mappedUdhariPending
+      };
+    },
+    enabled: !!userId && !!outletId,
+  });
 
   // Handler for expanding/collapsing individual date accordions for completed orders
   const toggleCompletedDateExpansion = (date) => {
@@ -146,108 +217,48 @@ function Orders() {
   };
 
   // Fix groupUdhariPaidByDate to always group by date (Month DD, YYYY)
-  const groupUdhariPaidByDate = (orders) => {
-    const grouped = {};
-    orders.forEach((order) => {
-      let formattedDate = "Unknown Date";
-      if (order.datetime) {
-        // Always use only the first three parts for the date
-        const parts = order.datetime.split(" ");
-        if (parts.length >= 3) {
-          const [day, mon, year] = parts;
-          const dateObj = new Date(`${mon} ${day}, ${year}`);
-          if (!isNaN(dateObj)) {
-            formattedDate = dateObj.toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            });
-          }
-        }
-      }
-      if (!grouped[formattedDate]) grouped[formattedDate] = [];
-      grouped[formattedDate].push(order);
-    });
-    return grouped;
-  };
+  // const groupUdhariPaidByDate = (orders) => { ... };
 
-  const udhariPaidGrouped = groupUdhariPaidByDate(udhariPaidOrders);
-
-  const toggleUdhariPaidDateExpansion = (date) => {
-    setExpandedUdhariPaidDates((prev) => ({
-      ...prev,
-      [date]: !prev[date],
-    }));
-  };
+  // Remove the groupUdhariPaidByDate function and udhariPaidGrouped constant since we don't need them anymore
+  // const udhariPaidGrouped = groupUdhariPaidByDate(udhariPaidOrders);
+  
+  // Remove the toggleUdhariPaidDateExpansion function since we don't need it anymore
+  // const toggleUdhariPaidDateExpansion = (date) => { ... };
 
   const fetchCompletedOrders = async () => {
     try {
       const auth = JSON.parse(localStorage.getItem("auth")) || {};
-      const userId = auth.userId || "73";
+      const userId = auth.userId;
       const accessToken = auth.accessToken;
 
       if (!accessToken) {
         throw new Error("Authentication token not found");
       }
 
-      const response = await fetch(
-        "https://men4u.xyz/v2/user/get_completed_and_cancel_order_list",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({
-            user_id: parseInt(userId),
-            outlet_id: outletId,
-            app_source: "user_app",
-          }),
-        }
-      );
+      const data = await apiService.customer.getOrderHistory({
+        userId: parseInt(userId),
+        outletId
+      });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch order history");
-      }
+      if (data) {
+        // Merge both spellings of complementary/complimentary orders
+        const complementaryOrders = {
+          ...(data.complementary_paid || {}),
+          ...(data.complimentary_paid || {})
+        };
 
-      const data = await response.json();
-
-      if (data.detail && data.detail.lists) {
         // Transform the data to include all order types
         const transformedData = {
-          paid: data.detail.lists.paid || {},
-          complimentary_paid: data.detail.lists.complimentary_paid || {},
-          cancelled: data.detail.lists.cancelled || {},
-          // Add any other order types here
+          paid: data.paid || {},
+          complimentary_paid: complementaryOrders,
+          cancelled: data.cancelled || {},
+          udhari_paid: data.udhari_paid || {},
+          udhari_pending: data.udhari_pending || {},
         };
-        setOrdersData(transformedData);
-
-        // Extract udhari_paid orders and flatten them into a single array
-        const udhariPaidRaw = data.detail.lists.udhari_paid || {};
-        const udhariPaidList = Object.values(udhariPaidRaw).flat();
-        // Map to match ongoingOrders structure
-        const mappedUdhariPaid = udhariPaidList.map((order) => ({
-          id: order.order_number,
-          orderId: order.order_id,
-          orderNumber: order.order_number,
-          itemCount: order.menu_count,
-          status: order.order_status,
-          iconColor: "#FFA902",
-          iconBgClass: "bg-warning",
-          isExpanded: false,
-          parentId: "accordionExample1",
-          orderType: order.order_type,
-          outletName: order.outlet_name,
-          totalAmount: order.final_grand_total,
-          paymentMethod: order.payment_method || "Not selected",
-          time: order.time,
-          tableNumber: order.table_number,
-          sectionName: order.section_name,
-        }));
-        setUdhariPaidOrders(mappedUdhariPaid);
+        // setOrdersData(transformedData); // This line is removed as per the new_code, as TanStack Query handles background updates.
 
         // Extract udhari_pending orders and flatten them into a single array
-        const udhariPendingRaw = data.detail.lists.udhari_pending || {};
+        const udhariPendingRaw = data.udhari_pending || {};
         const udhariPendingList = Object.values(udhariPendingRaw).flat();
         const mappedUdhariPending = udhariPendingList.map((order) => ({
           id: order.order_number,
@@ -268,71 +279,54 @@ function Orders() {
           sectionName: order.section_name,
           datetime: order.datetime,
         }));
-        setUdhariPendingOrders(mappedUdhariPending);
+        // setUdhariPendingOrders(mappedUdhariPending); // This line is removed as per the new_code, as TanStack Query handles background updates.
       }
     } catch (err) {
       console.error("Error fetching order history:", err);
-      setError((prev) => ({ ...prev, history: err.message }));
+      // setError((prev) => ({ ...prev, history: err.message })); // This line is removed as per the new_code, as TanStack Query handles background updates.
     } finally {
-      setIsLoadingHistory(false);
+      // setIsLoadingHistory(false); // This line is removed as per the new_code, as TanStack Query handles background updates.
     }
   };
 
-  const fetchOngoingOrders = async () => {
-    try {
-      const auth = JSON.parse(localStorage.getItem("auth")) || {};
-      const userId = auth.userId || "73";
-      const accessToken = auth.accessToken;
-
-      if (!accessToken) throw new Error("Authentication token not found");
-
-      const { data } = await axios.post(
-        "https://men4u.xyz/v2/user/get_ongoing_or_placed_order",
-        {
-          user_id: parseInt(userId),
-          outlet_id: outletId,
-          app_source: "user_app",
-        },
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
-      );
-
-      if (data.detail?.orders) {
-        const transformedOngoingOrders = data.detail.orders.map((order) => {
-          return {
-            id: order.order_number,
-            orderId: order.order_id,
-            orderNumber: order.order_number,
-            itemCount: order.menu_count,
-            status: order.status,
-            iconColor: "#FFA902",
-            iconBgClass: "bg-warning",
-            isExpanded: false,
-            parentId: "accordionExample1",
-            orderType: order.order_type,
-            outletName: order.outlet_name,
-            totalAmount: order.final_grand_total,
-            paymentMethod: order.payment_method || "Not selected",
-            time: order.time,
-          };
-        });
-
-        setOngoingOrders(transformedOngoingOrders);
-        setError((prev) => ({ ...prev, ongoing: null }));
-      }
-    } catch (err) {
-      console.error("Error fetching ongoing orders:", err);
-      if (axios.isAxiosError(err) && err.response?.status === 404) {
-        setOngoingOrders([]);
-        setError((prev) => ({ ...prev, ongoing: "404" }));
-      } else {
-        setError((prev) => ({ ...prev, ongoing: err.message }));
-      }
+  // Update the getOrderStatus function to handle both spellings
+  const getOrderStatus = (order) => {
+    switch (order.order_status) {
+      case "complimentary_paid":
+      case "complementary_paid":
+        return {
+          status: "Complimentary",
+          iconColor: "#6c5ce7",
+          iconBgClass: "bg-info",
+        };
+      case "paid":
+        return {
+          status: "Completed",
+          iconColor: "#00B67A",
+          iconBgClass: "bg-success",
+        };
+      case "udhari_paid":
+        return {
+          status: "Udhari Paid",
+          iconColor: "#00B67A",
+          iconBgClass: "bg-success",
+        };
+      case "cancelled":
+        return {
+          status: "Cancelled",
+          iconColor: "#E74C3C",
+          iconBgClass: "bg-danger",
+        };
+      default:
+        return {
+          status: order.order_status || "Completed",
+          iconColor: "#00B67A",
+          iconBgClass: "bg-success",
+        };
     }
   };
 
-  // Transform API data for OrderAccordionItem
+  // Update the transformOrderData function to handle complementary orders
   const transformOrderData = (orders) => {
     const transformedOrders = {
       completedByDate: {},
@@ -349,36 +343,6 @@ function Orders() {
       } catch (e) {
         console.error("Invalid date string:", dateString, e);
         return dateString; // Fallback
-      }
-    };
-
-    // Helper function to get order status and styling
-    const getOrderStatus = (order) => {
-      switch (order.order_status) {
-        case "complimentary_paid":
-          return {
-            status: "Complimentary",
-            iconColor: "#6c5ce7",
-            iconBgClass: "bg-info",
-          };
-        case "paid":
-          return {
-            status: "Completed",
-            iconColor: "#00B67A",
-            iconBgClass: "bg-success",
-          };
-        case "cancelled":
-          return {
-            status: "Cancelled",
-            iconColor: "#E74C3C",
-            iconBgClass: "bg-danger",
-          };
-        default:
-          return {
-            status: order.order_status || "Completed",
-            iconColor: "#00B67A",
-            iconBgClass: "bg-success",
-          };
       }
     };
 
@@ -400,19 +364,15 @@ function Orders() {
           outletName: order.outlet_name,
           orderType: order.order_type,
           totalAmount: order.final_grand_total,
-          paymentStatus:
-            order.order_status === "complimentary_paid"
-              ? "Complimentary"
-              : order.order_status === "paid"
-              ? "Paid"
-              : order.order_status === "cancelled"
-              ? "Cancelled"
-              : order.payment_status,
+          paymentStatus: status,
           orderTime: order.time,
           tableNumber: order.table_number,
           sectionName: order.section_name,
         };
       });
+
+      // Sort orders by order number in descending order
+      orders.sort((a, b) => parseInt(b.orderNumber) - parseInt(a.orderNumber));
 
       if (isCancelled) {
         transformedOrders.cancelledByDate[formattedDate] = {
@@ -425,7 +385,7 @@ function Orders() {
           transformedOrders.completedByDate[formattedDate].orders = [
             ...transformedOrders.completedByDate[formattedDate].orders,
             ...orders,
-          ];
+          ].sort((a, b) => parseInt(b.orderNumber) - parseInt(a.orderNumber)); // Sort after merging
           transformedOrders.completedByDate[formattedDate].orderCount +=
             orders.length;
         } else {
@@ -447,11 +407,16 @@ function Orders() {
 
     // Process complimentary paid orders
     if (orders.complimentary_paid) {
-      Object.entries(orders.complimentary_paid).forEach(
-        ([dateKey, orderList]) => {
-          processOrders(orderList, dateKey);
-        }
-      );
+      Object.entries(orders.complimentary_paid).forEach(([dateKey, orderList]) => {
+        processOrders(orderList, dateKey);
+      });
+    }
+
+    // Process udhari paid orders
+    if (orders.udhari_paid) {
+      Object.entries(orders.udhari_paid).forEach(([dateKey, orderList]) => {
+        processOrders(orderList, dateKey);
+      });
     }
 
     // Process cancelled orders
@@ -464,7 +429,54 @@ function Orders() {
     return transformedOrders;
   };
 
-  const transformedOrders = transformOrderData(ordersData);
+  // Update transformedOrders to use new data structure
+  const transformedOrders = transformOrderData(orderHistoryData?.orders || {
+    paid: {},
+    complimentary_paid: {},
+    cancelled: {},
+  });
+
+  // Update pendingOrdersByDate to use new data structure
+  const pendingOrdersByDate = {};
+  (orderHistoryData?.udhariPending || []).forEach(order => {
+    const dateKey = order.datetime.split(' ').slice(0, 3).join(' ');
+    if (!pendingOrdersByDate[dateKey]) {
+      pendingOrdersByDate[dateKey] = {
+        date: dateKey,
+        orderCount: 0,
+        orders: []
+      };
+    }
+    pendingOrdersByDate[dateKey].orders.push(order);
+    pendingOrdersByDate[dateKey].orderCount++;
+  });
+
+  // Sort pending orders
+  Object.values(pendingOrdersByDate).forEach(dateGroup => {
+    dateGroup.orders.sort((a, b) => parseInt(b.orderNumber) - parseInt(a.orderNumber));
+  });
+
+  // Handler for expanding all pending date accordions
+  const handleExpandAllPending = () => {
+    const newExpandedState = {};
+    Object.keys(pendingOrdersByDate).forEach((date) => {
+      newExpandedState[date] = true;
+    });
+    setExpandedPendingDates(newExpandedState);
+  };
+
+  // Handler for collapsing all pending date accordions
+  const handleCollapseAllPending = () => {
+    setExpandedPendingDates({});
+  };
+
+  // Handler for expanding/collapsing individual date accordions for pending orders
+  const togglePendingDateExpansion = (date) => {
+    setExpandedPendingDates((prev) => ({
+      ...prev,
+      [date]: !prev[date],
+    }));
+  };
 
   // Update the handleCancelOrder function
   const handleCancelOrder = (orderId, orderNumber) => {
@@ -476,28 +488,17 @@ function Orders() {
   // Update handleConfirmCancel
   const handleConfirmCancel = async (reason) => {
     try {
-      const auth = JSON.parse(localStorage.getItem("auth")) || {};
-      const accessToken = auth.accessToken;
-      if (!accessToken) throw new Error("Authentication token not found");
+      await apiService.customer.cancelOrder({
+        outletId,
+        orderId: selectedOrderId,
+        note: reason
+      });
 
-      const { data } = await axios.post(
-        "https://men4u.xyz/v2/user/cancel_order",
-        {
-          outlet_id: outletId,
-          order_id: selectedOrderId,
-          note: reason,
-          app_source: "user_app",
-        },
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
-      );
-
-      setCancelOrderStatus(true);
-      await fetchOngoingOrders();
+      await refetchOngoingOrders();
+      await refetchOrderHistory();
       handleCloseCancelModal();
     } catch (err) {
-      setCancelOrderStatus(false);
+      _setCancelOrderStatus(false);
       console.error("Error cancelling order:", err);
     }
   };
@@ -513,29 +514,49 @@ function Orders() {
   };
 
   // Group udhariPendingOrders by date
-  const udhariPendingGrouped = groupUdhariPaidByDate(udhariPendingOrders);
+  // const udhariPendingGrouped = groupUdhariPaidByDate(udhariPendingOrders);
 
-  // Handler for expanding/collapsing individual date accordions for pending orders
-  const togglePendingDateExpansion = (date) => {
-    setExpandedPendingDates((prev) => ({
-      ...prev,
-      [date]: !prev[date],
-    }));
-  };
+  // Group pending orders by date using the same logic as completed orders
+  // const pendingOrdersByDate = {};
+  // udhariPendingOrders.forEach(order => {
+  //   const dateKey = order.datetime.split(' ').slice(0, 3).join(' ');
+  //   if (!pendingOrdersByDate[dateKey]) {
+  //     pendingOrdersByDate[dateKey] = {
+  //       date: dateKey,
+  //       orderCount: 0,
+  //       orders: []
+  //     };
+  //   }
+  //   pendingOrdersByDate[dateKey].orders.push(order);
+  //   pendingOrdersByDate[dateKey].orderCount++;
+  // });
+
+  // Sort pending orders by order number in descending order
+  // Object.values(pendingOrdersByDate).forEach(dateGroup => {
+  //   dateGroup.orders.sort((a, b) => parseInt(b.orderNumber) - parseInt(a.orderNumber));
+  // });
 
   // Handler for expanding all pending date accordions
-  const handleExpandAllPending = () => {
-    const newExpandedState = {};
-    Object.keys(udhariPendingGrouped).forEach((date) => {
-      newExpandedState[date] = true;
-    });
-    setExpandedPendingDates(newExpandedState);
-  };
+  // const handleExpandAllPending = () => {
+  //   const newExpandedState = {};
+  //   Object.keys(pendingOrdersByDate).forEach((date) => {
+  //     newExpandedState[date] = true;
+  //   });
+  //   setExpandedPendingDates(newExpandedState);
+  // };
 
   // Handler for collapsing all pending date accordions
-  const handleCollapseAllPending = () => {
-    setExpandedPendingDates({});
-  };
+  // const handleCollapseAllPending = () => {
+  //   setExpandedPendingDates({});
+  // };
+
+  // Handler for expanding/collapsing individual date accordions for pending orders
+  // const togglePendingDateExpansion = (date) => {
+  //   setExpandedPendingDates((prev) => ({
+  //     ...prev,
+  //     [date]: !prev[date],
+  //   }));
+  // };
 
   // First check if user is not logged in
   if (!user) {
@@ -593,75 +614,64 @@ function Orders() {
       <Header />
       <div className="page-content">
         <div className="container pb">
-          {/* Only show if error is not 404 and we have orders */}
-          {error.ongoing !== "404" && ongoingOrders.length > 0 && (
+          {/* Show ongoing orders section */}
+          {!ongoingError && ongoingOrdersData?.length > 0 && (
             <div className="mb-4">
               <h6 className="mb-3">Ongoing Orders</h6>
               <div className="orders-list">
-                {ongoingOrders.map((order) => {
-                  return (
-                    <div
-                      key={order.id}
-                      className="order-item mb-3"
-                      onClick={() => navigate(`/order-detail/${order.orderId}`)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <div className="border border-warning shadow-sm p-3 rounded">
-                        <div className="d-flex align-items-center justify-content-between w-100">
-                          {/* Left side with icon and order details */}
-                          <div className="d-flex align-items-center">
-                            {order.status === "placed" ? (
-                              <Timer orderTime={order.time} />
-                            ) : (
-                              <span className={`icon-box ${order.iconBgClass}`}>
-                                <i className="fa-solid fa-bag-shopping text-white"></i>
-                              </span>
-                            )}
-                            <div className="ms-3">
-                              <h6 className="mb-0">
-                                Order #{order.orderNumber}
-                              </h6>
-                              <span className="text-soft">
-                                {order.itemCount} Items {order.status}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Right side with dine-in status and cancel button */}
-                          <div className="d-flex flex-column align-items-end">
-                            <span className="text-soft mb-2">
-                              {order.orderType}
+                {ongoingOrdersData.map((order) => (
+                  <div
+                    key={order.id}
+                    className="order-item mb-3"
+                    onClick={() => navigate(`/order-detail/${order.orderId}`)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <div className="border border-warning shadow-sm p-3 rounded">
+                      <div className="d-flex align-items-center justify-content-between w-100">
+                        {/* Left side with icon and order details */}
+                        <div className="d-flex align-items-center">
+                          {order.status === "placed" ? (
+                            <Timer orderTime={order.time} />
+                          ) : (
+                            <span className={`icon-box ${order.iconBgClass}`}>
+                              <i className="fa-solid fa-bag-shopping text-white"></i>
                             </span>
-                            {order.status === "placed" && (
-                              <button
-                                className="btn btn-sm text-white"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleCancelOrder(
-                                    order.orderId,
-                                    order.orderNumber
-                                  );
-                                }}
-                                style={{
-                                  backgroundColor: "#FF0000",
-                                }}
-                              >
-                                Cancel Order
-                              </button>
-                            )}
+                          )}
+                          <div className="ms-3">
+                            <h6 className="mb-0">Order #{order.orderNumber}</h6>
+                            <span className="text-soft">
+                              {order.itemCount} Items {order.status}
+                            </span>
                           </div>
+                        </div>
+
+                        {/* Right side with dine-in status and cancel button */}
+                        <div className="d-flex flex-column align-items-end">
+                          <span className="text-soft mb-2">{order.orderType}</span>
+                          {order.status === "placed" && (
+                            <button
+                              className="btn btn-sm text-white"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCancelOrder(order.orderId, order.orderNumber);
+                              }}
+                              style={{ backgroundColor: "#FF0000" }}
+                            >
+                              Cancel Order
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
           <div className="default-tab style-1">
             <ul
-              className="nav nav-tabs d-flex flex-nowrap overflow-auto w-100"
+              className="nav nav-tabs d-flex flex-nowrap overflow-auto w-120 justify-content-between"
               id="myTab3"
               role="tablist"
             >
@@ -754,9 +764,8 @@ function Orders() {
                 tabIndex={0}
               >
                 <div className="accordion style-3" id="accordionExamplePending">
-                  {Object.keys(udhariPendingGrouped).length > 0 ? (
+                  {Object.keys(pendingOrdersByDate).length > 0 ? (
                     <>
-                      {/* Expand/Collapse All for Pending Orders */}
                       <div className="d-flex justify-content-end align-items-center mb-3">
                         <button
                           className="btn btn-sm btn-link text-dark p-0"
@@ -765,9 +774,7 @@ function Orders() {
                               ? handleCollapseAllPending
                               : handleExpandAllPending
                           }
-                          aria-expanded={Object.values(
-                            expandedPendingDates
-                          ).some((e) => e)}
+                          aria-expanded={Object.values(expandedPendingDates).some((e) => e)}
                         >
                           <span>
                             {Object.values(expandedPendingDates).some((e) => e)
@@ -783,98 +790,73 @@ function Orders() {
                           ></i>
                         </button>
                       </div>
-                      {Object.entries(udhariPendingGrouped).map(
-                        ([dateKey, orders]) => (
-                          <div className="accordion-item" key={dateKey}>
-                            <h2
-                              className="accordion-header"
-                              id={
-                                "headingUdhariPending" +
-                                dateKey.replace(/\s/g, "")
-                              }
-                            >
-                              <button
-                                className={
-                                  "btn btn-link w-100 d-flex justify-content-between align-items-center p-0 " +
-                                  (!expandedPendingDates[dateKey]
-                                    ? "collapsed"
-                                    : "")
-                                }
-                                type="button"
-                                data-bs-toggle="collapse"
-                                data-bs-target={
-                                  "#collapseUdhariPending" +
-                                  dateKey.replace(/\s/g, "")
-                                }
-                                aria-expanded={
-                                  expandedPendingDates[dateKey] || false
-                                }
-                                aria-controls={
-                                  "collapseUdhariPending" +
-                                  dateKey.replace(/\s/g, "")
-                                }
-                                onClick={() =>
-                                  togglePendingDateExpansion(dateKey)
-                                }
-                              >
-                                <span className="flex-grow-1 text-start">
-                                  {dateKey}
-                                </span>
-                                <span className="me-2">{orders.length}</span>
-                                <i
-                                  className={`ms-2 fas ${
-                                    expandedPendingDates[dateKey]
-                                      ? "fa-chevron-up"
-                                      : "fa-chevron-down"
-                                  }`}
-                                ></i>
-                              </button>
-                            </h2>
-                            <div
-                              id={
-                                "collapseUdhariPending" +
-                                dateKey.replace(/\s/g, "")
-                              }
+                      {Object.entries(pendingOrdersByDate).map(([dateKey, dailyData]) => (
+                        <div className="accordion-item" key={dateKey}>
+                          <h2
+                            className="accordion-header"
+                            id={"headingPending" + dateKey.replace(/\s/g, "")}
+                          >
+                            <button
                               className={
-                                "accordion-collapse collapse " +
-                                (expandedPendingDates[dateKey] ? "show" : "")
+                                "btn btn-link w-100 d-flex justify-content-between align-items-center p-0 " +
+                                (!expandedPendingDates[dateKey] ? "collapsed" : "")
                               }
-                              aria-labelledby={
-                                "headingUdhariPending" +
-                                dateKey.replace(/\s/g, "")
-                              }
-                              data-bs-parent="#accordionUdhariPending"
+                              type="button"
+                              data-bs-toggle="collapse"
+                              data-bs-target={"#collapsePending" + dateKey.replace(/\s/g, "")}
+                              aria-expanded={expandedPendingDates[dateKey] || false}
+                              aria-controls={"collapsePending" + dateKey.replace(/\s/g, "")}
+                              onClick={() => togglePendingDateExpansion(dateKey)}
                             >
-                              <div className="accordion-body">
-                                {orders.map((order) => (
-                                  <OrderAccordionItem
-                                    key={order.id + "-" + order.status}
-                                    orderId={order.orderId}
-                                    orderNumber={order.orderNumber}
-                                    itemCount={order.itemCount}
-                                    status={order.status}
-                                    iconColor={order.iconColor}
-                                    iconBgClass={order.iconBgClass}
-                                    isExpanded={order.isExpanded}
-                                    parentId={order.parentId}
-                                    outletName={order.outletName}
-                                    orderType={order.orderType}
-                                    totalAmount={order.totalAmount}
-                                    paymentStatus={
-                                      order.status === "udhari_pending"
-                                        ? "Udhari Pending"
-                                        : order.paymentStatus
-                                    }
-                                    orderTime={order.time || order.orderTime}
-                                    tableNumber={order.tableNumber}
-                                    sectionName={order.sectionName}
-                                  />
-                                ))}
-                              </div>
+                              <span className="flex-grow-1 text-start">{dailyData.date}</span>
+                              <span className="me-2">{dailyData.orderCount}</span>
+                              <i
+                                className={`ms-2 fas ${
+                                  expandedPendingDates[dateKey]
+                                    ? "fa-chevron-up"
+                                    : "fa-chevron-down"
+                                }`}
+                              ></i>
+                            </button>
+                          </h2>
+                          <div
+                            id={"collapsePending" + dateKey.replace(/\s/g, "")}
+                            className={
+                              "accordion-collapse collapse " +
+                              (expandedPendingDates[dateKey] ? "show" : "")
+                            }
+                            aria-labelledby={"headingPending" + dateKey.replace(/\s/g, "")}
+                            data-bs-parent="#accordionExamplePending"
+                          >
+                            <div className="accordion-body">
+                              {dailyData.orders.map((order) => (
+                                <OrderAccordionItem
+                                  key={order.id + "-" + order.status}
+                                  orderId={order.orderId}
+                                  orderNumber={order.orderNumber}
+                                  itemCount={order.itemCount}
+                                  status={order.status}
+                                  iconColor={order.iconColor}
+                                  iconBgClass={order.iconBgClass}
+                                  isExpanded={order.isExpanded}
+                                  parentId={order.parentId}
+                                  outletName={order.outletName}
+                                  orderType={order.orderType}
+                                  totalAmount={order.totalAmount}
+                                  paymentStatus={
+                                    order.status === "udhari_pending"
+                                      ? "Udhari Pending"
+                                      : order.paymentStatus
+                                  }
+                                  orderTime={order.time || order.orderTime}
+                                  tableNumber={order.tableNumber}
+                                  sectionName={order.sectionName}
+                                />
+                              ))}
                             </div>
                           </div>
-                        )
-                      )}
+                        </div>
+                      ))}
                     </>
                   ) : (
                     <NoOrders message="No pending orders" />
@@ -890,7 +872,7 @@ function Orders() {
                 tabIndex={0}
               >
                 <div className="accordion style-3" id="accordionExample3">
-                  {error.history ? (
+                  {orderHistoryError ? (
                     <NoOrders message="No completed orders" />
                   ) : Object.keys(transformedOrders.completedByDate).length >
                     0 ? (
@@ -1023,11 +1005,11 @@ function Orders() {
                 tabIndex={0}
               >
                 <div className="accordion style-3" id="accordionExample2">
-                  {isLoadingHistory ? (
+                  {isLoadingOrderHistory ? (
                     <div className="text-center py-4">
                       Loading order history...
                     </div>
-                  ) : error.history ? (
+                  ) : orderHistoryError ? (
                     <NoOrders message="No cancelled orders" />
                   ) : Object.keys(transformedOrders.cancelledByDate).length >
                     0 ? (

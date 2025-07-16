@@ -192,6 +192,7 @@ export const OutletProvider = ({ children }) => {
           section_id: sectionId || "",
           table_number: tableId || "",
           app_source: "user_app",
+          user_id: auth.userId || null, // this should be optional !!!
         },
         {
           headers: {

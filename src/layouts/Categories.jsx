@@ -1,104 +1,39 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useQuery } from '@tanstack/react-query';
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useOutlet } from '../contexts/OutletContext';
-
-// API configuration
-const axiosInstance = axios.create({
-  baseURL: "https://men4u.xyz/v2",
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  }
-});
-
-// API service function
-const fetchCategoryList = async (outletId, token) => {
-  try {
-    const response = await axiosInstance.post('/user/get_category_list',
-      { outlet_id: outletId, app_source: "user_app" },
-
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      }
-    );
-    return response.data?.detail?.menu_list || [];
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      // Handle specific axios errors
-      if (error.response) {
-        // Server responded with error status
-        throw new Error(`Server Error: ${error.response.data?.message || 'Unknown server error'}`);
-      } else if (error.request) {
-        // Request made but no response
-        throw new Error('Network Error: No response from server');
-      }
-    }
-    throw new Error('Failed to fetch categories');
-  }
-};
+import { useAuth } from '../contexts/AuthContext';
+import apiService from '../api/apiService';
+import QueryErrorBoundary from '../components/QueryErrorBoundary';
+import TestCacheButton from '../components/TestCacheButton';
 
 function Categories() {
   const navigate = useNavigate();
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [viewMode, setViewMode] = useState('grid');
   const { outletId } = useOutlet();
+  const { getUserId } = useAuth();
 
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Get auth data
-        const authData = localStorage.getItem('auth');
-        const userData = authData ? JSON.parse(authData) : null;
-
-        if (!userData?.accessToken) {
-          throw new Error('Authentication required');
-        }
-
-        if (!outletId) {
-          throw new Error('Outlet ID is required');
-        }
-
-        // Fetch categories
-        const categoryList = await fetchCategoryList(outletId, userData.accessToken);
-        
-        // Map categories
-        const mappedCategories = categoryList.map(category => ({
-          menuCatId: category.menu_cat_id,
-          categoryName: category.category_name,
-          outletId: category.outlet_id,
-          outletVegNonveg: category.outlet_veg_nonveg,
-          menuCount: category.menu_count
-        }));
-
-        setCategories(mappedCategories);
-      } catch (err) {
-        console.error('Error loading categories:', err);
-        setError(err.message);
-        setCategories([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCategories();
-  }, [outletId]); // Added outletId as dependency
+  // Replace useEffect + useState with useQuery
+  const { 
+    data: categories = [], 
+    isLoading,
+    error,
+    refetch 
+  } = useQuery({
+    queryKey: ['categories', outletId],
+    queryFn: () => apiService.categories.getList({ outletId }),
+    enabled: !!outletId,
+    // staleTime: 5 * 60 * 1000, // Match previous cache time of 5 minutes
+  });
 
   const handleCategoryClick = (e, category) => {
     e.preventDefault();
-    navigate(`/category-menu/${category.menuCatId}`, { 
+    navigate(`/category-menu/${category.menu_cat_id}`, { 
       state: { 
-        categoryName: category.categoryName,
-        menuCount: category.menuCount 
+        categoryName: category.category_name,
+        menuCount: category.menu_count 
       } 
     });
   };
@@ -192,24 +127,6 @@ function Categories() {
         >
           <i className="fas fa-th-large"></i>
         </button>
-        {/* <button
-          type="button"
-          className={`btn btn-sm rounded-pill px-3 py-2 ${
-            viewMode === 'list' 
-              ? 'text-white shadow-sm' 
-              : 'text-muted'
-          }`}
-          onClick={() => setViewMode('list')}
-          style={{
-            background: viewMode === 'list' 
-              ? 'linear-gradient(135deg, #FF7043 0%, #F4511E 100%)' 
-              : 'transparent',
-            border: 'none',
-            transition: 'all 0.3s ease',
-          }}
-        >
-          <i className="fas fa-bars"></i>
-        </button> */}
       </div>
       <style>
         {`
@@ -274,10 +191,10 @@ function Categories() {
                     fontWeight: '600',
                     textShadow: '0 1px 2px rgba(0,0,0,0.2)'
                   }}>
-                  {category.categoryName}
+                  {category.category_name}
                 </h6>
                 <span className="badge bg-white bg-opacity-25 text-white px-2 py-1 rounded-pill">
-                  {category.menuCount} Items
+                  {category.menu_count} Items
                 </span>
               </div>
             </div>
@@ -287,38 +204,57 @@ function Categories() {
     );
   };
 
-  // Main render
   return (
     <div>
       <Header />
       <div className="page-content p-b60">
         <div className="container">
-          {/* View toggle and error message */}
-          {/* <div className="mb-4">
-            {!loading && !error && categories.length > 0 && <ViewToggle />}
-            {error && <ErrorMessage message={error} />}
-          </div> */}
+          {/* Test cache controls - Remove in production */}
+          {/* <TestCacheButton /> */}
+          
+          <QueryErrorBoundary>
+            {/* Optional: Add refresh button */}
+            {/* <div className="d-flex justify-content-between align-items-center mb-4">
+              <ViewToggle />
+              {!isLoading && (
+                <button 
+                  className="btn btn-light btn-sm"
+                  onClick={() => refetch()}
+                >
+                  <i className="fas fa-sync-alt me-1"></i>
+                  Refresh
+                </button>
+              )}
+            </div> */}
 
-          {/* Categories display */}
-          <div className="row">
-            {loading ? (
-              <CategorySkeleton />
-            ) : categories.length > 0 ? (
-              categories.map((category, index) => (
-                <CategoryCard 
-                  key={category.menuCatId}
-                  category={category}
-                  index={index}
-                  isList={viewMode === 'list'}
-                />
-              ))
-            ) : (
-              <div className="col-12 text-center py-5">
-                <i className="fas fa-folder-open fa-3x text-muted mb-3 d-block"></i>
-                <h5 className="text-muted">No categories found</h5>
-              </div>
-            )}
-          </div>
+            {/* Categories display */}
+            <div className="row">
+              {isLoading ? (
+                <CategorySkeleton />
+              ) : error ? (
+                <div className="col-12">
+                  <div className="alert alert-danger" role="alert">
+                    <i className="fas fa-exclamation-circle me-2"></i>
+                    {error.message || 'Failed to load categories'}
+                  </div>
+                </div>
+              ) : categories.length > 0 ? (
+                categories.map((category, index) => (
+                  <CategoryCard 
+                    key={category.menu_cat_id}
+                    category={category}
+                    index={index}
+                    isList={viewMode === 'list'}
+                  />
+                ))
+              ) : (
+                <div className="col-12 text-center py-5">
+                  <i className="fas fa-folder-open fa-3x text-muted mb-3 d-block"></i>
+                  <h5 className="text-muted">No categories found</h5>
+                </div>
+              )}
+            </div>
+          </QueryErrorBoundary>
         </div>
       </div>
       <Footer />

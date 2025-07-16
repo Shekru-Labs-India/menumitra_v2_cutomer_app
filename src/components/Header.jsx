@@ -8,6 +8,8 @@ import TestEnvironmentBanner from "./TestEnvironmentBanner";
 import OutletInfoBanner from "./OutletInfoBanner";
 import { useLocation } from "react-router-dom";
 import logo from "../assets/logo.png";
+import logo2 from "../assets/mm-logo.png";
+
 
 function Header() {
   const mainBarRef = useRef(null);
@@ -67,7 +69,7 @@ function Header() {
   const getHeaderTitle = () => {
     const path = location.pathname;
     if (path === "/") return "MenuMitra";
-    if (path.startsWith("/checkout")) return "Cart";
+    if (path.startsWith("/checkout")) return "Checkout";
     if (path.startsWith("/profile")) return "Profile";
     if (path.startsWith("/search")) return "Search";
     if (path.startsWith("/orders")) return "Orders";
@@ -113,18 +115,12 @@ function Header() {
                     style={{ display: "flex", alignItems: "center", gap: 4 }}
                   >
                     <img
-                      src={logo}
+                      src={logo2}
                       alt="MenuMitra Logo"
-                      style={{ height: 50, width: 50, marginRight: 0 }}
+                      style={{ height: 40, width: 40, marginRight: 0 }}
                     />
                     <span
-                      style={{
-                        fontSize: 18,
-                        fontWeight: 600,
-                        color: "#222",
-                        letterSpacing: 0,
-                        lineHeight: 1,
-                      }}
+                      className="fs-5 fw-semibold text-dark lh-1"
                     >
                       MenuMitra
                     </span>

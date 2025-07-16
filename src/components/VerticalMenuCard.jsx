@@ -6,6 +6,9 @@ import { useModal } from "../contexts/ModalContext";
 import { useCart } from "../contexts/CartContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useOutlet } from "../contexts/OutletContext";
+import { useCacheData } from "../contexts/CacheDataContext"; // Add this import
+import apiService from '../api/apiService';
+import { useMenuItems } from '../hooks/useMenuItems';
 
 // FoodTypeIcon component
 const FoodTypeIcon = ({ foodType }) => {
@@ -107,7 +110,7 @@ const FoodTypeIcon = ({ foodType }) => {
               style={{
                 color: "#B0BEC5",
                 fontSize: "10px",
-                transform: "rotate(-15deg)",
+                // transform: "rotate(-15deg)",
               }}
             ></i>
           </div>
@@ -129,14 +132,18 @@ const VerticalMenuCard = ({
   discount,
   menuItem = {},
   onFavoriteUpdate,
+  originalPrice,
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
+  // Convert isFavorite to boolean if it's a number
+  const isFavoriteBoolean = typeof isFavorite === 'number' ? isFavorite === 1 : Boolean(isFavorite);
+  
+  const { toggleFavorite, isFavoriteLoading } = useMenuItems();
   const { openModal } = useModal();
-  const { cartItems, updateQuantity, removeFromCart, getCartItemComment } =
-    useCart();
+  const { cartItems, getCartItemComment } = useCart(); // Add this back
   const { user, setShowAuthOffcanvas } = useAuth();
   const { outletId } = useOutlet();
   const MAX_QUANTITY = 20;
+
 
   // Generate the product URL from menuItem data with safety checks
   const detailPageUrl =
@@ -157,18 +164,14 @@ const VerticalMenuCard = ({
   const handleFavoriteToggle = async (e) => {
     e.preventDefault();
 
-    // Check if user is authenticated
     if (!user) {
       setShowAuthOffcanvas(true);
       return;
     }
 
-    if (isLoading || !menuItem?.menuId) return;
+    if (isFavoriteLoading || !menuItem?.menuId) return;
 
     try {
-      setIsLoading(true);
-
-      // Get auth data from localStorage
       const authData = localStorage.getItem("auth");
       const auth = authData ? JSON.parse(authData) : null;
 
@@ -177,48 +180,30 @@ const VerticalMenuCard = ({
         return;
       }
 
-      // Choose API endpoint based on current favorite status
-      const apiUrl = isFavorite
-        ? "https://men4u.xyz/v2/user/remove_favourite_menu"
-        : "https://men4u.xyz/v2/user/save_favourite_menu";
-
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${auth.accessToken}`,
+      // Use the mutation instead of direct API call
+      toggleFavorite(
+        {
+          menuId: menuItem.menuId,
+          isFavorite: isFavoriteBoolean,
+          userId: auth.userId
         },
-        body: JSON.stringify({
-          outlet_id: outletId,
-          menu_id: menuItem.menuId,
-          user_id: auth.userId || null,
-          app_source: "user_app",
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        onFavoriteUpdate(menuItem.menuId, !isFavorite);
-      } else {
-        console.error("Failed to update favorite status:", data.detail);
-        if (data.detail === "Menu already in favorites") {
-          onFavoriteUpdate(menuItem.menuId, true);
-          window.alert("Menu is already in your favorites.");
-        } else {
-          openModal("ERROR", {
-            message: data.detail || "Failed to update favorite status",
-          });
+        {
+          onSuccess: () => {
+            onFavoriteUpdate(menuItem.menuId, !isFavoriteBoolean);
+          },
+          onError: (error) => {
+            console.error("Error updating favorite status:", error);
+            openModal("ERROR", {
+              message: error.message || "Failed to update favorite status",
+            });
+          }
         }
-      }
+      );
     } catch (error) {
       console.error("Error updating favorite status:", error);
       openModal("ERROR", {
-        message: "Failed to connect to the server",
+        message: error.message || "Failed to update favorite status",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -322,20 +307,20 @@ const VerticalMenuCard = ({
           </div>
           <a
             href="javascript:void(0);"
-            className={`${isLoading ? "disabled" : ""}`}
+            className={`${isFavoriteLoading ? "disabled" : ""}`}
             onClick={handleFavoriteToggle}
             style={{
-              pointerEvents: isLoading ? "none" : "auto",
+              pointerEvents: isFavoriteLoading ? "none" : "auto",
               cursor: "pointer",
               textDecoration: "none",
             }}
           >
-            <div className={`like-button ${isFavorite ? "active" : ""}`}>
+            <div className={`like-button ${isFavoriteBoolean ? "active" : ""}`}>
               <i
-                className={`fa-${isFavorite ? "solid" : "regular"} fa-heart`}
+                className={`fa-${isFavoriteBoolean ? "solid" : "regular"} fa-heart`}
                 style={{
                   fontSize: "16px",
-                  color: isFavorite ? "#dc3545" : "#6c757d",
+                  color: isFavoriteBoolean ? "#dc3545" : "#6c757d",
                   lineHeight: 1,
                 }}
               />
@@ -392,12 +377,20 @@ const VerticalMenuCard = ({
               className="price"
               style={{
                 color: "#3AB4F2",
-                // fontWeight: "bold",
                 fontSize: "15px",
                 marginLeft: "auto",
               }}
             >
-              ₹{currentPrice}
+              {menuItem.offer > 0 ? (
+                <>
+                  ₹{Math.round(menuItem.portions?.[0]?.price * (1 - menuItem.offer / 100))}
+                  <del className="ms-2 text-muted">
+                    ₹{menuItem.portions?.[0]?.price}
+                  </del>
+                </>
+              ) : (
+                `₹${currentPrice}`
+              )}
             </li>
           </ul>
         </div>
@@ -497,10 +490,11 @@ VerticalMenuCard.propTypes = {
   title: PropTypes.string.isRequired,
   currentPrice: PropTypes.number.isRequired,
   reviewCount: PropTypes.number,
-  isFavorite: PropTypes.bool,
+  isFavorite: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
   discount: PropTypes.string,
   menuItem: PropTypes.object,
   onFavoriteUpdate: PropTypes.func.isRequired,
+  originalPrice: PropTypes.number,
 };
 
 export default VerticalMenuCard;
