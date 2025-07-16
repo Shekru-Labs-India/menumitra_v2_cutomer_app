@@ -300,14 +300,15 @@ function ProductDetail() {
                   <span className="text-style text-soft">Price</span>
                   <div className="d-flex justify-content-between align-items-center">
                     <h3 className="sub-title mb-0">
-                      ₹{menuDetails.portions[0]?.price}
+                      ₹
+                      {menuDetails.offer > 0
+                        ? menuDetails.portions[0]?.price -
+                          (menuDetails.portions[0]?.price * menuDetails.offer) /
+                            100
+                        : menuDetails.portions[0]?.price}
                       {menuDetails.offer > 0 && (
                         <del className="ms-2 text-muted">
-                          ₹
-                          {Math.round(
-                            menuDetails.portions[0]?.price /
-                              (1 - menuDetails.offer / 100)
-                          )}
+                          ₹{menuDetails.portions[0]?.price}
                         </del>
                       )}
                     </h3>
