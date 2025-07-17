@@ -367,7 +367,7 @@ const OrderAccordionItem = ({
                 <h6 className="mb-0">#{orderNumber}</h6>
                 
               {/* Status below only if not paid/cancelled */}
-              {paymentStatus !== "Paid" && status !== "Cancelled" && (
+              {paymentStatus !== "Paid" && status !== "cancelled" && (
                 <p className="mb-0 text-muted" style={{ fontSize: "12px" }}>
                   ({status})
                 </p>
@@ -384,7 +384,7 @@ const OrderAccordionItem = ({
                   >
                     <i className="bi bi-check-circle-fill me-1"></i>Paid
                   </span>
-                ) : status === "Cancelled" ? (
+                ) : status === "cancelled" ? (
                   <span
                     className="badge bg-danger text-white"
                     style={{
@@ -404,7 +404,7 @@ const OrderAccordionItem = ({
                       borderRadius: "6px",
                     }}
                   >
-                    <i className="fa fa-hourglass-half me-1"></i>Udhari Pending
+                    {/* <i className="fa fa-hourglass-half me-1"></i>Udhari Pending */}
                   </span>
                 ) : null}
               </div>

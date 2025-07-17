@@ -144,11 +144,15 @@ function OrderDetail() {
 
       // Destructure at the top level correctly
       const { order_details, menu_details } = orderDetails;
-      const outlet_name = localStorage.getItem("outlet_name") || order_details.outlet_name || "";
+      const outlet_name =
+        localStorage.getItem("outlet_name") || order_details.outlet_name || "";
       const outlet_address = localStorage.getItem("outlet_address") || "-";
       const outlet_mobile = localStorage.getItem("outlet_mobile") || "-";
       const website_url = "https://menumitra.com";
-      const customerName = localStorage.getItem("customerName") || order_details.user_name || "Guest";
+      const customerName =
+        localStorage.getItem("customerName") ||
+        order_details.user_name ||
+        "Guest";
 
       // Add current date and time for PDF generation timestamp
       const now = new Date();
@@ -244,6 +248,17 @@ function OrderDetail() {
           )}</span></br>`
         : ""
     }
+    
+    <!-- Coupon Discount -->
+    ${
+      order_details.coupon_details
+        ? `<span style="font-weight: bold;">Coupon Discount (${
+            order_details.coupon_details.coupon_code
+          }):</span> <span style="color: red;">-₹${(
+            order_details.coupon_discount
+          ).toFixed(2)}</span></br>`
+        : ""
+    }
 
     <!-- Special Discount -->
     ${
@@ -318,7 +333,9 @@ function OrderDetail() {
             </div>
             <div style="text-align: right;">
               <p style="margin: 0 0 10px 0; font-weight: bold;">Payment Method</p>
-              <p style="margin: 5px 0; text-transform: uppercase;">${order_details.payment_method || ""}</p>
+              <p style="margin: 5px 0; text-transform: uppercase;">${
+                order_details.payment_method || ""
+              }</p>
         </div>
           </div>
 
@@ -591,7 +608,9 @@ function OrderDetail() {
                       <p className="mb-0 text-soft">
                         Qty: {menu.quantity} × ₹{menu.price}
                         {menu.comment && (
-                          <span className="ms-2 text-soft">• {menu.comment}</span>
+                          <span className="ms-2 text-soft">
+                            • {menu.comment}
+                          </span>
                         )}
                       </p>
                       {menu.offer > 0 && (
@@ -626,7 +645,11 @@ function OrderDetail() {
                   <div className="d-flex justify-content-between px-0 border-0">
                     <span className="text-soft">Bill Amount</span>
                     <strong className="text-primary">
-                      ₹{Number(orderDetails.order_details.coupon_details.total_bill_before_coupon).toFixed(2)}
+                      ₹
+                      {Number(
+                        orderDetails.order_details.coupon_details
+                          .total_bill_before_coupon
+                      ).toFixed(2)}
                     </strong>
                   </div>
                 )}
@@ -636,26 +659,44 @@ function OrderDetail() {
                   <>
                     <div
                       className="d-flex justify-content-between px-0"
-                      style={{ paddingTop: 4, paddingBottom: 4, marginBottom: 0 }}
+                      style={{
+                        paddingTop: 4,
+                        paddingBottom: 4,
+                        marginBottom: 0,
+                      }}
                     >
                       <span>
-                        Coupon ({orderDetails.order_details.coupon_details.coupon_code})
-                        {orderDetails.order_details.coupon_details.discount_type === "amount" 
+                        Coupon (
+                        {orderDetails.order_details.coupon_details.coupon_code})
+                        {orderDetails.order_details.coupon_details
+                          .discount_type === "amount"
                           ? ` - Flat ₹${orderDetails.order_details.coupon_details.discount_value}`
-                          : ` - ${orderDetails.order_details.coupon_details.discount_value}% off`
-                        }
+                          : ` - ${orderDetails.order_details.coupon_details.discount_value}% off`}
                       </span>
                       <strong style={{ color: "#e74c3c" }}>
-                        -₹{Number(orderDetails.order_details.coupon_discount).toFixed(2)}
+                        -₹
+                        {Number(
+                          orderDetails.order_details.coupon_discount
+                        ).toFixed(2)}
                       </strong>
                     </div>
                     <div
                       className="d-flex justify-content-between px-0"
-                      style={{ paddingTop: 4, paddingBottom: 4, marginBottom: 0 }}
+                      style={{
+                        paddingTop: 4,
+                        paddingBottom: 4,
+                        marginBottom: 0,
+                      }}
                     >
-                      <span style={{ fontWeight: 500 }}>After Coupon Discount</span>
                       <span style={{ fontWeight: 500 }}>
-                        ₹{Number(orderDetails.order_details.coupon_details.total_bill_after_coupon).toFixed(2)}
+                        After Coupon Discount
+                      </span>
+                      <span style={{ fontWeight: 500 }}>
+                        ₹
+                        {Number(
+                          orderDetails.order_details.coupon_details
+                            .total_bill_after_coupon
+                        ).toFixed(2)}
                       </span>
                     </div>
                   </>
@@ -666,7 +707,10 @@ function OrderDetail() {
                   <div className="d-flex justify-content-between px-0 border-0">
                     <span className="text-soft">Total</span>
                     <strong className="text-primary">
-                      ₹{Number(orderDetails.order_details.total_bill_amount).toFixed(2)}
+                      ₹
+                      {Number(
+                        orderDetails.order_details.total_bill_amount
+                      ).toFixed(2)}
                     </strong>
                   </div>
                 )}
@@ -805,7 +849,9 @@ function OrderDetail() {
             <div>
               <FeedbackButton />
             </div>
-            {["paid", "complementary_paid", "udhari_paid"].includes(orderDetails.order_details.order_status?.toLowerCase()) && (
+            {["paid", "complementary_paid", "udhari_paid"].includes(
+              orderDetails.order_details.order_status?.toLowerCase()
+            ) && (
               <button
                 className="btn btn-light btn-sm d-flex align-items-center"
                 onClick={handleDownloadInvoice}

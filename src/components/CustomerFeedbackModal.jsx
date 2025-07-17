@@ -17,46 +17,46 @@ const CustomerFeedbackModal = ({ show, onClose }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
-    if (name === 'customer_name') {
+
+    if (name === "customer_name") {
       // Only allow letters and spaces
       if (/^[A-Za-z\s]*$/.test(value)) {
         setForm((prev) => ({ ...prev, [name]: value }));
       }
-    } else if (name === 'mobile') {
+    } else if (name === "mobile") {
       // Allow empty value for clearing the input
-      if (value === '') {
-        setForm((prev) => ({ ...prev, [name]: '' }));
+      if (value === "") {
+        setForm((prev) => ({ ...prev, [name]: "" }));
         return;
       }
 
       // Remove any non-digit characters
-      const numbersOnly = value.replace(/\D/g, '');
-      
+      const numbersOnly = value.replace(/\D/g, "");
+
       // Check if first digit is valid (6-9)
       if (numbersOnly.length > 0) {
         const firstDigit = parseInt(numbersOnly[0]);
         if (firstDigit < 6) {
           // Clear input if starts with 0-5
-          setForm((prev) => ({ ...prev, [name]: '' }));
+          setForm((prev) => ({ ...prev, [name]: "" }));
           return;
         }
       }
-      
+
       // Limit to 10 digits and validate format
       if (/^[6-9]\d{0,9}$/.test(numbersOnly)) {
         setForm((prev) => ({ ...prev, [name]: numbersOnly }));
       }
-    } else if (name === 'order_number') {
+    } else if (name === "order_number") {
       // Allow empty value for clearing the input
-      if (value === '') {
-        setForm((prev) => ({ ...prev, [name]: '' }));
+      if (value === "") {
+        setForm((prev) => ({ ...prev, [name]: "" }));
         return;
       }
 
       // Remove any non-digit characters
-      const numbersOnly = value.replace(/\D/g, '');
-      
+      const numbersOnly = value.replace(/\D/g, "");
+
       // Only update if the value contains 6-12 digits
       if (/^\d{0,12}$/.test(numbersOnly)) {
         setForm((prev) => ({ ...prev, [name]: numbersOnly }));
@@ -95,6 +95,8 @@ const CustomerFeedbackModal = ({ show, onClose }) => {
       setLoading(false);
     }
   };
+
+  const ratingLabels = ["Bad", "Poor", "Average", "Good", "Excellent"];
 
   return (
     <div
@@ -155,7 +157,7 @@ const CustomerFeedbackModal = ({ show, onClose }) => {
                   placeholder="Enter your mobile number"
                 />
               </div>
-              <div className="mb-2">
+              {/* <div className="mb-2">
                 <label className="form-label">Order Number</label>
                 <input
                   type="text"
@@ -165,7 +167,7 @@ const CustomerFeedbackModal = ({ show, onClose }) => {
                   onChange={handleChange}
                   placeholder="Enter your order number"
                 />
-              </div>
+              </div> */}
               <div className="mb-2">
                 <label className="form-label">
                   <span className="text-danger">*</span>Feedback
@@ -184,28 +186,63 @@ const CustomerFeedbackModal = ({ show, onClose }) => {
                 <label className="form-label">
                   <span className="text-danger">*</span>Rating
                 </label>
-                <div style={{ display: "flex", gap: 4, fontSize: 24 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 4,
+                    fontSize: 24,
+                    position: "relative",
+                  }}
+                >
                   {[1, 2, 3, 4, 5].map((n) => (
-                    <i
+                    <div
                       key={n}
-                      className={
-                        n <= Number(form.feedback_rating)
-                          ? "fa-solid fa-star"
-                          : "fa-regular fa-star"
-                      }
                       style={{
-                        color:
-                          n <= Number(form.feedback_rating)
-                            ? "#FFD600"
-                            : "#ccc",
-                        cursor: "pointer",
-                        transition: "color 0.2s",
+                        position: "relative",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
                       }}
-                      onClick={() =>
-                        setForm((prev) => ({ ...prev, feedback_rating: n }))
-                      }
-                      aria-label={`Rate ${n} star${n > 1 ? "s" : ""}`}
-                    ></i>
+                    >
+                      {/* Show label above the selected star */}
+                      {form.feedback_rating === n && (
+                        <span
+                          style={{
+                            position: "absolute",
+                            top: -22,
+                            left: "50%",
+                            transform: "translateX(-50%)",
+                            fontSize: 12,
+                            color: "#666",
+                            fontWeight: 500,
+                            whiteSpace: "nowrap",
+                            pointerEvents: "none",
+                            zIndex: 1,
+                          }}
+                        >
+                          {ratingLabels[n - 1]}
+                        </span>
+                      )}
+                      <i
+                        className={
+                          n <= Number(form.feedback_rating)
+                            ? "fa-solid fa-star"
+                            : "fa-regular fa-star"
+                        }
+                        style={{
+                          color:
+                            n <= Number(form.feedback_rating)
+                              ? "#FFD600"
+                              : "#ccc",
+                          cursor: "pointer",
+                          transition: "color 0.2s",
+                        }}
+                        onClick={() =>
+                          setForm((prev) => ({ ...prev, feedback_rating: n }))
+                        }
+                        aria-label={`Rate ${n} star${n > 1 ? "s" : ""}`}
+                      ></i>
+                    </div>
                   ))}
                 </div>
               </div>
