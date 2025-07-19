@@ -11,12 +11,12 @@ import { useOutlet } from "../contexts/OutletContext";
 import QuickFilters from "../components/QuickFilters";
 import axios from "axios";
 import apiService from "../api/apiService";
-import { useQuery } from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query";
 
 function Search() {
   // Add this at the start of the component, with other useEffects
   useEffect(() => {
-    const style = document.createElement('style');
+    const style = document.createElement("style");
     style.textContent = styles;
     document.head.appendChild(style);
     return () => document.head.removeChild(style);
@@ -141,11 +141,11 @@ function Search() {
     refetch,
     isFetching,
   } = useQuery({
-    queryKey: ['searchMenus', outletId, userId, searchInputValue.trim()],
+    queryKey: ["searchMenus", outletId, userId, searchInputValue.trim()],
     queryFn: () =>
       apiService.menus.searchMenus({
         outletId,
-        userId,  // Make sure userId is passed
+        userId, // Make sure userId is passed
         keyword: searchInputValue.trim(),
       }),
     enabled: false,
@@ -165,15 +165,28 @@ function Search() {
   const handleSearch = async () => {
     setHasSearched(true);
     setError(null);
+    // Only search if input is 4 or more characters
+    if (searchInputValue.trim().length < 4) return;
     const { error: queryError } = await refetch();
     if (queryError) setError(queryError);
   };
 
-  // Input change handler (does NOT trigger search)
+  // Debounced version of handleSearch
+  const debouncedHandleSearch = useCallback(
+    debounce(() => {
+      handleSearch();
+    }, 400),
+    [searchInputValue, outletId, userId]
+  );
+
+  // Input change handler (triggers search if 4+ chars)
   const handleSearchChange = (event) => {
     setSearchInputValue(event.target.value);
     if (!event.target.value.trim()) {
       setHasSearched(false); // Reset search state if input is cleared
+    }
+    if (event.target.value.trim().length >= 4) {
+      debouncedHandleSearch();
     }
   };
 
@@ -341,7 +354,8 @@ function Search() {
   }, []);
 
   // Use filteredResults if available, otherwise use searchResults
-  const displayResults = filteredResults.length > 0 ? filteredResults : searchResults;
+  const displayResults =
+    filteredResults.length > 0 ? filteredResults : searchResults;
 
   return (
     <>
@@ -355,8 +369,7 @@ function Search() {
                   <div className="input-group-text">
                     <div
                       className="input-icon search-icon"
-                      onClick={handleSearch}
-                      style={{ cursor: 'pointer' }}
+                      style={{ cursor: "not-allowed", opacity: 0.5 }}
                     >
                       <i
                         className="fas fa-search"
@@ -371,11 +384,6 @@ function Search() {
                     placeholder="Search menu items..."
                     onChange={handleSearchChange}
                     value={searchInputValue}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handleSearch();
-                      }
-                    }}
                     autoComplete="off"
                     results="0"
                     data-search-input
@@ -383,11 +391,11 @@ function Search() {
                 </div>
               </div>
             </div>
-            <QuickFilters 
-              onFilterChange={handleQuickFilterChange} 
+            <QuickFilters
+              onFilterChange={handleQuickFilterChange}
               menuList={searchResults} // Pass the original search results
             />
-           
+
             {isLoading || isFetching ? (
               <div className="text-center py-4">
                 <div className="spinner-border text-primary" role="status">
@@ -407,7 +415,10 @@ function Search() {
                     }}
                   ></i>
                   <p className="mt-3 text-muted">
-                    Error: {error?.message || searchError?.message || "Failed to fetch"}
+                    Error:{" "}
+                    {error?.message ||
+                      searchError?.message ||
+                      "Failed to fetch"}
                   </p>
                 </div>
               </div>
@@ -445,17 +456,24 @@ function Search() {
                     <li key={menu.menu_id}>
                       <HorizontalMenuCard
                         image={
-                          menu.images && Array.isArray(menu.images) && menu.images.length > 0
+                          menu.images &&
+                          Array.isArray(menu.images) &&
+                          menu.images.length > 0
                             ? menu.images[0].image
                             : menu.image || null
                         }
                         title={menu.menu_name}
                         currentPrice={
-                          menu.offer > 0 
-                          ? Math.round(menu.portions?.[0]?.price * (1 - menu.offer / 100))
-                          : menu.portions?.[0]?.price || 0
+                          menu.offer > 0
+                            ? Math.round(
+                                menu.portions?.[0]?.price *
+                                  (1 - menu.offer / 100)
+                              )
+                            : menu.portions?.[0]?.price || 0
                         }
-                        originalPrice={menu.offer > 0 ? menu.portions?.[0]?.price : null}
+                        originalPrice={
+                          menu.offer > 0 ? menu.portions?.[0]?.price : null
+                        }
                         discount={menu.offer > 0 ? `${menu.offer}%` : null}
                         menuItem={{
                           menuId: menu.menu_id,
@@ -470,7 +488,9 @@ function Search() {
                               unit_type: portion.unit_type,
                             })) || [],
                           image:
-                            menu.images && Array.isArray(menu.images) && menu.images.length > 0
+                            menu.images &&
+                            Array.isArray(menu.images) &&
+                            menu.images.length > 0
                               ? menu.images[0].image
                               : menu.image || null,
                           menuFoodType: menu.menu_food_type,
@@ -478,9 +498,14 @@ function Search() {
                           rating: menu.rating,
                           isSpecial: menu.is_special,
                           spicyIndex: menu.spicy_index, // Add this line
-                          categoryName: menu.category_name // Add this line
+                          categoryName: menu.category_name, // Add this line
                         }}
-                        onFavoriteClick={() => handleFavoriteClick(menu.menu_id, menu.is_favourite === 1)}
+                        onFavoriteClick={() =>
+                          handleFavoriteClick(
+                            menu.menu_id,
+                            menu.is_favourite === 1
+                          )
+                        }
                         isFavorite={menu.is_favourite === 1}
                         rating={menu.rating}
                         categoryName={menu.category_name}

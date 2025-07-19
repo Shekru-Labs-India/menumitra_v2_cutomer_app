@@ -831,7 +831,7 @@ function OrderDetail() {
                 </div>
               </div>
 
-              {orderDetails.order_details.order_payment_settle_type &&
+              {/* {orderDetails.order_details.order_payment_settle_type &&
                 orderDetails.order_details.order_payment_settle_type !==
                   "null" && (
                   <div style={{ marginTop: 4 }}>
@@ -840,7 +840,7 @@ function OrderDetail() {
                       {orderDetails.order_details.order_payment_settle_type}
                     </span>
                   </div>
-                )}
+                )} */}
             </div>
           </div>
 
