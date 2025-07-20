@@ -5,7 +5,16 @@ import { useAuth } from "../../contexts/AuthContext";
 import axios from "axios";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useToast } from "../Toast/useToast";
-import { browserName, browserVersion, deviceType, getUA, mobileModel, mobileVendor, osName, osVersion } from 'react-device-detect';
+import {
+  browserName,
+  browserVersion,
+  deviceType,
+  getUA,
+  mobileModel,
+  mobileVendor,
+  osName,
+  osVersion,
+} from "react-device-detect";
 
 const STEPS = {
   LOGIN: "login",
@@ -46,7 +55,7 @@ const AuthOffcanvas = () => {
     if (currentStep === STEPS.OTP || resetTimer) {
       setTimer(20);
       setIsResendDisabled(true);
-      
+
       interval = setInterval(() => {
         setTimer((prevTimer) => {
           if (prevTimer <= 1) {
@@ -208,11 +217,14 @@ const AuthOffcanvas = () => {
         app_type: "customer",
       });
 
-      if (data.role === "customer") {
+      if (data.role === "customer" || data.role === "admin") {
         setCurrentStep(STEPS.OTP);
         toast.success("OTP sent successfully", "Verification");
       } else {
-        toast.error("This mobile number is not registered as a customer", "Error");
+        toast.error(
+          "This mobile number is not registered as a customer or admin",
+          "Error"
+        );
       }
     } catch (err) {
       console.error("Login error:", err);
@@ -227,7 +239,8 @@ const AuthOffcanvas = () => {
       }
 
       toast.error(
-        err.response?.data?.detail || "Unable to process request. Please try again.",
+        err.response?.data?.detail ||
+          "Unable to process request. Please try again.",
         "Error"
       );
     } finally {
@@ -246,11 +259,15 @@ const AuthOffcanvas = () => {
       });
 
       setCurrentStep(STEPS.OTP);
-      toast.success("Account created successfully. Please verify OTP.", "Success");
+      toast.success(
+        "Account created successfully. Please verify OTP.",
+        "Success"
+      );
     } catch (err) {
       console.error("Signup error:", err);
       toast.error(
-        err.response?.data?.detail || "Failed to create account. Please try again.",
+        err.response?.data?.detail ||
+          "Failed to create account. Please try again.",
         "Error"
       );
     } finally {
@@ -266,71 +283,81 @@ const AuthOffcanvas = () => {
         screen.height,
         screen.width,
         navigator.language,
-        new Date().getTimezoneOffset()
-      ].join('|');
-      
+        new Date().getTimezoneOffset(),
+      ].join("|");
+
       // Create a hash of the characteristics
       let hash = 0;
       for (let i = 0; i < characteristics.length; i++) {
         const char = characteristics.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
+        hash = (hash << 5) - hash + char;
         hash = hash & hash; // Convert to 32-bit integer
       }
       return Math.abs(hash).toString(16);
     };
 
     // Get or create device ID
-    let deviceId = localStorage.getItem('mm_device_id');
+    let deviceId = localStorage.getItem("mm_device_id");
     if (!deviceId) {
       deviceId = generateDeviceId();
-      localStorage.setItem('mm_device_id', deviceId);
+      localStorage.setItem("mm_device_id", deviceId);
     }
 
     // Enhanced browser detection
     const getBrowserInfo = () => {
       const ua = navigator.userAgent;
-      
+
       // Check for common browsers using both user agent and specific browser properties
-      if (navigator.brave?.isBrave || ua.includes('Brave')) {
-        return 'Brave';
-      } else if (ua.includes('Chrome') && !ua.includes('Edg') && !ua.includes('OPR')) {
-        return 'Chrome';
-      } else if (ua.includes('Firefox')) {
-        return 'Firefox';
-      } else if (ua.includes('Safari') && !ua.includes('Chrome')) {
-        return 'Safari';
-      } else if (ua.includes('Edg')) {
-        return 'Edge';
-      } else if (ua.includes('OPR') || ua.includes('Opera')) {
-        return 'Opera';
-      } else if (ua.includes('MSIE') || ua.includes('Trident/')) {
-        return 'Internet Explorer';
+      if (navigator.brave?.isBrave || ua.includes("Brave")) {
+        return "Brave";
+      } else if (
+        ua.includes("Chrome") &&
+        !ua.includes("Edg") &&
+        !ua.includes("OPR")
+      ) {
+        return "Chrome";
+      } else if (ua.includes("Firefox")) {
+        return "Firefox";
+      } else if (ua.includes("Safari") && !ua.includes("Chrome")) {
+        return "Safari";
+      } else if (ua.includes("Edg")) {
+        return "Edge";
+      } else if (ua.includes("OPR") || ua.includes("Opera")) {
+        return "Opera";
+      } else if (ua.includes("MSIE") || ua.includes("Trident/")) {
+        return "Internet Explorer";
       } else {
-        return 'Browser'; // Generic fallback
+        return "Browser"; // Generic fallback
       }
     };
 
     // Get OS info with better formatting
     const getOSInfo = () => {
-      if (osName === 'none' || !osName) {
+      if (osName === "none" || !osName) {
         // Fallback OS detection from user agent
         const ua = navigator.userAgent;
-        if (ua.includes('Windows')) return 'Windows';
-        if (ua.includes('Mac')) return 'MacOS';
-        if (ua.includes('Linux')) return 'Linux';
-        if (ua.includes('Android')) return 'Android';
-        if (ua.includes('iOS') || ua.includes('iPhone') || ua.includes('iPad')) return 'iOS';
-        return 'Unknown OS';
+        if (ua.includes("Windows")) return "Windows";
+        if (ua.includes("Mac")) return "MacOS";
+        if (ua.includes("Linux")) return "Linux";
+        if (ua.includes("Android")) return "Android";
+        if (ua.includes("iOS") || ua.includes("iPhone") || ua.includes("iPad"))
+          return "iOS";
+        return "Unknown OS";
       }
-      return osName === 'Mac OS' ? 'MacOS' : osName;
+      return osName === "Mac OS" ? "MacOS" : osName;
     };
 
     // Format device model
-    let deviceModel = '';
+    let deviceModel = "";
     const detectedBrowser = getBrowserInfo();
     const detectedOS = getOSInfo();
-    
-    if (mobileModel && mobileVendor && mobileModel !== 'none' && mobileVendor !== 'none') {
+
+    if (
+      mobileModel &&
+      mobileVendor &&
+      mobileModel !== "none" &&
+      mobileVendor !== "none"
+    ) {
       // Mobile device format
       deviceModel = `${mobileVendor} ${mobileModel}`;
     } else {
@@ -339,17 +366,21 @@ const AuthOffcanvas = () => {
     }
 
     // Enhanced device type detection
-    let readableDeviceType = 'Desktop';
+    let readableDeviceType = "Desktop";
     const ua = navigator.userAgent;
-    
-    if (deviceType === 'mobile' || 
-        /Mobile|Android|iPhone|iPod/i.test(ua) || 
-        (mobileModel !== 'none' && !ua.includes('iPad'))) {
-      readableDeviceType = 'Mobile Phone';
-    } else if (deviceType === 'tablet' || 
-               /iPad|Tablet|PlayBook/i.test(ua) || 
-               (ua.includes('Android') && !ua.includes('Mobile'))) {
-      readableDeviceType = 'Tablet';
+
+    if (
+      deviceType === "mobile" ||
+      /Mobile|Android|iPhone|iPod/i.test(ua) ||
+      (mobileModel !== "none" && !ua.includes("iPad"))
+    ) {
+      readableDeviceType = "Mobile Phone";
+    } else if (
+      deviceType === "tablet" ||
+      /iPad|Tablet|PlayBook/i.test(ua) ||
+      (ua.includes("Android") && !ua.includes("Mobile"))
+    ) {
+      readableDeviceType = "Tablet";
     }
 
     return {
@@ -357,20 +388,24 @@ const AuthOffcanvas = () => {
       device_model: deviceModel.trim() || `${detectedOS} Device`,
       device_type: readableDeviceType,
       full_details: {
-        browser: `${detectedBrowser} ${browserVersion !== 'none' ? browserVersion : ''}`.trim(),
-        operating_system: `${detectedOS} ${osVersion !== 'none' ? osVersion : ''}`.trim(),
-        device_type: readableDeviceType
-      }
+        browser: `${detectedBrowser} ${
+          browserVersion !== "none" ? browserVersion : ""
+        }`.trim(),
+        operating_system: `${detectedOS} ${
+          osVersion !== "none" ? osVersion : ""
+        }`.trim(),
+        device_type: readableDeviceType,
+      },
     };
   };
 
   useEffect(() => {
     const info = getDeviceInfo();
-    console.log('Browser Detection:', {
+    console.log("Browser Detection:", {
       userAgent: navigator.userAgent,
       deviceInfo: info,
       platform: navigator.platform,
-      vendor: navigator.vendor
+      vendor: navigator.vendor,
     });
   }, []);
 
@@ -387,14 +422,14 @@ const AuthOffcanvas = () => {
         app_type: "customer",
         device_id: deviceInfo.device_id,
         device_model: deviceInfo.device_model,
-        device_type: deviceInfo.device_type
+        device_type: deviceInfo.device_type,
       });
 
       const { data } = response;
 
       // Check if we have all required data
       if (!data.user_id || !data.access_token) {
-        throw new Error('Invalid response from server');
+        throw new Error("Invalid response from server");
       }
 
       // Store user data in localStorage and update context
@@ -404,14 +439,14 @@ const AuthOffcanvas = () => {
         role: data.role,
         mobile: phoneNumber,
         access_token: data.access_token,
-        expires_at: data.expires_at
+        expires_at: data.expires_at,
       });
 
       toast.success("Login successful!", "Welcome");
       handleClose();
     } catch (err) {
       console.error("OTP verification error:", err);
-      
+
       // Handle different types of errors
       if (err.response?.status === 400) {
         toast.error("Invalid OTP. Please try again.", "Error");
@@ -429,7 +464,7 @@ const AuthOffcanvas = () => {
 
   const handleResendOTP = async () => {
     setIsLoading(true);
-    setResetTimer(prev => prev + 1); // Trigger timer reset
+    setResetTimer((prev) => prev + 1); // Trigger timer reset
 
     try {
       const { data } = await api.post("/common/resend_otp", {
@@ -689,7 +724,7 @@ const AuthOffcanvas = () => {
           onClick={handleResendOTP}
           disabled={isLoading || isResendDisabled}
         >
-          {isResendDisabled ? `Resend OTP in ${timer}s` : 'Resend OTP'}
+          {isResendDisabled ? `Resend OTP in ${timer}s` : "Resend OTP"}
         </button>
       </div>
     );
@@ -699,7 +734,7 @@ const AuthOffcanvas = () => {
     <div className="px-1">
       <h6 className="title font-w600 mb-2">Verify OTP</h6>
       <p className="text-muted mb-4">
-        Enter the verification code sent to{" "} <br/>
+        Enter the verification code sent to <br />
         <span className="fw-bold fs-6">+91 {phoneNumber}</span>
       </p>
       <form onSubmit={handleOTPSubmit}>
