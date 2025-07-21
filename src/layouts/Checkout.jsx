@@ -9,9 +9,9 @@ import { useOutlet } from "../contexts/OutletContext";
 import OrderExistsModal from "../components/Modal/variants/OrderExistsModal";
 import { useAuth } from "../contexts/AuthContext";
 import LazyImage from "../components/Shared/LazyImage";
-import { useQuery, useMutation } from '@tanstack/react-query';
-import apiService from '../api/apiService';
-import { useToastContext } from '../components/Toast/ToastContext';
+import { useQuery, useMutation } from "@tanstack/react-query";
+import apiService from "../api/apiService";
+import { useToastContext } from "../components/Toast/ToastContext";
 
 const FooterSummary = React.memo(function FooterSummary({ checkoutDetails }) {
   // Fallback to zeros if no data yet
@@ -128,27 +128,34 @@ function Checkout() {
   };
 
   // React Query for checkout details
-  const { 
+  const {
     data: checkoutDetails,
     isLoading: detailsLoading,
-    error: checkoutError
+    error: checkoutError,
   } = useQuery({
-    queryKey: ['checkout', outletId, cartItems],
-    queryFn: () => apiService.checkout.getDetails({
-      outletId,
-      orderItems: getOrderItems()
-    }),
+    queryKey: ["checkout", outletId, cartItems],
+    queryFn: () =>
+      apiService.checkout.getDetails({
+        outletId,
+        orderItems: getOrderItems(),
+      }),
     enabled: !!outletId && cartItems.length > 0,
     // staleTime: 30000,
     // cacheTime: 5 * 60 * 1000,
     retry: 2,
     onError: (err) => {
       if (err.response?.status === 401) {
-        addToast({ message: "Session expired. Please login again.", type: "error" });
+        addToast({
+          message: "Session expired. Please login again.",
+          type: "error",
+        });
       } else {
-        addToast({ message: "Failed to fetch checkout details", type: "error" });
+        addToast({
+          message: "Failed to fetch checkout details",
+          type: "error",
+        });
       }
-    }
+    },
   });
 
   // Remove item handler
@@ -173,33 +180,48 @@ function Checkout() {
     onSuccess: () => {
       clearCart();
       localStorage.removeItem("cart");
-      addToast({ message: "Items added to existing order successfully!", type: "success" });
+      addToast({
+        message: "Items added to existing order successfully!",
+        type: "success",
+      });
       navigate("/orders");
       handleModalClose();
     },
     onError: (error) => {
       console.error("Error adding to existing order:", error);
-      addToast({ message: error.message || "Failed to add to existing order", type: "error" });
-    }
+      addToast({
+        message: error.message || "Failed to add to existing order",
+        type: "error",
+      });
+    },
   });
 
   // Cancel existing and create new order mutation
   const cancelAndCreateNewMutation = useMutation({
     mutationFn: async (variables) => {
-      const result = await apiService.checkout.cancelExistingAndCreateNew(variables);
+      const result = await apiService.checkout.cancelExistingAndCreateNew(
+        variables
+      );
       return result;
     },
     onSuccess: () => {
       clearCart();
       localStorage.removeItem("cart");
-      addToast({ message: "Order cancelled and new order created successfully!", type: "success" });
+      addToast({
+        message: "Order cancelled and new order created successfully!",
+        type: "success",
+      });
       navigate("/orders");
       handleModalClose();
     },
     onError: (error) => {
       console.error("Error cancelling order:", error);
-      addToast({ message: error.message || "Failed to cancel existing order and create new one", type: "error" });
-    }
+      addToast({
+        message:
+          error.message || "Failed to cancel existing order and create new one",
+        type: "error",
+      });
+    },
   });
 
   // Modify the createOrder function to handle errors without re-throwing
@@ -213,7 +235,7 @@ function Checkout() {
         menu_id: item.menuId,
         quantity: item.quantity,
         portion_name: item.portionName.toLowerCase(),
-        comment: item.comment || "" // Add the comment field here
+        comment: item.comment || "", // Add the comment field here
       }));
 
       // Get order settings from localStorage
@@ -240,7 +262,8 @@ function Checkout() {
 
       // Add table_id only for dine-in orders
       if (orderType === "dine-in") {
-        const tableId = outletDetails?.tableId || localStorage.getItem("tableId");
+        const tableId =
+          outletDetails?.tableId || localStorage.getItem("tableId");
         if (tableId) {
           payload.table_id = String(tableId);
         }
@@ -268,10 +291,16 @@ function Checkout() {
     } catch (error) {
       // Handle error here and show toast
       if (error.response?.status === 400) {
-        const errorMessage = error.response.data?.detail || error.response.data?.message || "Failed to create order";
+        const errorMessage =
+          error.response.data?.detail ||
+          error.response.data?.message ||
+          "Failed to create order";
         addToast({ message: errorMessage, type: "error" });
       } else {
-        addToast({ message: "An unexpected error occurred. Please try again.", type: "error" });
+        addToast({
+          message: "An unexpected error occurred. Please try again.",
+          type: "error",
+        });
       }
       return false; // Indicate failure
     }
@@ -285,7 +314,10 @@ function Checkout() {
         item.comment &&
         (item.comment.length < 5 || item.comment.length > 50)
       ) {
-        addToast({ message: "Comment must be between 5 and 50 characters.", type: "error" });
+        addToast({
+          message: "Comment must be between 5 and 50 characters.",
+          type: "error",
+        });
         return;
       }
     }
@@ -303,7 +335,7 @@ function Checkout() {
 
       const existingOrder = await apiService.checkout.checkExistingOrder({
         userId,
-        outletId
+        outletId,
       });
 
       if (existingOrder) {
@@ -325,7 +357,10 @@ function Checkout() {
     } catch (err) {
       // Only handle non-order creation errors here
       if (err.response?.status === 401) {
-        addToast({ message: "Session expired. Please login again.", type: "error" });
+        addToast({
+          message: "Session expired. Please login again.",
+          type: "error",
+        });
       }
     } finally {
       setCheckoutLoading(false);
@@ -362,7 +397,7 @@ function Checkout() {
         outletId,
         sectionId,
         tableId: localStorage.getItem("tableId"),
-        orderItems
+        orderItems,
       });
     } catch (error) {
       console.error("Cancel existing order error:", error);
@@ -390,7 +425,7 @@ function Checkout() {
         orderId: existingOrderModal.orderDetails.order_id,
         userId: userId.toString(),
         outletId: outletId.toString(),
-        orderItems
+        orderItems,
       });
     } catch (error) {
       console.error("Add to existing order error:", error);
@@ -409,7 +444,7 @@ function Checkout() {
     setCouponStatus(null);
     try {
       const accessToken = getAccessToken();
-      
+
       const response = await axios.post(
         "https://men4u.xyz/v2/common/verify_coupon",
         {
@@ -427,18 +462,19 @@ function Checkout() {
 
       if (response.data?.detail) {
         const { detail, discount_type, discount_value } = response.data;
-        const discountText = discount_type === 'amount' 
-          ? `₹${discount_value}`
-          : `${discount_value}%`;
-          
+        const discountText =
+          discount_type === "amount"
+            ? `₹${discount_value}`
+            : `${discount_value}%`;
+
         setCouponStatus({
           success: true,
           message: `${detail} - You will get ${discountText} off!`,
           couponDetails: {
             code: response.data.coupon_code,
             type: discount_type,
-            value: discount_value
-          }
+            value: discount_value,
+          },
         });
       } else {
         setCouponStatus({
@@ -449,7 +485,8 @@ function Checkout() {
     } catch (err) {
       setCouponStatus({
         success: false,
-        message: err.response?.data?.detail || "Invalid coupon or network error.",
+        message:
+          err.response?.data?.detail || "Invalid coupon or network error.",
       });
     } finally {
       setCouponLoading(false);
@@ -471,12 +508,12 @@ function Checkout() {
               >
                 <div className="text-center">
                   <div className="mb-4">
-                    <i 
+                    <i
                       className="fa-solid fa-user"
-                      style={{ 
+                      style={{
                         fontSize: 80,
                         opacity: 0.5,
-                        color: "#6c757d"
+                        color: "#6c757d",
                       }}
                     ></i>
                   </div>
@@ -507,12 +544,12 @@ function Checkout() {
               >
                 <div className="text-center">
                   <div className="mb-4">
-                    <i 
+                    <i
                       className="fa-solid fa-shopping-cart"
-                      style={{ 
+                      style={{
                         fontSize: 80,
                         opacity: 0.5,
-                        color: "#6c757d"
+                        color: "#6c757d",
                       }}
                     ></i>
                   </div>
@@ -536,9 +573,10 @@ function Checkout() {
         // Main checkout view
         <div
           className="page-content"
-          style={{ 
+          style={{
             // background: "#f7f8fa",
-             minHeight: "100vh" }}
+            minHeight: "100vh",
+          }}
         >
           <div
             className="container bottom-content pt-0"
@@ -557,11 +595,11 @@ function Checkout() {
                     }}
                   >
                     {/* Cart SVG Icon */}
-                    <i 
+                    <i
                       className="fa-solid fa-shopping-cart"
-                      style={{ 
+                      style={{
                         fontSize: 64,
-                        color: "#adb5bd"
+                        color: "#adb5bd",
                       }}
                     ></i>
                     <span
@@ -579,209 +617,234 @@ function Checkout() {
                     </button>
                   </div>
                 ) : (
-                  cartItems.map((item) => (
-                    <li
-                      key={`${item.menuId}-${item.portionId}`}
-                      className="mb-3 border-0"
-                      style={{ cursor: "pointer" }}
-                      onClick={() => navigate(`/product-detail/${item.menuId}`)}
-                    >
-                      <div
-                        className="rounded-4 shadow-lg position-relative p-3 border-3"
-                        style={{ minHeight: 90 }}
-                        
+                  cartItems.map((item) => {
+                    const menuCatId = item.menu_cat_id || item.category_id;
+                    return (
+                      <li
+                        key={`${item.menuId}-${item.portionId}`}
+                        className="mb-3 border-0"
+                        style={{ cursor: "pointer" }}
+                        onClick={() => {
+                          if (!menuCatId) {
+                            addToast({
+                              message: "No menu_cat_id found for this item!",
+                              type: "error",
+                            });
+                            return;
+                          }
+                          navigate(
+                            `/product-detail/${item.menuId}/${menuCatId}`
+                          );
+                        }}
                       >
-                        {/* Remove button in top right */}
-                        <button
-                          type="button"
-                          className="btn p-0 border-0 bg-transparent shadow-none position-absolute"
-                          aria-label="Remove"
-                          style={{
-                            top: 12,
-                            right: 16,
-                            fontSize: 22,
-                            color: "#b0b3b8",
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveItem(item.menuId, item.portionId);
-                          }}
+                        <div
+                          className="rounded-4 shadow-lg position-relative p-3 border-3"
+                          style={{ minHeight: 90 }}
                         >
-                          ×
-                        </button>
-                        <div className="d-flex align-items-center">
-                          <div className="flex-grow-1">
-                            <div className="d-flex align-items-center mb-1">
-                              <h5 className="mb-0" style={{ fontWeight: 600 }}>
-                                {item.menuName}
-                              </h5>
-                              {/* Add offer display */}
-                              {item.offer && (
-                                <span
-                                  className="badge bg-success-subtle text-success ms-2"
-                                  style={{
-                                    fontSize: 12,
-                                    padding: "4px 8px",
-                                    borderRadius: 12,
-                                    fontWeight: 500
-                                  }}
+                          {/* Remove button in top right */}
+                          <button
+                            type="button"
+                            className="btn p-0 border-0 bg-transparent shadow-none position-absolute"
+                            aria-label="Remove"
+                            style={{
+                              top: 12,
+                              right: 16,
+                              fontSize: 22,
+                              color: "#b0b3b8",
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveItem(item.menuId, item.portionId);
+                            }}
+                          >
+                            ×
+                          </button>
+                          <div className="d-flex align-items-center">
+                            <div className="flex-grow-1">
+                              <div className="d-flex align-items-center mb-1">
+                                <h5
+                                  className="mb-0"
+                                  style={{ fontWeight: 600 }}
                                 >
-                                  {item.offer}% OFF
-                                </span>
-                              )}
-                            </div>
-                            <div className="d-flex align-items-center mb-1">
-                              <span
-                                className="text-success me-2"
-                                style={{
-                                  fontSize: 15,
-                                  display: "flex",
-                                  alignItems: "center",
-                                }}
-                              >
-                                <i
-                                  className="fa-solid fa-utensils me-1"
-                                  style={{ fontSize: 15, color: "#19b955" }}
-                                ></i>
-                                {item.portionName}
-                              </span>
-                            </div>
-
-                            {/* Add Special Instructions/Comment display */}
-                            {item.comment && (
-                              <div className="d-flex align-items-center mb-2">
-                                <span
-                                  className="text-muted"
-                                  style={{
-                                    fontSize: 13,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "4px"
-                                  }}
-                                >
-                                  <i 
-                                    className="fa-solid fa-message-lines"
-                                    style={{ 
+                                  {item.menuName}
+                                </h5>
+                                {/* Add offer display */}
+                                {item.offer && (
+                                  <span
+                                    className="badge bg-success-subtle text-success ms-2"
+                                    style={{
                                       fontSize: 12,
-                                      color: "#6c757d"
-                                    }}
-                                  ></i>
-                                  <span style={{ 
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    display: "-webkit-box",
-                                    WebkitLineClamp: 2,
-                                    WebkitBoxOrient: "vertical",
-                                    lineHeight: "1.2"
-                                  }}>
-                                    {item.comment}
-                                  </span>
-                                </span>
-                              </div>
-                            )}
-
-                            <div className="d-flex align-items-center justify-content-between">
-                              <div className="d-flex align-items-center">
-                                <span
-                                  className="fw-bold"
-                                  style={{ color: "#2196f3", fontSize: 18 }}
-                                >
-                                  ₹{parseFloat(item.price).toFixed(2) || "0.00"}
-                                </span>
-                                {item.offer > 0 && (
-                                  <>
-                                    <span
-                                      className="ms-2 text-muted"
-                                      style={{
-                                        textDecoration: "line-through",
-                                        fontSize: 16,
-                                      }}
-                                    >
-                                      ₹
-                                      {item.originalPrice ||
-                                        (
-                                          item.price /
-                                          (1 - item.offer / 100)
-                                        ).toFixed(2)}
-                                    </span>
-                                  </>
-                                )}
-                              </div>
-                              <div className="d-flex flex-column align-items-end gap-1">
-                                {/* {item.offer > 0 && (
-                                  <span
-                                    className="text-success fw-bold mb-1"
-                                    style={{ fontSize: 16 }}
-                                  >
-                                    {item.offer}% Off
-                                  </span>
-                                )} */}
-                                <div className="bg-light rounded-pill d-flex align-items-center px-2 py-1">
-                                  <button
-                                    className="btn btn-link p-0 m-0"
-                                    style={{
-                                      color: "#222",
-                                      fontSize: 20,
-                                      minWidth: 28,
-                                    }}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleQuantityChange(
-                                        item.menuId,
-                                        item.portionId,
-                                        item.quantity - 1
-                                      );
-                                    }}
-                                  >
-                                    –
-                                  </button>
-                                  <span
-                                    className="mx-2"
-                                    style={{
-                                      minWidth: 18,
-                                      textAlign: "center",
+                                      padding: "4px 8px",
+                                      borderRadius: 12,
                                       fontWeight: 500,
                                     }}
                                   >
-                                    {item.quantity}
+                                    {item.offer}% OFF
                                   </span>
-                                  <button
-                                    className="btn btn-link p-0 m-0"
+                                )}
+                              </div>
+                              <div className="d-flex align-items-center mb-1">
+                                <span
+                                  className="text-success me-2"
+                                  style={{
+                                    fontSize: 15,
+                                    display: "flex",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <i
+                                    className="fa-solid fa-utensils me-1"
+                                    style={{ fontSize: 15, color: "#19b955" }}
+                                  ></i>
+                                  {item.portionName}
+                                </span>
+                              </div>
+
+                              {/* Add Special Instructions/Comment display */}
+                              {item.comment && (
+                                <div className="d-flex align-items-center mb-2">
+                                  <span
+                                    className="text-muted"
                                     style={{
-                                      color: "#222",
-                                      fontSize: 20,
-                                      minWidth: 28,
-                                    }}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleQuantityChange(
-                                        item.menuId,
-                                        item.portionId,
-                                        item.quantity + 1
-                                      );
+                                      fontSize: 13,
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "4px",
                                     }}
                                   >
-                                    +
-                                  </button>
+                                    <i
+                                      className="fa-solid fa-message-lines"
+                                      style={{
+                                        fontSize: 12,
+                                        color: "#6c757d",
+                                      }}
+                                    ></i>
+                                    <span
+                                      style={{
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        display: "-webkit-box",
+                                        WebkitLineClamp: 2,
+                                        WebkitBoxOrient: "vertical",
+                                        lineHeight: "1.2",
+                                      }}
+                                    >
+                                      {item.comment}
+                                    </span>
+                                  </span>
+                                </div>
+                              )}
+
+                              <div className="d-flex align-items-center justify-content-between">
+                                <div className="d-flex align-items-center">
+                                  <span
+                                    className="fw-bold"
+                                    style={{ color: "#2196f3", fontSize: 18 }}
+                                  >
+                                    ₹
+                                    {parseFloat(item.price).toFixed(2) ||
+                                      "0.00"}
+                                  </span>
+                                  {item.offer > 0 && (
+                                    <>
+                                      <span
+                                        className="ms-2 text-muted"
+                                        style={{
+                                          textDecoration: "line-through",
+                                          fontSize: 16,
+                                        }}
+                                      >
+                                        ₹
+                                        {item.originalPrice ||
+                                          (
+                                            item.price /
+                                            (1 - item.offer / 100)
+                                          ).toFixed(2)}
+                                      </span>
+                                    </>
+                                  )}
+                                </div>
+                                <div className="d-flex flex-column align-items-end gap-1">
+                                  {/* {item.offer > 0 && (
+                                    <span
+                                      className="text-success fw-bold mb-1"
+                                      style={{ fontSize: 16 }}
+                                    >
+                                      {item.offer}% Off
+                                    </span>
+                                  )} */}
+                                  <div className="bg-light rounded-pill d-flex align-items-center px-2 py-1">
+                                    <button
+                                      className="btn btn-link p-0 m-0"
+                                      style={{
+                                        color: "#222",
+                                        fontSize: 20,
+                                        minWidth: 28,
+                                      }}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleQuantityChange(
+                                          item.menuId,
+                                          item.portionId,
+                                          item.quantity - 1
+                                        );
+                                      }}
+                                    >
+                                      –
+                                    </button>
+                                    <span
+                                      className="mx-2"
+                                      style={{
+                                        minWidth: 18,
+                                        textAlign: "center",
+                                        fontWeight: 500,
+                                      }}
+                                    >
+                                      {item.quantity}
+                                    </span>
+                                    <button
+                                      className="btn btn-link p-0 m-0"
+                                      style={{
+                                        color: "#222",
+                                        fontSize: 20,
+                                        minWidth: 28,
+                                      }}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleQuantityChange(
+                                          item.menuId,
+                                          item.portionId,
+                                          item.quantity + 1
+                                        );
+                                      }}
+                                    >
+                                      +
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </li>
-                  ))
+                      </li>
+                    );
+                  })
                 )}
               </ul>
             </div>
             {/* Summary Card */}
             {cartItems.length > 0 && (
               <>
-                <div className="rounded-4 shadow-sm p-3 mb-3" 
-                     style={{ border: "1px solid #e0e0e0", marginTop: 24 }}>
+                <div
+                  className="rounded-4 shadow-sm p-3 mb-3"
+                  style={{ border: "1px solid #e0e0e0", marginTop: 24 }}
+                >
                   {detailsLoading ? (
                     <div className="text-center py-3">
-                      <div className="spinner-border text-primary" role="status">
+                      <div
+                        className="spinner-border text-primary"
+                        role="status"
+                      >
                         <span className="visually-hidden">Loading...</span>
                       </div>
                     </div>
@@ -808,9 +871,11 @@ function Checkout() {
                         <span>
                           Discount ({checkoutDetails?.discount_percent || 0}%)
                         </span>
-                        <span>-₹{checkoutDetails?.discount_amount || "0.00"}</span>
+                        <span>
+                          -₹{checkoutDetails?.discount_amount || "0.00"}
+                        </span>
                       </div>
-                      
+
                       {/* Add Coupon Discount Line - Only show when coupon is successfully applied */}
                       {couponStatus?.success && (
                         <div
@@ -835,22 +900,29 @@ function Checkout() {
                         <span>
                           ₹
                           {(
-                            parseFloat(checkoutDetails?.total_bill_amount || 0) -
+                            parseFloat(
+                              checkoutDetails?.total_bill_amount || 0
+                            ) -
                             parseFloat(checkoutDetails?.discount_amount || 0) -
-                            (couponStatus?.success ? parseFloat(couponStatus.couponDetails.value) : 0)
+                            (couponStatus?.success
+                              ? parseFloat(couponStatus.couponDetails.value)
+                              : 0)
                           ).toFixed(2)}
                         </span>
                       </div>
-                      
+
                       {/* Service Charges and GST sections remain the same */}
                       <div
                         className="d-flex justify-content-between align-items-center mb-1"
                         style={{ color: "#b0b3b8" }}
                       >
                         <span>
-                          Service Charges ({checkoutDetails?.service_charges_percent || 0}%)
+                          Service Charges (
+                          {checkoutDetails?.service_charges_percent || 0}%)
                         </span>
-                        <span>+₹{checkoutDetails?.service_charges_amount || "0.00"}</span>
+                        <span>
+                          +₹{checkoutDetails?.service_charges_amount || "0.00"}
+                        </span>
                       </div>
                       <div
                         className="d-flex justify-content-between align-items-center mb-1"
@@ -866,9 +938,14 @@ function Checkout() {
                           Grand Total
                         </span>
                         <span className="fw-bold" style={{ fontSize: 18 }}>
-                          ₹{(
-                            parseFloat(checkoutDetails?.final_grand_total || 0) - 
-                            (couponStatus?.success ? parseFloat(couponStatus.couponDetails.value) : 0)
+                          ₹
+                          {(
+                            parseFloat(
+                              checkoutDetails?.final_grand_total || 0
+                            ) -
+                            (couponStatus?.success
+                              ? parseFloat(couponStatus.couponDetails.value)
+                              : 0)
                           ).toFixed(2)}
                         </span>
                       </div>
@@ -888,19 +965,25 @@ function Checkout() {
                       boxShadow: "0 2px 8px rgba(25,185,85,0.15)",
                     }}
                     onClick={handleCheckout}
-                    disabled={detailsLoading || checkoutLoading || cartItems.length === 0}
+                    disabled={
+                      detailsLoading ||
+                      checkoutLoading ||
+                      cartItems.length === 0
+                    }
                   >
                     {checkoutLoading ? (
                       <span>Processing...</span>
                     ) : (
                       <>
                         Place Order{" "}
-                        <span style={{
-                          color: "#b6f5d1",
-                          fontSize: 16,
-                          fontWeight: 500,
-                          marginLeft: 4,
-                        }}>
+                        <span
+                          style={{
+                            color: "#b6f5d1",
+                            fontSize: 16,
+                            fontWeight: 500,
+                            marginLeft: 4,
+                          }}
+                        >
                           ({getCartCount()} Items)
                         </span>
                       </>
@@ -913,7 +996,9 @@ function Checkout() {
                   <label className="mb-1 fw-semibold" style={{ fontSize: 15 }}>
                     Apply Coupon
                   </label>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 8 }}
+                  >
                     <input
                       type="text"
                       className="form-control"
@@ -963,7 +1048,10 @@ function Checkout() {
         orderStatus={existingOrderModal.orderDetails?.order_status}
         onCancelExisting={handleCancelExisting}
         onAddToExisting={handleAddToExisting}
-        isLoading={addToExistingMutation.isPending || cancelAndCreateNewMutation.isPending}
+        isLoading={
+          addToExistingMutation.isPending ||
+          cancelAndCreateNewMutation.isPending
+        }
       />
 
       <Footer />

@@ -215,6 +215,7 @@ function Search() {
     // Format the menu data for modal
     const menuItem = {
       menuId: menu.menu_id,
+      menu_cat_id: menu.menu_cat_id,
       menuName: menu.menu_name,
       portions: menu.portions.map((portion) => ({
         portion_id: portion.portion_id,

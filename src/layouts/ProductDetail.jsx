@@ -11,8 +11,8 @@ import { useOutlet } from "../contexts/OutletContext";
 import { useAuth } from "../contexts/AuthContext";
 import LazyImage from "../components/Shared/LazyImage";
 import apiService from "../api/apiService";
-import { useMenuItems } from '../hooks/useMenuItems';
-import TripleSlider from '../components/TripleSlider/TripleSlider';
+import { useMenuItems } from "../hooks/useMenuItems";
+import TripleSlider from "../components/TripleSlider/TripleSlider";
 
 // Import Swiper styles
 import "swiper/css";
@@ -142,14 +142,19 @@ function ProductDetail() {
   const { toggleFavorite, isFavoriteLoading } = useMenuItems();
 
   // Replace useEffect with useQuery
-  const { data: menuDetails, isLoading, error } = useQuery({
-    queryKey: ['menuDetails', outletId, menuId, menuCatId, userId],
-    queryFn: () => apiService.menus.getDetails({ 
-      outletId, 
-      menuId: Number(menuId), 
-      menuCatId: Number(menuCatId),
-      userId 
-    }),
+  const {
+    data: menuDetails,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["menuDetails", outletId, menuId, menuCatId, userId],
+    queryFn: () =>
+      apiService.menus.getDetails({
+        outletId,
+        menuId: Number(menuId),
+        menuCatId: Number(menuCatId),
+        userId,
+      }),
     enabled: !!outletId && !!menuId && !!menuCatId,
   });
 
@@ -171,6 +176,7 @@ function ProductDetail() {
     const formattedMenuDetails = {
       ...menuDetails,
       menuId: Number(menuId),
+      menu_cat_id: Number(menuCatId),
       menuName: menuDetails.menu_name,
       image: menuDetails.images?.[0] || null,
       portions: menuDetails.portions.map((portion) => ({
@@ -209,7 +215,7 @@ function ProductDetail() {
         {
           menuId: Number(menuId),
           isFavorite: menuDetails?.is_favourite === 1, // Changed from is_favorite to is_favourite
-          userId: auth.userId
+          userId: auth.userId,
         },
         {
           onSuccess: () => {
@@ -220,7 +226,7 @@ function ProductDetail() {
             openModal("ERROR", {
               message: error.message || "Failed to update favorite status",
             });
-          }
+          },
         }
       );
     } catch (error) {
@@ -252,7 +258,7 @@ function ProductDetail() {
         <div className="page-content">
           <div className="container">
             <div className="alert alert-danger">
-              {error.message || 'Failed to load menu details'}
+              {error.message || "Failed to load menu details"}
             </div>
           </div>
         </div>
@@ -321,20 +327,22 @@ function ProductDetail() {
 </div>
 */}
 
-{/* Add the new TripleSlider implementation */}
-<TripleSlider
-  slides={
-    menuDetails.images?.length
-      ? menuDetails.images.map((image) => ({
-          backgroundImage: image,
-          title: menuDetails.menu_name,
-        }))
-      : [{
-          backgroundImage: 'https://via.placeholder.com/800x800', // Updated to square placeholder
-          title: menuDetails.menu_name,
-        }]
-  }
-/>
+          {/* Add the new TripleSlider implementation */}
+          <TripleSlider
+            slides={
+              menuDetails.images?.length
+                ? menuDetails.images.map((image) => ({
+                    backgroundImage: image,
+                    title: menuDetails.menu_name,
+                  }))
+                : [
+                    {
+                      backgroundImage: "https://via.placeholder.com/800x800", // Updated to square placeholder
+                      title: menuDetails.menu_name,
+                    },
+                  ]
+            }
+          />
 
           <div className="account-box style-1">
             <div className="container p-b60">
@@ -358,12 +366,23 @@ function ProductDetail() {
                           textDecoration: "none",
                         }}
                       >
-                        <div className={`like-button ${menuDetails?.is_favourite === 1 ? "active" : ""}`}>
+                        <div
+                          className={`like-button ${
+                            menuDetails?.is_favourite === 1 ? "active" : ""
+                          }`}
+                        >
                           <i
-                            className={`fa-${menuDetails?.is_favourite === 1 ? "solid" : "regular"} fa-heart`}
+                            className={`fa-${
+                              menuDetails?.is_favourite === 1
+                                ? "solid"
+                                : "regular"
+                            } fa-heart`}
                             style={{
                               fontSize: "20px",
-                              color: menuDetails?.is_favourite === 1 ? "#dc3545" : "#6c757d",
+                              color:
+                                menuDetails?.is_favourite === 1
+                                  ? "#dc3545"
+                                  : "#6c757d",
                               lineHeight: 1,
                             }}
                           />
@@ -394,7 +413,11 @@ function ProductDetail() {
                     <h3 className="sub-title mb-0">
                       {menuDetails.offer > 0 ? (
                         <>
-                          ₹{Math.round(menuDetails.portions[0]?.price * (1 - menuDetails.offer / 100))}
+                          ₹
+                          {Math.round(
+                            menuDetails.portions[0]?.price *
+                              (1 - menuDetails.offer / 100)
+                          )}
                           <del className="ms-2 text-muted">
                             ₹{menuDetails.portions[0]?.price}
                           </del>
