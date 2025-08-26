@@ -3,26 +3,31 @@ import React from 'react';
 import logo from '../assets/logo.png';
 import logo2 from '../assets/mm-logo.png';
 
+
 const SOCIAL_LINKS = [
   {
     platform: 'facebook',
     url: 'https://www.facebook.com/people/Menu-Mitra/61565082412478/',
-    icon: 'fa-brands fa-facebook'
+    icon: 'ri-facebook-fill',
+    color: '#3c74ee'
   },
   {
     platform: 'instagram',
     url: 'https://www.instagram.com/menumitra/',
-    icon: 'fa-brands fa-instagram'
+    icon: 'ri-instagram-fill',
+    color: '#E4405F'
   },
   {
     platform: 'youtube',
     url: 'https://www.youtube.com/@menumitra',
-    icon: 'fa-brands fa-youtube'
+    icon: 'ri-youtube-fill',
+    color: '#FF0000'
   },
   {
-    platform: 'twitter',
-    url: 'https://x.com/MenuMitra',
-    icon: 'fa-brands fa-twitter'
+    platform: 'google',
+    url: 'https://google.com/MenuMitra',
+    icon: 'ri-google-fill',
+    color: '#304856ff'
   }
 ];
 
@@ -45,17 +50,27 @@ const MenuMitra = () => {
   );
 
   const renderSocialLinks = () => (
-    <div className="d-flex justify-content-center gap-4 mb-3">
-      {SOCIAL_LINKS.map(({ platform, url, icon }) => (
+    <div className="d-flex justify-content-center gap-3 mb-3">
+      {SOCIAL_LINKS.map(({ platform, url, icon, color }) => (
         <a
           key={platform}
           href={url}
-          className="text-dark"
+          className="text-decoration-none"
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`Visit MenuMitra on ${platform}`}
         >
-          <i className={`${icon} fs-5`}></i>
+          <div 
+            className="rounded-circle d-flex align-items-center justify-content-center border"
+            style={{ 
+              width: '40px', 
+              height: '40px', 
+              borderColor: '#ddd',
+              backgroundColor: '#fff'
+            }}
+          >
+            <i className={icon} style={{ fontSize: '20px', color: color }}></i>
+          </div>
         </a>
       ))}
     </div>
@@ -63,24 +78,12 @@ const MenuMitra = () => {
 
   const renderFooter = () => (
     <div className="text-center">
-      <div className="d-flex align-items-center justify-content-center gap-1 mb-1">
-        <i className="fa-solid fa-bolt"></i>
-        <span>Powered by</span>
-      </div>
-      <a 
-        className="text-success text-decoration-none d-block mb-1" 
-        href="https://www.shekruweb.com" 
-        target="_blank" 
-        rel="noopener noreferrer"
-      >
-        Shekru Labs India Pvt. Ltd.
-      </a>
-      <p className="text-muted mb-0 small">Version 2.0</p>
+      <p className="text-muted mb-0 small">version 2.0 13 Aug 2025</p>
     </div>
   );
 
   return (
-    <div className="border-top pt-4 pb-4">
+    <div className="border-top pt-4 pb-4 bg-light">
       {renderLogo()}
       {renderSocialLinks()}
       {renderFooter()}

@@ -38,6 +38,7 @@ import QueryTestWrapper from "./components/QueryTestWrapper";
 import { ToastProvider } from './components/Toast/ToastContext.jsx';
 import ToastContainer from './components/Toast/ToastContainer.jsx';
 
+
 function App() {
   const [shouldClearCart, setShouldClearCart] = useState(false);
 
@@ -119,6 +120,7 @@ window.addEventListener("storage", (e) => {
   if (e.key === "auth" && !e.newValue) {
     clearAppData();
   }
+  
 });
 
 export default App;
