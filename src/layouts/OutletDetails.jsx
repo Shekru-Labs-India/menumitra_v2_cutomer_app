@@ -44,7 +44,7 @@ function OutletDetails() {
       const accessToken = auth.accessToken;
 
       const response = await fetch(
-        "https://men4u.xyz/v2/user/get_restaurant_details",
+        "https://ghanish.in/v2/user/get_restaurant_details",
         {
           method: "POST",
           headers: {

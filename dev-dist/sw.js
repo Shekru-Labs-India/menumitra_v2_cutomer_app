@@ -88,7 +88,7 @@ define(['./workbox-a959eb95'], (function (workbox) { 'use strict';
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("index.html"), {
     allowlist: [/^\/$/]
   }));
-  workbox.registerRoute(/^https:\/\/men4u\.xyz\/v2\/user\/.*/i, new workbox.NetworkFirst({
+  workbox.registerRoute(/^https:\/\/ghanish\.in\/v2\/user\/.*/i, new workbox.NetworkFirst({
     "cacheName": "api-cache",
     "networkTimeoutSeconds": 5,
     plugins: [new workbox.ExpirationPlugin({
@@ -98,7 +98,7 @@ define(['./workbox-a959eb95'], (function (workbox) { 'use strict';
       statuses: [0, 200]
     })]
   }), 'GET');
-  workbox.registerRoute(/^https:\/\/men4u\.xyz\/media\/.*/i, new workbox.CacheFirst({
+  workbox.registerRoute(/^https:\/\/ghanish\.in\/media\/.*/i, new workbox.CacheFirst({
     "cacheName": "image-cache",
     plugins: [new workbox.ExpirationPlugin({
       maxEntries: 100,

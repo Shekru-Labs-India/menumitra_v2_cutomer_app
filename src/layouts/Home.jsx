@@ -55,7 +55,7 @@ function extractOutletParamsFromPath(pathname) {
 const bannerData = [
   {
     id: 1,
-    imageUrl: "https://men4u.xyz/v2/media/menu_images/mm_images_70143.jpg",
+    imageUrl: "https://ghanish.in/v2/media/menu_images/mm_images_70143.jpg",
     title: "Special Offer",
     discount: "20% OFF",
     textColor: "#FFFFFF", // Changed to white for better visibility on image
@@ -63,7 +63,7 @@ const bannerData = [
   },
   {
     id: 2,
-    imageUrl: "https://men4u.xyz/v2/media/menu_images/mm_images_70143.jpg",
+    imageUrl: "https://ghanish.in/v2/media/menu_images/mm_images_70143.jpg",
     title: "Lunch Special",
     discount: "30% OFF",
     textColor: "#FFFFFF",
@@ -71,7 +71,7 @@ const bannerData = [
   },
   {
     id: 3,
-    imageUrl: "https://men4u.xyz/v2/media/menu_images/mm_images_70143.jpg",
+    imageUrl: "https://ghanish.in/v2/media/menu_images/mm_images_70143.jpg",
     title: "Happy Hours",
     discount: "25% OFF",
     textColor: "#FFFFFF",
@@ -79,7 +79,7 @@ const bannerData = [
   },
   {
     id: 4,
-    imageUrl: "https://men4u.xyz/v2/media/menu_images/mm_images_70143.jpg",
+    imageUrl: "https://ghanish.in/v2/media/menu_images/mm_images_70143.jpg",
     title: "Weekend Special",
     discount: "40% OFF",
     textColor: "#FFFFFF",
@@ -87,7 +87,7 @@ const bannerData = [
   },
   {
     id: 5,
-    imageUrl: "https://men4u.xyz/v2/media/menu_images/mm_images_70143.jpg",
+    imageUrl: "https://ghanish.in/v2/media/menu_images/mm_images_70143.jpg",
     title: "First Order",
     discount: "50% OFF",
     textColor: "#FFFFFF",

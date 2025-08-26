@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API configuration
-const API_BASE_URL = 'https://men4u.xyz';
+const API_BASE_URL = 'https://ghanish.in';
 export const API_VERSION = '/v2';
 export const APP_PREFIX = '/user';
 

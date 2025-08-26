@@ -4,7 +4,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import defaultAvatar from "../assets/images/avatar/avatar-default.png";
 
-const API_BASE_URL = 'https://men4u.xyz/v2';
+const API_BASE_URL = 'https://ghanish.in/v2';
 
 function EditProfile() {
   const navigate = useNavigate();
