@@ -245,9 +245,9 @@ const withErrorHandling = (apiCall) => {
     } catch (error) {
       // Standardize error format
       const standardError = {
-        message: error.response?.data?.message || 'An error occurred',
+        message: error.response?.data?.message || 'NOT FOUND',
         status: error.response?.status,
-        originalError: error
+        // originalError: error
       };
       throw standardError;
     }
