@@ -544,7 +544,7 @@ function OrderDetail() {
               <div className="d-flex align-items-center justify-content-between mb-2">
                 <div>
                   <h5 className="mb-0 text-primary">
-                    #{orderDetails.order_details.order_number}
+                   Order  #{orderDetails.order_details.order_number}
                   </h5>
                 </div>
                 <span
@@ -582,7 +582,7 @@ function OrderDetail() {
               {orderDetails.menu_details.map((menu, index) => (
                 <div
                   key={index}
-                  className="d-flex align-items-center justify-content-between"
+                  className="d-flex align-items-center justify-content-between py-3"
                   style={{
                     borderBottom:
                       index !== orderDetails.menu_details.length - 1
@@ -630,7 +630,7 @@ function OrderDetail() {
 
           {/* Bill Details Card */}
           <div className="card mt-3">
-            <div className="card-header border-0 d-flex justify-content-between align-items-center">
+            <div className="card-header border-0 d-flex justify-content-between align-items-center pb-0">
               <h5 className="card-title text-primary mb-0">Payment Details</h5>
               {orderDetails.order_details.payment_method && (
                 <span className="badge bg-primary-light text-primary">
