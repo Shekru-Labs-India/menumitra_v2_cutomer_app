@@ -146,14 +146,14 @@ function Header() {
               <div className="mid-content" />
               <div className="right-content d-flex align-items-center gap-2">
                 <Link to="/search" className="header-icon">
-                  <i className="fas fa-search"></i>
+                  <i className="fs-4 fas fa-search"></i>
                 </Link>
                 <a
                   href="#"
                   className="menu-toggler ms-2"
                   onClick={toggleSidebar}
                 >
-                  <i className="fas fa-bars"></i>
+                  <i className="fs-4 fas fa-bars"></i>
                 </a>
               </div>
             </div>
