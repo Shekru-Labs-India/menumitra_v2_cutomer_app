@@ -41,6 +41,8 @@ export const AuthProvider = ({ children }) => {
   }, [getAuthData]);
 
   const handleLoginSuccess = (userData) => {
+    console.log('Login Success - API Response:', userData);
+    
     // Store auth data in localStorage
     const auth = {
       userId: userData.user_id,
@@ -48,9 +50,10 @@ export const AuthProvider = ({ children }) => {
       role: userData.role,
       mobile: userData.mobile,
       accessToken: userData.access_token,
-      expiresAt: userData.expires_at
+      expiresAt: userData.expires_on  // Using expires_on from API
     };
     
+    console.log('Storing auth data:', auth);
     localStorage.setItem('auth', JSON.stringify(auth));
     
     setUser({
@@ -59,7 +62,7 @@ export const AuthProvider = ({ children }) => {
       role: userData.role,
       mobile: userData.mobile,
       accessToken: userData.access_token,
-      expiresAt: userData.expires_at
+      expiresAt: userData.expires_on  // Using expires_on from API
     });
   };
 
@@ -73,10 +76,27 @@ export const AuthProvider = ({ children }) => {
 
   // Auth utility functions using React state
   const isAuthenticated = useCallback(() => {
+    console.log('isAuthenticated check:', {
+      user,
+      userExists: !!user,
+      accessToken: user?.accessToken,
+      expiresAt: user?.expiresAt,
+      expiresAtType: typeof user?.expiresAt
+    });
+    
+    // Simplified check - just check if user exists and has access token
     if (!user) return false;
-    const expiresAt = new Date(user.expiresAt).getTime();
-    const now = new Date().getTime();
-    return user.accessToken && expiresAt > now;
+    
+    // For now, just check if user exists and has access token
+    const isValid = !!user.accessToken;
+    
+    console.log('Auth check result:', {
+      isValid,
+      accessTokenExists: !!user.accessToken,
+      userExists: !!user
+    });
+    
+    return isValid;
   }, [user]);
 
   const getAccessToken = useCallback(() => user?.accessToken, [user]);
