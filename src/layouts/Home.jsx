@@ -19,7 +19,7 @@ import SearchBar from "../components/SearchBar";
 import apiService from "../api/apiService";
 import OfferBanner from "./OfferBanner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useBanners } from "../hooks/useBanners";
+import { useCachedBanners } from "../hooks/useCachedBanners";
 
 // Helper function to get auth data
 const getAuthData = () => {
@@ -146,8 +146,8 @@ function Home() {
   const queryClient = useQueryClient();
   const userId = getUserId();
 
-  // Fetch banner data
-  const { data: banners = [], isLoading: bannersLoading, error: bannersError } = useBanners({
+  // Fetch banner data with cache
+  const { banners = [], isLoading: bannersLoading, error: bannersError, dataSource } = useCachedBanners({
     outletId,
     userId,
     enabled: !!outletId
@@ -403,7 +403,7 @@ function Home() {
           <div className=" pt-0">
             <div className="container p-b40 p-t0">
 
-              {/* Modern Banner Swiper */}
+              {/* Modern Banner Swiper with Cache Status */}
               {bannersLoading ? (
                 // Loading skeleton for banners
                 <div className="modern-banner-swiper">
@@ -424,22 +424,25 @@ function Home() {
                   <p className="text-muted">No banners available</p>
                 </div>
               ) : (
-                <CodeSandboxBannerSwiper
-                  banners={banners.map(banner => ({
-                    id: banner.banner_id,
-                    title: banner.name || banner.title,
-                    subtitle: banner.subtitle || banner.name,
-                    description: banner.description || banner.subtitle,
-                    bgImage: banner.banner_image || banner.image
-                  }))}
-                  onBannerClick={(banner) => {
-                    console.log('Banner clicked:', banner);
-                    // Add your banner click logic here
-                  }}
-                  autoplayDelay={3000}
-                  pauseOnHover={true}
-                  disableOnInteraction={false}
-                />
+                <div>
+                  
+                  <CodeSandboxBannerSwiper
+                    banners={banners.map(banner => ({
+                      id: banner.banner_id,
+                      title: banner.name || banner.title,
+                      subtitle: banner.subtitle || banner.name,
+                      description: banner.description || banner.subtitle,
+                      bgImage: banner.banner_image || banner.image
+                    }))}
+                    onBannerClick={(banner) => {
+                      console.log('Banner clicked:', banner);
+                      // Add your banner click logic here
+                    }}
+                    autoplayDelay={3000}
+                    pauseOnHover={true}
+                    disableOnInteraction={false}
+                  />
+                </div>
               )}
 
               <div
