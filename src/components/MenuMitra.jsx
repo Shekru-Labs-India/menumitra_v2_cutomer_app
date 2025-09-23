@@ -78,12 +78,13 @@ const MenuMitra = () => {
 
   const renderFooter = () => (
     <div className="text-center">
-      <p className="text-muted mb-0 small">version 2.0 13 Aug 2025</p>
+      <p className="text-muted mb-0 small">version 2.0</p>
+      <p className="text-muted mb-0 small">13 Aug 2025</p>
     </div>
   );
 
   return (
-    <div className="border-top pt-4 pb-4 bg-light">
+    <div className="border-top py-3 px-3 bg-light rounded-4">
       {renderLogo()}
       {renderSocialLinks()}
       {renderFooter()}
