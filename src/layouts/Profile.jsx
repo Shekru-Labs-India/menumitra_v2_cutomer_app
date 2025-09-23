@@ -39,18 +39,18 @@ function Profile() {
     <>
       <Header />
 
-      <div className="page-content bottom-content ">
+      <div className="page-content pb-2 ">
         <div className="container profile-area">
           <div
-            className="profile"
+            className="profile rounded-4 mx-1 mt-3"
             onClick={!isAuthenticated ? handleLoginClick : undefined}
             style={!isAuthenticated ? { cursor: "pointer" } : {}}
           >
-            <div className="d-flex align-items-center mb-0">
+            <div className="d-flex align-items-center mb-0 ">
               {/* <div className="media media-70 me-3">
                 <img src={defaultAvatar} alt="Profile" />
               </div> */}
-              <div className="about-profile">
+              <div className="about-profile ">
                 <h5 className="sub-title mb-0">
                   {isAuthenticated ? `Hello, ${user?.name}` : "Hello User"}
                 </h5>
@@ -77,16 +77,6 @@ function Profile() {
                 )}
               </div>
             </div>
-            {/* <div className="location-box">
-              <i className="location fa-solid fa-location-dot" />
-              <div className="flex-1">
-                <h6 className="text-white font-w400 mb-0">324002</h6>
-                <h6 className="text-white font-w400 mb-0">UK - 324002</h6>
-              </div>
-              <a href="javascript:void(0);" className="change-btn">
-                Change
-              </a>
-            </div> */}
           </div>
           <div className="profile-content border-0">
             <div className="row g-2">
@@ -203,16 +193,7 @@ function Profile() {
           <a
             href="#"
             onClick={onLogoutClick}
-            style={{
-              color: "#000",
-              fontWeight: 500,
-              fontSize: 17,
-              textDecoration: "none",
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              marginBottom: 8,
-            }}
+            className="text-dark fw-medium fs-5 text-decoration-none d-flex align-items-center gap-2 mb-5"
           >
             <i className="fa-solid fa-power-off text-dark" style={{ fontSize: 16 }} />
             <span className="text-dark">Logout</span>

@@ -27,7 +27,7 @@ const SOCIAL_LINKS = [
     platform: 'google',
     url: 'https://google.com/MenuMitra',
     icon: 'ri-google-fill',
-    color: '#304856ff'
+    color: '#4285F4'
   }
 ];
 

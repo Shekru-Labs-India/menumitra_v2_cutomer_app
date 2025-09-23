@@ -87,7 +87,7 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider 
       value={{
         user,
-        isAuthenticated: isAuthenticated(),
+        isAuthenticated, // Remove the () - provide the function, not its result
         showAuthOffcanvas,
         setShowAuthOffcanvas,
         handleLoginSuccess,
