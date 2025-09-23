@@ -1,17 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-const CustomerFeedbackModal = ({ show, onClose }) => {
+const CustomerFeedbackModal = ({ show, onClose, orderNo }) => {
   const [form, setForm] = useState({
     order_number: "",
     customer_name: "",
     mobile: "",
     feedback_description: "",
     feedback_rating: "",
+    app_source: "customer_app",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  // Update form when orderNo prop changes
+  useEffect(() => {
+    if (orderNo) {
+      setForm(prev => ({ ...prev, order_number: orderNo }));
+    }
+  }, [orderNo]);
 
   if (!show) return null;
 
@@ -72,10 +80,10 @@ const CustomerFeedbackModal = ({ show, onClose }) => {
     setSuccess("");
 
     // Add order number validation
-    if (form.order_number && form.order_number.length < 6) {
-      setError("Order number must be at least 6 digits.");
-      return;
-    }
+    // if (form.order_number && form.order_number.length < 6) {
+    //   setError("Order number must be at least 6 digits.");
+    //   return;
+    // }
 
     if (!form.feedback_description.trim() || !form.feedback_rating) {
       setError("Feedback and rating are required.");

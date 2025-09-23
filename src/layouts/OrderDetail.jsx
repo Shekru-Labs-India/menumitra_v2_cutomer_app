@@ -847,7 +847,7 @@ function OrderDetail() {
           {/* Invoice and Feedback Buttons */}
           <div className="d-flex justify-content-between align-items-center mt-3">
             <div>
-              <FeedbackButton />
+              <FeedbackButton orderNo={orderDetails.order_details.order_number} />
             </div>
             {["paid", "complementary_paid", "udhari_paid"].includes(
               orderDetails.order_details.order_status?.toLowerCase()

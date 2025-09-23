@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import CustomerFeedbackModal from "../components/CustomerFeedbackModal";
-const FeedbackButton = () => {
+
+const FeedbackButton = ({ orderNo }) => {
   const [showFeedback, setShowFeedback] = useState(false);
 
   return (
@@ -31,6 +32,7 @@ const FeedbackButton = () => {
       <CustomerFeedbackModal
         show={showFeedback}
         onClose={() => setShowFeedback(false)}
+        orderNo={orderNo}
       />
     </>
   );
