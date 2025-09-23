@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import Offcanvas from "../Shared/Offcanvas";
+import BaseModal from "../Modal/BaseModal";
 import { useAuth } from "../../contexts/AuthContext";
 import axios from "axios";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -134,66 +134,7 @@ const AuthOffcanvas = () => {
     }
   }, [currentStep]);
 
-  useEffect(() => {
-    const handleVisualViewport = () => {
-      const viewportHeight =
-        window.visualViewport?.height || window.innerHeight;
-      const windowHeight = window.innerHeight;
-      const offcanvas = document.querySelector(".auth-offcanvas");
 
-      // Check if keyboard is open
-      const keyboardIsOpen = viewportHeight < windowHeight * 0.75;
-
-      if (offcanvas) {
-        if (keyboardIsOpen) {
-          // Lock background scroll
-          document.body.style.overflow = "hidden";
-          document.body.style.position = "fixed";
-          document.body.style.width = "100%";
-
-          // Simple transform to move above keyboard
-          const keyboardHeight = windowHeight - viewportHeight;
-          offcanvas.style.transform = `translateY(-${keyboardHeight}px)`;
-          offcanvas.style.transition = "transform 0.2s ease-out";
-        } else {
-          // Reset all styles
-          document.body.style.overflow = "";
-          document.body.style.position = "";
-          document.body.style.width = "";
-
-          offcanvas.style.transform = "translateY(0)";
-        }
-      }
-    };
-
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener("resize", handleVisualViewport);
-      window.visualViewport.addEventListener("scroll", handleVisualViewport);
-    }
-
-    return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener(
-          "resize",
-          handleVisualViewport
-        );
-        window.visualViewport.removeEventListener(
-          "scroll",
-          handleVisualViewport
-        );
-      }
-      // Cleanup styles
-      document.body.style.overflow = "";
-      document.body.style.position = "";
-      document.body.style.width = "";
-    };
-  }, []);
-
-  const handleInputFocus = (e) => {
-    setTimeout(() => {
-      e.target.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 100);
-  };
 
   const handleClose = () => {
     setCurrentStep(STEPS.LOGIN);
@@ -510,7 +451,6 @@ const AuthOffcanvas = () => {
 
   const renderLoginStep = () => (
     <div className="px-1">
-      <h6 className="title font-w600 mb-2">Login to MenuMitra</h6>
       <form onSubmit={handlePhoneSubmit}>
         <div className="mb-3">
           <label className="form-label">Phone Number</label>
@@ -529,7 +469,6 @@ const AuthOffcanvas = () => {
                   setPhoneNumber(value);
                 }
               }}
-              onFocus={handleInputFocus}
               placeholder="Enter your phone number"
               pattern="^[6-9][0-9]{9}$"
               maxLength="10"
@@ -630,7 +569,6 @@ const AuthOffcanvas = () => {
 
   const renderSignupStep = () => (
     <div className="px-1">
-      <h6 className="title font-w600 mb-2">Create Account</h6>
       <form onSubmit={handleSignupSubmit}>
         <div className="mb-3">
           <label className="form-label">Full Name</label>
@@ -668,7 +606,6 @@ const AuthOffcanvas = () => {
                   setPhoneNumber(value);
                 }
               }}
-              onFocus={handleInputFocus}
               placeholder="Enter your phone number"
               pattern="^[6-9][0-9]{9}$"
               maxLength="10"
@@ -732,7 +669,6 @@ const AuthOffcanvas = () => {
 
   const renderOTPStep = () => (
     <div className="px-1">
-      <h6 className="title font-w600 mb-2">Verify OTP</h6>
       <p className="text-muted mb-4">
         Enter the verification code sent to <br />
         <span className="fw-bold fs-6">+91 {phoneNumber}</span>
@@ -758,7 +694,6 @@ const AuthOffcanvas = () => {
                 autoComplete="one-time-code"
                 required
                 disabled={isLoading}
-                onFocus={handleInputFocus}
               />
             ))}
           </div>
@@ -798,28 +733,47 @@ const AuthOffcanvas = () => {
   );
 
   return (
-    <Offcanvas
+    <BaseModal
       isOpen={showAuthOffcanvas}
       onClose={handleClose}
-      position="bottom"
-      className="auth-offcanvas m-3 rounded"
-      style={{
-        transition: "transform 0.2s ease-out",
-        willChange: "transform",
-      }}
+      size="modal-dialog-centered"
     >
-      {currentStep === STEPS.LOGIN && renderLoginStep()}
-      {currentStep === STEPS.SIGNUP && renderSignupStep()}
-      {currentStep === STEPS.OTP && renderOTPStep()}
-    </Offcanvas>
+      <div className="auth-modal-content">
+        {/* Custom title with close button */}
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h6 className="title font-w600 mb-0">
+            {currentStep === STEPS.LOGIN && "Login to MenuMitra"}
+            {currentStep === STEPS.SIGNUP && "Create Account"}
+            {currentStep === STEPS.OTP && "Verify OTP"}
+          </h6>
+          <button 
+            className="btn-close" 
+            onClick={handleClose}
+            type="button"
+            aria-label="Close"
+            style={{
+              background: 'none',
+              border: 'none',
+              fontSize: '1.2rem',
+              color: isDarkMode ? '#ffffff' : '#6c757d',
+              padding: '0.25rem',
+              cursor: 'pointer'
+            }}
+          >
+            <i className="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        
+        {currentStep === STEPS.LOGIN && renderLoginStep()}
+        {currentStep === STEPS.SIGNUP && renderSignupStep()}
+        {currentStep === STEPS.OTP && renderOTPStep()}
+      </div>
+    </BaseModal>
   );
 };
 
 AuthOffcanvas.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  onClose: PropTypes.func.isRequired,
-  onLoginSuccess: PropTypes.func.isRequired,
-  defaultStep: PropTypes.oneOf(Object.values(STEPS)),
+  // PropTypes are handled by the AuthContext, no direct props needed
 };
 
 export default AuthOffcanvas;
