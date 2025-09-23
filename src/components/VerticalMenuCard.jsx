@@ -261,7 +261,7 @@ const VerticalMenuCard = ({
               style={{
                 borderRadius: "12px",
                 width: "100%",
-                aspectRatio: "4/3",
+                aspectRatio: "4/4",
                 backgroundColor: "#f8f9fa",
               }}
             >
