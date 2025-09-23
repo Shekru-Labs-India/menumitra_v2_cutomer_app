@@ -862,7 +862,7 @@ function Checkout() {
                           Total
                         </span>
                         <span className="fw-bold" style={{ fontSize: 18 }}>
-                          ₹{checkoutDetails?.total_bill_amount || "0.00"}
+                          ₹{checkoutDetails?.total_bill_amount || getCartTotal().toFixed(2)}
                         </span>
                       </div>
                       <hr className="my-2" style={{ borderColor: "#e0e0e0" }} />
@@ -903,15 +903,17 @@ function Checkout() {
                         <span>Subtotal</span>
                         <span>
                           ₹
-                          {(
-                            parseFloat(
-                              checkoutDetails?.total_bill_amount || 0
-                            ) -
-                            parseFloat(checkoutDetails?.discount_amount || 0) -
-                            (couponStatus?.success
-                              ? parseFloat(couponStatus.couponDetails.value)
-                              : 0)
-                          ).toFixed(2)}
+                          {checkoutDetails ? (
+                            (
+                              parseFloat(checkoutDetails.total_bill_amount || 0) -
+                              parseFloat(checkoutDetails.discount_amount || 0) -
+                              (couponStatus?.success
+                                ? parseFloat(couponStatus.couponDetails.value)
+                                : 0)
+                            ).toFixed(2)
+                          ) : (
+                            getCartTotal().toFixed(2)
+                          )}
                         </span>
                       </div>
 
@@ -921,8 +923,7 @@ function Checkout() {
                         style={{ color: "#b0b3b8" }}
                       >
                         <span>
-                          Service Charges (
-                          {checkoutDetails?.service_charges_percent || 0}%)
+                          Service Charges ({checkoutDetails?.service_charges_percent || 0}%)
                         </span>
                         <span>
                           +₹{checkoutDetails?.service_charges_amount || "0.00"}
@@ -944,14 +945,16 @@ function Checkout() {
                         </span>
                         <span className="fw-bold" style={{ fontSize: 18 }}>
                           ₹
-                          {(
-                            parseFloat(
-                              checkoutDetails?.final_grand_total || 0
-                            ) -
-                            (couponStatus?.success
-                              ? parseFloat(couponStatus.couponDetails.value)
-                              : 0)
-                          ).toFixed(2)}
+                          {checkoutDetails ? (
+                            (
+                              parseFloat(checkoutDetails.final_grand_total || 0) -
+                              (couponStatus?.success
+                                ? parseFloat(couponStatus.couponDetails.value)
+                                : 0)
+                            ).toFixed(2)
+                          ) : (
+                            getCartTotal().toFixed(2)
+                          )}
                         </span>
                       </div>
                     </>
