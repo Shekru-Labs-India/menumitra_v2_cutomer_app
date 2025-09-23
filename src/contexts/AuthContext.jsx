@@ -66,6 +66,9 @@ export const AuthProvider = ({ children }) => {
   const handleLogout = useCallback(() => {
     localStorage.removeItem('auth');
     setUser(null);
+    
+    // Dispatch cache clear event
+    window.dispatchEvent(new CustomEvent('cache:clear'));
   }, []);
 
   // Auth utility functions using React state
@@ -87,7 +90,7 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider 
       value={{
         user,
-        isAuthenticated, // Remove the () - provide the function, not its result
+        isAuthenticated: isAuthenticated(), // Call the function here
         showAuthOffcanvas,
         setShowAuthOffcanvas,
         handleLoginSuccess,

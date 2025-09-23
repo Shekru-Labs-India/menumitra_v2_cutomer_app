@@ -51,23 +51,13 @@ function Profile() {
                 <img src={defaultAvatar} alt="Profile" />
               </div> */}
               <div className="about-profile ">
-                <h5 className="sub-title mb-0">
+                <h5 className="sub-title mb-2">
                   {isAuthenticated ? `Hello, ${user?.name}` : "Hello User"}
                 </h5>
                 {!isAuthenticated && (
                   <button
-                    className="btn position-absolute"
+                    className="btn btn-light position-absolute top-0 end-0 m-3 fw-semibold rounded-2 px-3 py-2 border-2 border-white shadow-none"
                     style={{
-                      top: 18,
-                      right: 24,
-                      border: "2px solid #fff",
-                      color: "#222",
-                      background: "#fff",
-                      fontWeight: 600,
-                      borderRadius: 8,
-                      padding: "6px 18px",
-                      boxShadow: "none",
-                      outline: "none",
                       zIndex: 10,
                     }}
                     onClick={handleLoginClick}
