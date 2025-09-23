@@ -455,12 +455,12 @@ function Checkout() {
     setCouponStatus(null);
     try {
       const accessToken = getAccessToken();
-
       const response = await axios.post(
         "https://men4u.xyz/v2/common/verify_coupon",
         {
           coupon_code: couponCode,
           app_source: "user_App",
+          outlet_id: String(outletId),
         },
         {
           headers: {
