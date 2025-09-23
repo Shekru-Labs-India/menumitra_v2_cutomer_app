@@ -850,16 +850,8 @@ function Checkout() {
                   className="rounded-4 shadow-sm p-3 mb-3"
                   style={{ border: "1px solid #e0e0e0", marginTop: 24 }}
                 >
-                  {detailsLoading ? (
-                    <div className="text-center py-3">
-                      <div
-                        className="spinner-border text-primary"
-                        role="status"
-                      >
-                        <span className="visually-hidden">Loading...</span>
-                      </div>
-                    </div>
-                  ) : checkoutError ? (
+                  {/* Remove the loading spinner - show content immediately */}
+                  {checkoutError ? (
                     <div className="text-center text-danger py-3">
                       Failed to load checkout details. Please try again.
                     </div>
@@ -874,6 +866,7 @@ function Checkout() {
                         </span>
                       </div>
                       <hr className="my-2" style={{ borderColor: "#e0e0e0" }} />
+                      
                       {/* Regular Discount */}
                       <div
                         className="d-flex justify-content-between align-items-center mb-1"
@@ -922,7 +915,7 @@ function Checkout() {
                         </span>
                       </div>
 
-                      {/* Service Charges and GST sections remain the same */}
+                      {/* Service Charges and GST sections */}
                       <div
                         className="d-flex justify-content-between align-items-center mb-1"
                         style={{ color: "#b0b3b8" }}
@@ -943,7 +936,8 @@ function Checkout() {
                         <span>+₹{checkoutDetails?.gst_amount || "0.00"}</span>
                       </div>
                       <hr className="my-2" style={{ borderColor: "#e0e0e0" }} />
-                      {/* Updated Grand Total with coupon discount */}
+                      
+                      {/* Grand Total with coupon discount */}
                       <div className="d-flex justify-content-between align-items-center">
                         <span className="fw-bold" style={{ fontSize: 18 }}>
                           Grand Total
