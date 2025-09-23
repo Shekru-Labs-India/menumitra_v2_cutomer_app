@@ -26,6 +26,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "swiper/css/effect-fade";
 import "swiper/css/autoplay";
+import { useBanners } from "../hooks/useBanners";
 
 // Helper function to get auth data
 const getAuthData = () => {
@@ -50,50 +51,6 @@ function extractOutletParamsFromPath(pathname) {
   }
   return null;
 }
-
-// Update the bannerData array
-const bannerData = [
-  {
-    id: 1,
-    imageUrl: "https://men4u.xyz/v2/media/menu_images/mm_images_70143.jpg",
-    title: "Special Offer",
-    discount: "20% OFF",
-    textColor: "#FFFFFF", // Changed to white for better visibility on image
-    description: "*on Selected Items"
-  },
-  {
-    id: 2,
-    imageUrl: "https://men4u.xyz/v2/media/menu_images/mm_images_70143.jpg",
-    title: "Lunch Special",
-    discount: "30% OFF",
-    textColor: "#FFFFFF",
-    description: "*12PM to 3PM"
-  },
-  {
-    id: 3,
-    imageUrl: "https://men4u.xyz/v2/media/menu_images/mm_images_70143.jpg",
-    title: "Happy Hours",
-    discount: "25% OFF",
-    textColor: "#FFFFFF",
-    description: "*on Beverages"
-  },
-  {
-    id: 4,
-    imageUrl: "https://men4u.xyz/v2/media/menu_images/mm_images_70143.jpg",
-    title: "Weekend Special",
-    discount: "40% OFF",
-    textColor: "#FFFFFF",
-    description: "*Saturday & Sunday"
-  },
-  {
-    id: 5,
-    imageUrl: "https://men4u.xyz/v2/media/menu_images/mm_images_70143.jpg",
-    title: "First Order",
-    discount: "50% OFF",
-    textColor: "#FFFFFF",
-    description: "*New Customers Only"
-  }
-];
 
 const styles = {
   swiperContainer: {
@@ -195,6 +152,13 @@ function Home() {
   // Add QueryClient
   const queryClient = useQueryClient();
   const userId = getUserId();
+
+  // Fetch banner data
+  const { data: banners = [], isLoading: bannersLoading, error: bannersError } = useBanners({
+    outletId,
+    userId,
+    enabled: !!outletId
+  });
 
   // Add favorite mutations with optimistic updates
   const toggleFavorite = useMutation({
@@ -508,49 +472,72 @@ function Home() {
                   
 
                     {/* Slides */}
-                    {bannerData.map((banner) => (
-                      <SwiperSlide 
-                        key={banner.id}
-                        style={{
-                          padding: '15px',
-                          borderRadius: '12px',
-                          boxSizing: 'border-box',
-                        }}
-                      >
-                        <div 
-                          className="card h-100 border-0 shadow-sm"
+                    {bannersLoading ? (
+                      // Loading skeleton for banners
+                      Array.from({ length: 3 }).map((_, index) => (
+                        <SwiperSlide key={`skeleton-${index}`}>
+                          <Skeleton height={200} style={{ borderRadius: '8px' }} />
+                        </SwiperSlide>
+                      ))
+                    ) : bannersError ? (
+                      // Error state
+                      <SwiperSlide>
+                        <div className="text-center p-4">
+                          <p className="text-muted">Failed to load banners</p>
+                        </div>
+                      </SwiperSlide>
+                    ) : banners.length === 0 ? (
+                      // No banners state
+                      <SwiperSlide>
+                        <div className="text-center p-4">
+                          <p className="text-muted">No banners available</p>
+                        </div>
+                      </SwiperSlide>
+                    ) : (
+                      banners.map((banner) => (
+                        <SwiperSlide 
+                          key={banner.banner_id}
                           style={{
-                            borderRadius: '8px',
-                            overflow: 'hidden',
-                            height: '100%'
+                            padding: '15px',
+                            borderRadius: '12px',
+                            boxSizing: 'border-box',
                           }}
                         >
                           <div 
-                            className="position-relative"
+                            className="card h-100 border-0 shadow-sm"
                             style={{
-                              paddingTop: '56.25%', // 16:9 aspect ratio
-                              overflow: 'hidden'
+                              borderRadius: '8px',
+                              overflow: 'hidden',
+                              height: '100%'
                             }}
                           >
-                            <img 
-                              src={banner.imageUrl} 
-                              alt={banner.title}
-                              className="position-absolute top-0 start-0 w-100 h-100"
-                              style={{
-                                objectFit: 'cover',
-                              }}
-                            />
-                            {/* Overlay with gradient */}
                             <div 
-                              className="position-absolute top-0 start-0 w-100 h-100"
+                              className="position-relative"
                               style={{
-                                background: 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.6))'
+                                paddingTop: '56.25%', // 16:9 aspect ratio
+                                overflow: 'hidden'
                               }}
-                            ></div>s
+                            >
+                              <img 
+                                src={banner.banner_image} 
+                                alt={banner.name}
+                                className="position-absolute top-0 start-0 w-100 h-100"
+                                style={{
+                                  objectFit: 'cover',
+                                }}
+                              />
+                              {/* Overlay with gradient */}
+                              <div 
+                                className="position-absolute top-0 start-0 w-100 h-100"
+                                style={{
+                                  background: 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.6))'
+                                }}
+                              ></div>
+                            </div>
                           </div>
-                        </div>
-                      </SwiperSlide>
-                    ))}
+                        </SwiperSlide>
+                      ))
+                    )}
 
                     {/* Pagination */}
                     <div 
