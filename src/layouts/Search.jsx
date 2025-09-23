@@ -430,7 +430,7 @@ function Search() {
                   <span className="visually-hidden">Loading...</span>
                 </div>
               </div>
-            ) : error || searchError ? (
+            ) : (error || searchError) && searchError?.response?.status !== 404 ? (
               <div className="text-center py-4">
                 <div className="empty-search-state">
                   <i
@@ -456,19 +456,19 @@ function Search() {
                   <p className="mt-3 text-muted">Search the menu</p>
                 </div>
               </div>
-            ) : displayResults.length === 0 ? (
+            ) : displayResults.length === 0 || (searchError?.response?.status === 404) ? (
               <div className="text-center py-4">
                 <div className="empty-search-state">
                   <i
-                    className="fas fa-exclamation-circle"
+                    className="fas fa-search"
                     style={{
                       fontSize: "64px",
-                      color: "#dc3545",
+                      color: "#6c757d",
                       opacity: "0.5",
                       marginBottom: "1rem",
                     }}
                   ></i>
-                  <p className="mt-3 text-muted">No menu found</p>
+                  <p className="mt-3 text-muted text-uppercase">No menu found</p>
                 </div>
               </div>
             ) : (
@@ -581,6 +581,7 @@ const styles = `
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    margin-top: 10rem;
   }
   
   .empty-search-state i {
