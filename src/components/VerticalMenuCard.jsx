@@ -237,7 +237,11 @@ const VerticalMenuCard = ({
       return;
     }
 
-    openModal("addToCart", menuItem);
+    // Pass the action information to the modal
+    openModal("addToCart", {
+      ...menuItem,
+      action: increment ? 'increment' : 'decrement'
+    });
   };
 
   return (
