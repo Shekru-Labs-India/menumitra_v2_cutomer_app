@@ -389,6 +389,33 @@ function Search() {
                     results="0"
                     data-search-input
                   />
+                  {searchInputValue && (
+                    <div className="input-group-text px-4">
+                      <button
+                        type="button"
+                        className="btn btn-link p-0 border-0"
+                        onClick={() => {
+                          setSearchInputValue("");
+                          setSearchResults([]);
+                          if (searchInputRef.current) {
+                            searchInputRef.current.focus();
+                          }
+                        }}
+                        style={{
+                          color: "#6c757d",
+                          fontSize: "16px",
+                          lineHeight: 1,
+                          padding: "0",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer"
+                        }}
+                        title="Clear search"
+                      >
+                        <i className="fas fa-times"></i>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
