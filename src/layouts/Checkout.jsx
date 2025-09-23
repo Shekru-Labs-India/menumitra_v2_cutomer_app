@@ -9,7 +9,7 @@ import { useOutlet } from "../contexts/OutletContext";
 import OrderExistsModal from "../components/Modal/variants/OrderExistsModal";
 import { useAuth } from "../contexts/AuthContext";
 import LazyImage from "../components/Shared/LazyImage";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import apiService from "../api/apiService";
 import { useToastContext } from "../components/Toast/ToastContext";
 
@@ -94,6 +94,7 @@ function Checkout() {
   const [couponLoading, setCouponLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const { addToast } = useToastContext();
+  const queryClient = useQueryClient();
 
   // Keep all your handlers and effects here
   const handleLogin = () => {
@@ -177,9 +178,14 @@ function Checkout() {
       const result = await apiService.checkout.addToExistingOrder(variables);
       return result;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       clearCart();
       localStorage.removeItem("cart");
+      
+      // Invalidate and refetch orders data
+      queryClient.invalidateQueries({ queryKey: ['ongoingOrders'] });
+      queryClient.invalidateQueries({ queryKey: ['orderHistory'] });
+      
       addToast({
         message: "Items added to existing order successfully!",
         type: "success",
@@ -204,11 +210,16 @@ function Checkout() {
       );
       return result;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       clearCart();
       localStorage.removeItem("cart");
+      
+      // Invalidate and refetch orders data
+      queryClient.invalidateQueries({ queryKey: ['ongoingOrders'] });
+      queryClient.invalidateQueries({ queryKey: ['orderHistory'] });
+      
       addToast({
-        message: "Order cancelled and new order created successfully!",
+        message: `Order cancelled and new order #${data.order_number} created successfully!`,
         type: "success",
       });
       navigate("/orders");

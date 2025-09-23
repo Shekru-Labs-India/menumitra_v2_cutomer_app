@@ -9,6 +9,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import apiService from "../api/apiService";
 import { useQuery } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Update the NoOrders component with new icon
 const NoOrders = ({ message }) => {
@@ -58,6 +59,7 @@ function Orders() {
   const { outletId } = useOutlet();
   const { user, setShowAuthOffcanvas } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // Get userId from auth
   const auth = JSON.parse(localStorage.getItem("auth")) || {};
