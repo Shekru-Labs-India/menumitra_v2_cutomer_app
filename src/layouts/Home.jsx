@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import CategorySwiper from "../components/CategorySwiper/CategorySwiper";
-import BannerSwiper from "../components/BannerSwiper/BannerSwiper";
+import CodeSandboxBannerSwiper from "../components/BannerSwiper/CodeSandboxBannerSwiper";
 import VerticalMenuCard from "../components/VerticalMenuCard";
 import { useAuth } from "../contexts/AuthContext";
 import { useCart } from "../contexts/CartContext";
@@ -19,13 +19,6 @@ import SearchBar from "../components/SearchBar";
 import apiService from "../api/apiService";
 import OfferBanner from "./OfferBanner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Autoplay, Pagination } from "swiper/modules";
-import "swiper/css/bundle"; // This includes all Swiper styles
-import "swiper/css/navigation";
-import "swiper/css/pagination";
-import "swiper/css/effect-fade";
-import "swiper/css/autoplay";
 import { useBanners } from "../hooks/useBanners";
 
 // Helper function to get auth data
@@ -401,40 +394,6 @@ function Home() {
     setIsSearching(!!searchResults.length);
   };
 
-  // Add this at the component level
-  const [swiperInstance, setSwiperInstance] = useState(null);
-
-  // Update the Swiper component with detailed logging
-  useEffect(() => {
-    if (swiperInstance) {
-      console.log("=== Swiper Instance State ===");
-      console.log("Is Swiper mounted:", swiperInstance.mounted);
-      console.log("Is Swiper initialized:", swiperInstance.initialized);
-      console.log("Current breakpoint:", swiperInstance.currentBreakpoint);
-      console.log("Current parameters:", swiperInstance.params);
-      console.log("DOM elements:", {
-        wrapper: swiperInstance.wrapperEl,
-        navigation: {
-          nextEl: swiperInstance.navigation?.nextEl,
-          prevEl: swiperInstance.navigation?.prevEl
-        },
-        pagination: swiperInstance.pagination?.el
-      });
-
-      // Check for potential issues
-      const issues = [];
-      if (!swiperInstance.mounted) issues.push("Swiper not mounted");
-      if (!swiperInstance.initialized) issues.push("Swiper not initialized");
-      if (!swiperInstance.navigation?.nextEl) issues.push("Next button not found");
-      if (!swiperInstance.navigation?.prevEl) issues.push("Prev button not found");
-      if (!swiperInstance.pagination?.el) issues.push("Pagination not found");
-      
-      if (issues.length > 0) {
-        console.warn("=== Swiper Issues Detected ===");
-        issues.forEach(issue => console.warn(`- ${issue}`));
-      }
-    }
-  }, [swiperInstance]);
 
   return (
     <>
@@ -444,115 +403,44 @@ function Home() {
           <div className=" pt-0">
             <div className="container p-b40 p-t0">
 
-              <div className="">
-                <div className="swiper-btn-center-lr position-relative my-0 py-0">
-                  <Swiper
-                    modules={[Navigation, Pagination, Autoplay]}
-                    slidesPerView={1}
-                    spaceBetween={10}
-                    loop={true}
-                    autoplay={{
-                      delay: 3000,
-                      disableOnInteraction: true,
-                    }}
-                    breakpoints={{
-                      // Bootstrap breakpoints
-                      576: { slidesPerView: 1 },
-                      768: { slidesPerView: 2 },
-                      992: { slidesPerView: 3 },
-                      1200: { slidesPerView: 4 }
-                    }}
-               
-                    // style={{
-                    //   // padding: '10px 0',
-                    //   position: 'relative',
-                    //   overflow: 'hidden'
-                    // }}
-                  >
-                  
-
-                    {/* Slides */}
-                    {bannersLoading ? (
-                      // Loading skeleton for banners
-                      Array.from({ length: 3 }).map((_, index) => (
-                        <SwiperSlide key={`skeleton-${index}`}>
-                          <Skeleton height={200} style={{ borderRadius: '8px' }} />
-                        </SwiperSlide>
-                      ))
-                    ) : bannersError ? (
-                      // Error state
-                      <SwiperSlide>
-                        <div className="text-center p-4">
-                          <p className="text-muted">Failed to load banners</p>
-                        </div>
-                      </SwiperSlide>
-                    ) : banners.length === 0 ? (
-                      // No banners state
-                      <SwiperSlide>
-                        <div className="text-center p-4">
-                          <p className="text-muted">No banners available</p>
-                        </div>
-                      </SwiperSlide>
-                    ) : (
-                      banners.map((banner) => (
-                        <SwiperSlide 
-                          key={banner.banner_id}
-                          style={{
-                            padding: '15px',
-                            borderRadius: '12px',
-                            boxSizing: 'border-box',
-                          }}
-                        >
-                          <div 
-                            className="card h-100 border-0 shadow-sm"
-                            style={{
-                              borderRadius: '8px',
-                              overflow: 'hidden',
-                              height: '100%'
-                            }}
-                          >
-                            <div 
-                              className="position-relative"
-                              style={{
-                                paddingTop: '56.25%', // 16:9 aspect ratio
-                                overflow: 'hidden'
-                              }}
-                            >
-                              <img 
-                                src={banner.banner_image} 
-                                alt={banner.name}
-                                className="position-absolute top-0 start-0 w-100 h-100"
-                                style={{
-                                  objectFit: 'cover',
-                                }}
-                              />
-                              {/* Overlay with gradient */}
-                              <div 
-                                className="position-absolute top-0 start-0 w-100 h-100"
-                                style={{
-                                  background: 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.6))'
-                                }}
-                              ></div>
-                            </div>
-                          </div>
-                        </SwiperSlide>
-                      ))
-                    )}
-
-                    {/* Pagination */}
-                    <div 
-                      className="swiper-pagination"
-                      style={{
-                        position: 'absolute',
-                        bottom: '10px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        zIndex: 10
-                      }}
-                    ></div>
-                  </Swiper>
+              {/* Modern Banner Swiper */}
+              {bannersLoading ? (
+                // Loading skeleton for banners
+                <div className="modern-banner-swiper">
+                  <div style={{ height: '200px', display: 'flex', gap: '20px', padding: '0 20px' }}>
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <Skeleton key={`skeleton-${index}`} height={200} style={{ borderRadius: '20px', flex: '1' }} />
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ) : bannersError ? (
+                // Error state
+                <div className="text-center p-4">
+                  <p className="text-muted">Failed to load banners</p>
+                </div>
+              ) : banners.length === 0 ? (
+                // No banners state
+                <div className="text-center p-4">
+                  <p className="text-muted">No banners available</p>
+                </div>
+              ) : (
+                <CodeSandboxBannerSwiper
+                  banners={banners.map(banner => ({
+                    id: banner.banner_id,
+                    title: banner.name || banner.title,
+                    subtitle: banner.subtitle || banner.name,
+                    description: banner.description || banner.subtitle,
+                    bgImage: banner.banner_image || banner.image
+                  }))}
+                  onBannerClick={(banner) => {
+                    console.log('Banner clicked:', banner);
+                    // Add your banner click logic here
+                  }}
+                  autoplayDelay={3000}
+                  pauseOnHover={true}
+                  disableOnInteraction={false}
+                />
+              )}
 
               <div
                 className="title-bar d-flex justify-content-between align-items-center"
