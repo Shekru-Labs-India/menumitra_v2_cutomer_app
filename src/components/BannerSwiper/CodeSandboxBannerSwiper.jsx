@@ -1,12 +1,11 @@
 import React, { useRef } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, Autoplay, EffectFade } from 'swiper/modules';
+import { Navigation, Autoplay, EffectFade } from 'swiper/modules';
 import PropTypes from 'prop-types';
 
 // Import Swiper styles
 import 'swiper/css';
 import 'swiper/css/navigation';
-import 'swiper/css/pagination';
 import 'swiper/css/autoplay';
 import 'swiper/css/effect-fade';
 
@@ -53,52 +52,20 @@ const CodeSandboxBannerSwiper = ({
           transition: transform 0.3s ease;
         }
 
+        .codesandbox-banner-swiper .banner-slide {
+          width: 100%;
+          height: 100%;
+          background-position: center;
+          background-size: cover;
+          background-repeat: no-repeat;
+          position: relative;
+        }
+
         .codesandbox-banner-swiper .swiper-slide:hover {
           transform: scale(1.02);
         }
 
-        .banner-overlay {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: linear-gradient(
-            135deg,
-            rgba(0, 0, 0, 0.4) 0%,
-            rgba(0, 0, 0, 0.2) 50%,
-            rgba(0, 0, 0, 0.6) 100%
-          );
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          text-align: center;
-          color: white;
-          padding: 30px;
-        }
-
-        .banner-title {
-          font-size: 2.5rem;
-          font-weight: 700;
-          margin-bottom: 10px;
-          text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-          line-height: 1.2;
-        }
-
-        .banner-subtitle {
-          font-size: 1.2rem;
-          margin-bottom: 8px;
-          opacity: 0.9;
-          font-weight: 500;
-        }
-
-        .banner-description {
-          font-size: 1rem;
-          opacity: 0.8;
-          max-width: 600px;
-          line-height: 1.4;
-        }
+        /* Removed banner overlay styles - no text overlay */
 
         /* Navigation Buttons */
         .codesandbox-banner-swiper .swiper-button-next,
@@ -125,24 +92,7 @@ const CodeSandboxBannerSwiper = ({
           font-weight: bold;
         }
 
-        /* Pagination */
-        .codesandbox-banner-swiper .swiper-pagination {
-          bottom: 20px;
-        }
-
-        .codesandbox-banner-swiper .swiper-pagination-bullet {
-          background: rgba(255, 255, 255, 0.6);
-          opacity: 1;
-          width: 14px;
-          height: 14px;
-          margin: 0 6px;
-          transition: all 0.3s ease;
-        }
-
-        .codesandbox-banner-swiper .swiper-pagination-bullet-active {
-          background: white;
-          transform: scale(1.3);
-        }
+        /* Removed pagination styles */
 
         /* Mobile Responsive */
         @media (max-width: 768px) {
@@ -176,14 +126,12 @@ const CodeSandboxBannerSwiper = ({
             font-size: 16px;
           }
 
-          .banner-overlay {
-            padding: 20px;
-          }
+          /* Removed banner overlay mobile styles */
         }
 
         @media (max-width: 480px) {
           .codesandbox-banner-swiper {
-            height: 180px;
+            height: 250px;
             margin: 10px 0;
             border-radius: 12px;
           }
@@ -212,9 +160,7 @@ const CodeSandboxBannerSwiper = ({
             font-size: 14px;
           }
 
-          .banner-overlay {
-            padding: 15px;
-          }
+          /* Removed banner overlay mobile styles */
         }
 
         /* Touch optimizations */
@@ -238,7 +184,7 @@ const CodeSandboxBannerSwiper = ({
       `}</style>
 
       <Swiper
-        modules={[Navigation, Pagination, Autoplay, EffectFade]}
+        modules={[Navigation, Autoplay, EffectFade]}
         spaceBetween={0}
         slidesPerView={1}
         centeredSlides={true}
@@ -255,10 +201,6 @@ const CodeSandboxBannerSwiper = ({
         navigation={{
           prevEl: prevRef.current,
           nextEl: nextRef.current,
-        }}
-        pagination={{
-          clickable: true,
-          dynamicBullets: true,
         }}
         speed={800}
         // Touch parameters for better responsiveness
@@ -295,34 +237,17 @@ const CodeSandboxBannerSwiper = ({
               style={{
                 backgroundImage: `url(${banner.bgImage || banner.image})`,
               }}
+              alt={`${banner.title || banner.heading || banner.subtitle || 'Banner'} - ${banner.description || banner.subtitle || ''}`}
+              title={`${banner.title || banner.heading || banner.subtitle || 'Banner'}`}
+              role="img"
+              aria-label={`${banner.title || banner.heading || banner.subtitle || 'Banner'} - ${banner.description || banner.subtitle || ''}`}
             >
-              <div className="banner-overlay">
-                <div className="banner-subtitle">
-                  {banner.subtitle || banner.title}
-                </div>
-                <div className="banner-title">
-                  {banner.title || banner.heading}
-                </div>
-                <div className="banner-description">
-                  {banner.description || banner.subtitle}
-                </div>
-              </div>
             </div>
           </SwiperSlide>
         ))}
       </Swiper>
 
-      {/* Navigation buttons */}
-      <div 
-        ref={prevRef}
-        className="swiper-button-prev"
-        aria-label="Previous banner"
-      ></div>
-      <div 
-        ref={nextRef}
-        className="swiper-button-next"
-        aria-label="Next banner"
-      ></div>
+   
     </div>
   );
 };

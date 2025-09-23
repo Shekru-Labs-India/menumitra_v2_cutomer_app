@@ -173,7 +173,7 @@ const styles = `
   .swiper-wrapper {
     transform: translate3d(0, 0, 0) !important;
     will-change: transform;
-    padding: 4px 0;
+    // padding: 4px 0;
     gap: 0;
   }
 
