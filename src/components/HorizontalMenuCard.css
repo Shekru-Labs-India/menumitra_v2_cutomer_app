@@ -44,7 +44,7 @@
 
 /* First card specific styling */
 .horizontal-menu-card:first-child {
-  margin-left: 0.5rem;
+  /* margin-left: 0.5rem; */
 }
 
 /* Last card specific styling */

@@ -269,11 +269,11 @@ const HorizontalMenuCard = ({
 
   return (
     <div 
-      className="horizontal-menu-card card product-card position-relative shadow border border-1 border-light"
+      className="horizontal-menu-card card product-card position-relative shadow border border-1 border-light pb-0 my-3"
       onClick={handleCardClick}  // Add onClick handler here
       style={{ 
         minHeight: 50, 
-        padding: "8px 0",
+        // padding: "8px 0",
         width: "100%",
         overflowX: "auto",
         whiteSpace: "nowrap",
