@@ -293,26 +293,21 @@ const HorizontalMenuCard = ({
           style={{
             width: imageSize.width,
             height: imageSize.height,
-            background: "#f5f5f5",
-            borderRadius: 0,
+            background: "#f8f9fa",
+            borderRadius: "12px",
             flexShrink: 0,
             overflow: "hidden",
           }}>
-          {/* Background icon */}
+          {/* Background icon (centered) */}
           <i
             className={icons.placeholder}
             style={{
-              position: "absolute",
-              left: "50%",
-              top: "50%",
-              transform: "translate(-50%, -50%)",
-              fontSize: 70,
-              opacity: 0.13,
-              color: "#888",
+              fontSize: "55px",
+              opacity: 0.5,
+              color: "#6c757d",
               zIndex: 1,
-              width: "100%",
-              height: "100%",
               pointerEvents: "none",
+              lineHeight: 1,
             }}
           ></i>
           
