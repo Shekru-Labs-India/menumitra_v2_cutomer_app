@@ -96,9 +96,13 @@ function AllOutlets() {
     }
   }, [error, isLoading, filteredOutlets.length, outlets, toast]);
 
-  const handleRestoUrl = (url, isOpen) => {
-    // If outlet is closed, don't process the click
+  const handleRestoUrl = (url, isOpen, isOutletFilled) => {
+    // If outlet is closed or not fully set up, don't process the click
     if (!isOpen) {
+      return;
+    }
+    if (!isOutletFilled) {
+      toast.info('This outlet is not ready yet', 'Info');
       return;
     }
 
@@ -268,7 +272,7 @@ function AllOutlets() {
                 <div
                   key={outlet.outlet_id}
                   className="card border-0 mb-2"
-                  onClick={() => handleRestoUrl(outlet.resto_url, outlet.is_open)}
+                  onClick={() => handleRestoUrl(outlet.resto_url, outlet.is_open, outlet.is_outlet_filled)}
                   style={{
                     cursor: outlet.is_open ? "pointer" : "not-allowed", // Change cursor for closed outlets
                     transition: "all 0.3s ease",
