@@ -153,6 +153,15 @@ function Home() {
     enabled: !!outletId
   });
 
+  // Hide entire banner section if API returns 404 Not Found
+  const hideBanners = !!(
+    bannersError && (
+      (bannersError?.response && bannersError.response.status === 404) ||
+      bannersError?.status === 404 ||
+      (typeof bannersError?.message === 'string' && bannersError.message.includes('404'))
+    )
+  );
+
   // Add favorite mutations with optimistic updates
   const toggleFavorite = useMutation({
     mutationFn: async ({ menuId, isFavorite }) => {
@@ -404,45 +413,47 @@ function Home() {
             <div className="container p-b40 p-t0">
 
               {/* Modern Banner Swiper with Cache Status */}
-              {bannersLoading ? (
-                // Loading skeleton for banners
-                <div className="modern-banner-swiper">
-                  <div style={{ height: '200px', display: 'flex', gap: '20px', padding: '0 20px' }}>
-                    {Array.from({ length: 3 }).map((_, index) => (
-                      <Skeleton key={`skeleton-${index}`} height={200} style={{ borderRadius: '20px', flex: '1' }} />
-                    ))}
+              {!hideBanners && (
+                bannersLoading ? (
+                  // Loading skeleton for banners
+                  <div className="modern-banner-swiper">
+                    <div style={{ height: '200px', display: 'flex', gap: '20px', padding: '0 20px' }}>
+                      {Array.from({ length: 3 }).map((_, index) => (
+                        <Skeleton key={`skeleton-${index}`} height={200} style={{ borderRadius: '20px', flex: '1' }} />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ) : bannersError ? (
-                // Error state
-                <div className="text-center p-4">
-                  <p className="text-muted">Failed to load banners</p>
-                </div>
-              ) : banners.length === 0 ? (
-                // No banners state
-                <div className="text-center p-4">
-                  <p className="text-muted">No banners available</p>
-                </div>
-              ) : (
-                <div>
-                  
-                  <CodeSandboxBannerSwiper
-                    banners={banners.map(banner => ({
-                      id: banner.banner_id,
-                      title: banner.name || banner.title,
-                      subtitle: banner.subtitle || banner.name,
-                      description: banner.description || banner.subtitle,
-                      bgImage: banner.banner_image || banner.image
-                    }))}
-                    onBannerClick={(banner) => {
-                      console.log('Banner clicked:', banner);
-                      // Add your banner click logic here
-                    }}
-                    autoplayDelay={3000}
-                    pauseOnHover={true}
-                    disableOnInteraction={false}
-                  />
-                </div>
+                ) : bannersError ? (
+                  // Error state
+                  <div className="text-center p-4">
+                    <p className="text-muted">Failed to load banners</p>
+                  </div>
+                ) : banners.length === 0 ? (
+                  // No banners state
+                  <div className="text-center p-4">
+                    <p className="text-muted">No banners available</p>
+                  </div>
+                ) : (
+                  <div>
+                    
+                    <CodeSandboxBannerSwiper
+                      banners={banners.map(banner => ({
+                        id: banner.banner_id,
+                        title: banner.name || banner.title,
+                        subtitle: banner.subtitle || banner.name,
+                        description: banner.description || banner.subtitle,
+                        bgImage: banner.banner_image || banner.image
+                      }))}
+                      onBannerClick={(banner) => {
+                        console.log('Banner clicked:', banner);
+                        // Add your banner click logic here
+                      }}
+                      autoplayDelay={3000}
+                      pauseOnHover={true}
+                      disableOnInteraction={false}
+                    />
+                  </div>
+                )
               )}
 
               <div
