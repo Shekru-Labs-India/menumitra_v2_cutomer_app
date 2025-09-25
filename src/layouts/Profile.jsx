@@ -3,19 +3,21 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { useModal } from "../contexts/ModalContext";
+// import { useModal } from "../contexts/ModalContext";
 import { useCart } from "../contexts/CartContext";
-import { useTheme } from "../contexts/ThemeContext";
+// import { useTheme } from "../contexts/ThemeContext";
 import MenuMitra from "../components/MenuMitra";
-import defaultAvatar from "../assets/images/avatar/avatar-default.png";
+// import defaultAvatar from "../assets/images/avatar/avatar-default.png";
+import { useOutlet } from "../contexts/OutletContext";
 
 function Profile() {
   const { handleLogout, user, isAuthenticated, setShowAuthOffcanvas } =
     useAuth();
   const { clearCart } = useCart();
-  const { isDarkMode } = useTheme();
+  // const { isDarkMode } = useTheme();
   const navigate = useNavigate();
-  const { openModal } = useModal();
+  // const { openModal } = useModal();
+  const { outletCode, sectionId, tableId } = useOutlet();
 
   const iconStyle = {
     // color: "#000",
@@ -27,7 +29,12 @@ function Profile() {
     e.preventDefault();
     clearCart();
     handleLogout();
-    navigate("/");
+    // Build canonical root preserving o/s/t if available
+    const code = outletCode || localStorage.getItem("outletCode");
+    const sec = sectionId || localStorage.getItem("sectionId");
+    const tbl = tableId || localStorage.getItem("tableId");
+    const target = code && sec && tbl ? `/o${code}/s${sec}/t${tbl}` : "/";
+    navigate(target, { replace: true });
   };
 
   const handleLoginClick = (e) => {
