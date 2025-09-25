@@ -16,8 +16,8 @@ const FoodTypeIcon = ({ foodType }) => {
         return (
           <div
             style={{
-              width: "14px",
-              height: "14px",
+              width: "16px",
+              height: "16px",
               borderRadius: "3px",
               border: "1px solid #4CAF50",
               backgroundColor: "white",
@@ -269,7 +269,7 @@ const HorizontalMenuCard = ({
 
   return (
     <div 
-      className="horizontal-menu-card card product-card position-relative shadow border border-1 border-light pb-0 my-3"
+      className="horizontal-menu-card card product-card position-relative shadow border border-1 border-light pb-0 my-3 pt-0"
       onClick={handleCardClick}  // Add onClick handler here
       style={{ 
         minHeight: 50, 
@@ -282,19 +282,18 @@ const HorizontalMenuCard = ({
         cursor: 'pointer'  // Add cursor pointer to indicate clickable
       }}>
       <div 
-        className="d-flex align-items-center p-1" 
+        className="d-flex align-items-center p-2" 
         style={{ 
           minHeight: 70,
           minWidth: "100%",
         }}>
         {/* Left side - Image and Icons */}
         <div 
-          className="position-relative d-flex align-items-center justify-content-center"
+          className="position-relative d-flex align-items-center justify-content-center rounded-3 border border-1 border-light"
           style={{
             width: imageSize.width,
             height: imageSize.height,
             background: "#f8f9fa",
-            borderRadius: "12px",
             flexShrink: 0,
             overflow: "hidden",
           }}>
@@ -336,8 +335,8 @@ const HorizontalMenuCard = ({
             <span
               style={{
                 position: "absolute",
-                left: 2,
-                bottom: 2,
+                left: 5,
+                bottom: 5,
                 zIndex: 3,
               }}
             >
