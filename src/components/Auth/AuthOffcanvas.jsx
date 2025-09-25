@@ -50,6 +50,12 @@ const AuthOffcanvas = () => {
   const [resetTimer, setResetTimer] = useState(0);
   const toast = useToast();
 
+
+  // inside AuthOffcanvas component, near other handlers
+const handleInputFocus = (e) => {
+  // optional UX: select all text on focus
+  if (e?.target?.select) e.target.select();
+};
   useEffect(() => {
     let interval;
     if (currentStep === STEPS.OTP || resetTimer) {
