@@ -51,6 +51,8 @@ const AuthOffcanvas = () => {
   const toast = useToast();
   const phoneInputRef = useRef(null);
   const nameInputRef = useRef(null);
+  const otpFormRef = useRef(null);
+  const didAutoSubmitRef = useRef(false);
 
 
   // inside AuthOffcanvas component, near other handlers
@@ -85,6 +87,7 @@ const handleInputFocus = (e) => {
 
   useEffect(() => {
     if (currentStep === STEPS.OTP) {
+      didAutoSubmitRef.current = false;
       const otpInputs = document.querySelectorAll("#otp input");
 
       const handleOTPInput = (e) => {
@@ -121,6 +124,24 @@ const handleInputFocus = (e) => {
       const updateOTPState = () => {
         const digits = [...otpInputs].map((input) => input.value).join("");
         setOtp(digits);
+
+        if (
+          digits.length === 4 &&
+          [...otpInputs].every((i) => i.value && i.value.length === 1) &&
+          !isLoading &&
+          !didAutoSubmitRef.current
+        ) {
+          didAutoSubmitRef.current = true;
+          setTimeout(() => {
+            if (otpFormRef.current?.requestSubmit) {
+              otpFormRef.current.requestSubmit();
+            } else {
+              otpFormRef.current
+                ?.querySelector('button[type="submit"]')
+                ?.click();
+            }
+          }, 0);
+        }
       };
 
       otpInputs.forEach((input) => {
@@ -140,7 +161,7 @@ const handleInputFocus = (e) => {
         });
       };
     }
-  }, [currentStep]);
+  }, [currentStep, isLoading]);
 
   // Autofocus phone input when login step is active
   useEffect(() => {
@@ -703,7 +724,7 @@ const handleInputFocus = (e) => {
         Enter the verification code sent to <br />
         <span className="fw-bold fs-6">+91 {phoneNumber}</span>
       </p>
-      <form onSubmit={handleOTPSubmit}>
+      <form ref={otpFormRef} onSubmit={handleOTPSubmit}>
         <div className="mb-4">
           <div
             id="otp"
