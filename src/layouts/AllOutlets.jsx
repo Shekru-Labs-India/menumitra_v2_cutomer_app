@@ -5,6 +5,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { parseRestoUrl } from "../utils/urlParser";
 import apiService from "../api/apiService";
+import { useToast } from "../components/Toast/useToast";
 
 const VegIcon = () => (
   <svg
@@ -50,6 +51,7 @@ const NonVegIcon = () => (
 
 function AllOutlets() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [filters, setFilters] = useState({
     type: "all", // 'all', 'veg', 'nonveg'
     status: "all", // 'all', 'open', 'closed'
@@ -81,6 +83,18 @@ function AllOutlets() {
     }
     return true;
   });
+
+  // Show toasts instead of inline alerts for errors/empty results
+  useEffect(() => {
+    if (error) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      toast.error(message, 'Error');
+      return;
+    }
+    if (!isLoading && Array.isArray(outlets) && outlets.length > 0 && filteredOutlets.length === 0) {
+      toast.info('No restaurants found matching your filters', 'Info');
+    }
+  }, [error, isLoading, filteredOutlets.length, outlets, toast]);
 
   const handleRestoUrl = (url, isOpen) => {
     // If outlet is closed, don't process the click
@@ -246,16 +260,8 @@ function AllOutlets() {
           {/* Updated Results Section */}
           {isLoading ? (
             <div className="text-center py-4">Loading restaurants...</div>
-          ) : error ? (
-            <div className="alert alert-danger">
-              <i className="fas fa-exclamation-circle me-2"></i>
-              {error instanceof Error ? error.message : 'An error occurred'}
-            </div>
           ) : filteredOutlets.length === 0 ? (
-            <div className="alert alert-info">
-              <i className="fas fa-info-circle me-2"></i>
-              No restaurants found matching your filters
-            </div>
+            <div className="text-center text-muted py-4">No results</div>
           ) : (
             <div className="d-flex flex-column gap-2" style={{ width: "100%" }}>
               {filteredOutlets.map((outlet) => (
