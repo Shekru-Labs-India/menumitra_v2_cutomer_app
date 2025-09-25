@@ -34,8 +34,6 @@ function OutletDetails() {
     queryKey: ["restaurantDetails", outletId],
     queryFn: () => apiService.customer.getRestaurantDetails({ outletId }),
     enabled: !!outletId,
-    staleTime: 5 * 60 * 1000,
-    cacheTime: 15 * 60 * 1000,
   });
   const [isProcessingUPI, setIsProcessingUPI] = useState(false);
   const [isProcessingPhonePe, setIsProcessingPhonePe] = useState(false);

@@ -22,7 +22,6 @@ function Categories() {
     queryKey: ['categories', outletId],
     queryFn: () => apiService.categories.getList({ outletId }),
     enabled: !!outletId,
-    // staleTime: 5 * 60 * 1000, // Match previous cache time of 5 minutes
   });
 
   const handleCategoryClick = (e, category) => {

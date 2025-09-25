@@ -150,7 +150,6 @@ function Search() {
         keyword: searchInputValue.trim(),
       }),
     enabled: false,
-    // staleTime: 5 * 60 * 1000,
     keepPreviousData: true,
   });
 
