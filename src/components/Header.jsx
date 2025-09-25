@@ -1,25 +1,26 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import Sidebar from "./Sidebar";
 import { useSidebar } from "../contexts/SidebarContext";
-import { useAuth } from "../contexts/AuthContext";
-import { useTheme } from "../contexts/ThemeContext";
+// import { useAuth } from "../contexts/AuthContext";
+// import { useTheme } from "../contexts/ThemeContext";
 import { Link, useNavigate } from "react-router-dom";
 import TestEnvironmentBanner from "./TestEnvironmentBanner";
 import OutletInfoBanner from "./OutletInfoBanner";
 import { useLocation } from "react-router-dom";
-import logo from "../assets/logo.png";
 import logo2 from "../assets/mm-logo.png";
 
 
 function Header() {
   const mainBarRef = useRef(null);
   const { isOpen, toggleSidebar, closeSidebar } = useSidebar();
-  const { isAuthenticated, user, setShowAuthOffcanvas, getUserName } =
-    useAuth();
-  const { isDarkMode, toggleTheme } = useTheme();
+  // const { getUserName } = useAuth();
   const location = useLocation();
-  const [userName, setUserName] = useState("");
+  // const [userName, setUserName] = useState("");
   const navigate = useNavigate();
+
+  // Treat dynamic outlet root like "/o123/s45/t6" as home as well
+  const isHomePath =
+    location.pathname === "/" || /^\/o\d+\/s\d+\/t\d+\/?$/.test(location.pathname);
 
   // Function to check if current route is profile related
   const isProfileRoute = () => {
@@ -41,11 +42,11 @@ function Header() {
   };
 
   // Modify the useEffect to get first name
-  useEffect(() => {
-    const fullName = getUserName();
-    const firstName = fullName?.split(" ")[0];
-    setUserName(firstName);
-  }, []);
+  // useEffect(() => {
+  //   const fullName = getUserName();
+  //   const firstName = fullName?.split(" ")[0];
+  //   setUserName(firstName);
+  // }, [getUserName]);
 
   // Keep scroll handler in separate useEffect
   useEffect(() => {
@@ -100,7 +101,7 @@ function Header() {
             <div className="header-content position-relative">
               {/* Left content: back arrow for non-home pages, logo+title for home */}
               <div className="left-content d-flex align-items-center gap-2">
-                {location.pathname !== "/" && (
+                {!isHomePath && (
                   <button
                     className="btn btn-link p-0 me-2"
                     style={{ fontSize: 22, color: "#222" }}
@@ -110,7 +111,7 @@ function Header() {
                   </button>
                 )}
                 {/* Logo and title for home page, left-aligned */}
-                {location.pathname === "/" && (
+                {isHomePath && (
                   <div
                     style={{ display: "flex", alignItems: "center", gap: 4 }}
                   >
@@ -128,7 +129,7 @@ function Header() {
                 )}
               </div>
               {/* Centered header title for all non-home pages */}
-              {location.pathname !== "/" && getHeaderTitle() && (
+              {!isHomePath && getHeaderTitle() && (
                 <div
                   style={{
                     position: "absolute",
