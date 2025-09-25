@@ -356,9 +356,9 @@ function ProductDetail() {
             />
           ) : (
             <div className="dz-banner-heading">
-              <div className="overlay-black-light">
+              <div className="overlay-black-light bg-body-secondary">
                 <div
-                  className="bnr-img d-flex justify-content-center align-items-center border border-2 border-light-subtle"
+                  className="d-flex justify-content-center align-items-center border border-2 border-light-subtle"
                   style={{ aspectRatio: "1/1" }}
                 >
                   <i className="fa-solid fa-utensils font-100 opacity-50 text-muted"></i>
