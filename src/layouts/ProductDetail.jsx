@@ -280,16 +280,14 @@ function ProductDetail() {
     <>
       <Header />
       <div className="page-content">
-        {/* Cross-outlet banner */}
+        {/* Cross-outlet info (compact) */}
         {isCrossOutlet && (
-          <div className="alert alert-warning mx-3 mt-3 mb-0" role="alert">
-            <div className="d-flex align-items-center">
-              <i className="fa-solid fa-store me-2"></i>
-              <div>
-                <strong>Viewing item from another outlet</strong>
-                <br />
-                <small>This item is from <strong>{crossOutletName}</strong>. Actions are disabled.</small>
-              </div>
+          <div className="mx-3 mt-2">
+            <div className="d-flex align-items-center small text-muted">
+              <i className="fa-solid fa-circle-info me-2"></i>
+              <span>
+                This item is from <strong>{crossOutletName}</strong>. Ordering is disabled for your current outlet.
+              </span>
             </div>
           </div>
         )}
@@ -532,15 +530,23 @@ function ProductDetail() {
             <button
               onClick={isCrossOutlet ? undefined : handleAddToCart}
               className="btn btn-primary text-start w-100"
-              disabled={!menuDetails.portions?.length || isCrossOutlet}
+              disabled={isCrossOutlet || !menuDetails.portions?.length}
               style={{
                 opacity: isCrossOutlet ? 0.5 : 1,
                 cursor: isCrossOutlet ? "not-allowed" : "pointer",
               }}
-              title={isCrossOutlet ? "Cannot add items from other outlets to cart" : ""}
+              title={
+                isCrossOutlet
+                  ? `Switch to ${crossOutletName} to order`
+                  : !menuDetails.portions?.length
+                  ? "Item unavailable"
+                  : ""
+              }
             >
-              <i className="fa-solid fa-cart-shopping me-2"></i>
-              {isCrossOutlet ? "VIEW ONLY" : "ADD TO CART"}
+              <i
+                className={`fa-solid ${isCrossOutlet ? "fa-lock" : "fa-cart-shopping"} me-2`}
+              ></i>
+              Add to cart
             </button>
           </div>
         </div>
