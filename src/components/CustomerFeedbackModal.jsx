@@ -89,12 +89,23 @@ const CustomerFeedbackModal = ({ show, onClose, orderNo }) => {
     }
     setLoading(true);
     try {
-      await axios.post("https://men4u.xyz/v2/common/customer_feedback", {
+      const response = await axios.post("https://men4u.xyz/v2/common/customer_feedback", {
         ...form,
         feedback_rating: Number(form.feedback_rating),
       });
       toast.success("Thank you for your feedback!", "Success");
-      setTimeout(() => onClose(), 1500);
+      setTimeout(() => {
+        if (response?.status === 201) {
+          setForm((prev) => ({
+            ...prev,
+            customer_name: "",
+            mobile: "",
+            feedback_description: "",
+            feedback_rating: "",
+          }));
+        }
+        onClose();
+      }, 1500);
     } catch (err) {
       toast.error("Failed to submit feedback. Please try again.", "Error");
     } finally {
@@ -108,7 +119,11 @@ const CustomerFeedbackModal = ({ show, onClose, orderNo }) => {
     <div
       className="modal show d-block"
       tabIndex="-1"
-      style={{ background: "rgba(0,0,0,0.3)" }}
+      style={{
+        background: "rgba(17, 25, 40, 0.35)",
+        backdropFilter: "blur(10px) saturate(160%)",
+        WebkitBackdropFilter: "blur(10px) saturate(160%)",
+      }}
     >
       <div className="modal-dialog modal-dialog-centered">
         <div className="modal-content">
