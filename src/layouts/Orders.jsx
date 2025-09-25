@@ -583,7 +583,7 @@ function OrdersContent() {
 
                         {/* Right side with dine-in status and cancel button */}
                         <div className="d-flex flex-column align-items-end">
-                          <span className="text-soft mb-2">{order.orderType}</span>
+                          <span className="text-soft mb-2">{order.orderType?.toUpperCase()}</span>
                           {order.status === "placed" && (
                             <button
                               className="btn btn-sm text-white"

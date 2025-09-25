@@ -555,7 +555,7 @@ function OrderDetail() {
                     orderDetails.order_details.order_status
                   )}
                 >
-                  {orderDetails.order_details.order_status}
+                  {orderDetails.order_details.order_status?.toUpperCase()}
                 </span>
               </div>
               <div className="d-flex align-items-center justify-content-between">
@@ -565,7 +565,7 @@ function OrderDetail() {
                 </span>
                 <span className="text-soft">
                   <i className="fa-solid fa-location-dot me-2"></i>
-                  {orderDetails.order_details.order_type}
+                  {orderDetails.order_details.order_type?.toUpperCase()}
                 </span>
               </div>
             </div>
@@ -573,11 +573,12 @@ function OrderDetail() {
 
           {/* Order Items Card */}
           <div className="card mt-3">
-            <div className="card-header border-0 pb-0">
+            <div className="card-header border-0 pb-0 border-bottom pb-3">
               <h5 className="card-title text-primary">
                 Order Items ({orderDetails.order_details.menu_count})
               </h5>
             </div>
+           
             <div className="card-body">
               {orderDetails.menu_details.map((menu, index) => (
                 <div

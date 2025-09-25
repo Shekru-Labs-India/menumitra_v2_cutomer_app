@@ -12,6 +12,7 @@ import QuickFilters from "../components/QuickFilters";
 import axios from "axios";
 import apiService from "../api/apiService";
 import { useQuery } from "@tanstack/react-query";
+import AuthPrompt from "../components/Auth/AuthPrompt";
 
 function Search() {
   // Add this at the start of the component, with other useEffects
@@ -451,26 +452,31 @@ function Search() {
                 </div>
               </div>
             ) : !hasSearched || searchInputValue.trim() === "" ? (
-              <div className="text-center py-4">
-                <div className="empty-search-state">
-                  <p className="mt-3 text-muted">Search the menu</p>
-                </div>
-              </div>
+              <AuthPrompt
+                iconClassName="fa-solid fa-magnifying-glass"
+                title="Search Menu"
+                subtitle="Type 4 or more characters to search"
+                buttonLabel="Start Searching"
+                onLogin={() => {
+                  if (searchInputRef.current) searchInputRef.current.focus();
+                }}
+                containerClassName="w-100"
+                minHeight="calc(100vh - 300px)"
+              />
             ) : displayResults.length === 0 || (searchError?.response?.status === 404) ? (
-              <div className="text-center py-4">
-                <div className="empty-search-state">
-                  <i
-                    className="fas fa-search"
-                    style={{
-                      fontSize: "64px",
-                      color: "#6c757d",
-                      opacity: "0.5",
-                      marginBottom: "1rem",
-                    }}
-                  ></i>
-                  <p className="mt-3 text-muted text-uppercase">No menu found</p>
-                </div>
-              </div>
+              <AuthPrompt
+                iconClassName="fa-solid fa-magnifying-glass"
+                title="No menu found"
+                subtitle="Try different keywords or filters"
+                buttonLabel="Clear Search"
+                onLogin={() => {
+                  setSearchInputValue("");
+                  setSearchResults([]);
+                  if (searchInputRef.current) searchInputRef.current.focus();
+                }}
+                containerClassName="w-100"
+                minHeight="calc(100vh - 300px)"
+              />
             ) : (
               <div className="item-list style-2">
                 <div className="saprater" />

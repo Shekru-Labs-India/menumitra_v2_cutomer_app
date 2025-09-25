@@ -3,9 +3,11 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useOutlet } from "../contexts/OutletContext";
 import OutletInfoBanner from "../components/OutletInfoBanner";
+import { useToast } from "../components/Toast/useToast";
 
 function OutletDetails() {
   const { outletInfo, outletId } = useOutlet();
+  const toast = useToast();
   const [restaurantDetails, setRestaurantDetails] = useState(() => {
     // Always initialize from cache if available
     const cached = localStorage.getItem(
@@ -129,6 +131,29 @@ function OutletDetails() {
       console.clear();
     } finally {
       setIsProcessingGPay(false);
+    }
+  };
+
+  const handleCopyUPI = async () => {
+    const upi = restaurantDetails?.outlet_details?.upi_id || "";
+    if (!upi) {
+      toast.info("UPI ID not available", "Info");
+      return;
+    }
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(upi);
+      } else {
+        const tempInput = document.createElement("input");
+        tempInput.value = upi;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand("copy");
+        document.body.removeChild(tempInput);
+      }
+      toast.success("UPI ID copied to clipboard", "Copied");
+    } catch (err) {
+      toast.error("Failed to copy UPI ID", "Error");
     }
   };
 
@@ -279,9 +304,19 @@ function OutletDetails() {
               <h6 className="mb-2">Quick Payment</h6>
               <div className="d-flex align-items-center justify-content-center">
                 <i className="fas fa-qrcode text-primary me-2"></i>
-                <span className="font-monospace">
+                <span className="font-monospace me-2 fs-5">
                   {restaurantDetails?.outlet_details?.upi_id}
                 </span>
+                {restaurantDetails?.outlet_details?.upi_id && (
+                  <button
+                    type="button"
+                    className="btn btn-sm px-0"
+                    onClick={handleCopyUPI}
+                    aria-label="Copy UPI ID"
+                  >
+                    <i className="fa-solid fa-copy fs-5"></i>
+                  </button>
+                )}
               </div>
             </div>
 
