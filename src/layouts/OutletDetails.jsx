@@ -323,16 +323,16 @@ function OutletDetails() {
             <div className="row g-2">
               <div className="col-6">
                 <button
-                  className="btn w-100"
+                  className="btn w-100 h-75"
                   style={{
-                    backgroundColor: "#5F259F",
-                    color: "white",
+                    backgroundColor: "#f3e8ff",
+                    color: "#5F259F",
                   }}
                   onClick={handlePhonePe}
                   disabled={isProcessingPhonePe}
                 >
                   <div className="d-flex align-items-center justify-content-center">
-                    <i className="fas fa-mobile-alt me-2"></i>
+                    <img src="/icons/phonepe-icon.svg" alt="PhonePe" width="40" height="40" className="me-2" />
                     <span>
                       {isProcessingPhonePe ? "Opening..." : "PhonePe"}
                     </span>
@@ -341,28 +341,32 @@ function OutletDetails() {
               </div>
               <div className="col-6">
                 <button
-                  className="btn w-100"
-                  style={{
-                    backgroundColor: "#1a73e8",
-                    color: "white",
-                  }}
+                  className="btn w-100 h-75"
+                    style={{
+                      backgroundColor: "#e8f0fe",
+                      color: "#1a73e8",
+                    }}
                   onClick={handleGooglePay}
                   disabled={isProcessingGPay}
                 >
                   <div className="d-flex align-items-center justify-content-center">
-                    <i className="fab fa-google me-2"></i>
+                    <img src="/icons/google-pay-icon.svg" alt="Google Pay" width="40" height="40" className="me-2" />
                     <span>{isProcessingGPay ? "Opening..." : "GPay"}</span>
                   </div>
                 </button>
               </div>
               <div className="col-12">
                 <button
-                  className="btn btn-primary w-100"
+                  className="btn w-100 text-dark h-100"
                   onClick={handleGenericUPI}
                   disabled={isProcessingUPI}
+                  style={{
+                    backgroundColor: "#e6ffe6",
+                    // color: "#28a745",
+                  }}
                 >
                   <div className="d-flex align-items-center justify-content-center">
-                    <i className="fas fa-wallet me-2"></i>
+                    <img src="/icons/upi-payment-icon.svg" alt="UPI Payment" width="40" height="40" className="me-2" />
                     <span>
                       {isProcessingUPI ? "Opening..." : "Other UPI Apps"}
                     </span>
