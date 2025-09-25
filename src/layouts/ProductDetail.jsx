@@ -284,7 +284,7 @@ function ProductDetail() {
         {/* Cross-outlet info (compact) */}
         {isCrossOutlet && (
           <div className="mx-3 mt-2">
-            <div className="d-flex align-items-center small text-muted">
+            <div className="d-flex align-items-center small mb-2 bg-danger text-white rounded-3 p-2">
               <i className="fa-solid fa-circle-info me-2"></i>
               <span>
                 This item is from <strong>{crossOutletName}</strong>. Ordering is disabled for your current outlet.
