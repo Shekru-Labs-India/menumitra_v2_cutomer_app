@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import CustomerFeedbackModal from "../components/CustomerFeedbackModal";
 
-const FeedbackButton = ({ orderNo }) => {
+const FeedbackButton = ({ orderNo, onOpen }) => {
   const [showFeedback, setShowFeedback] = useState(false);
 
   return (
@@ -21,7 +21,10 @@ const FeedbackButton = ({ orderNo }) => {
           cursor: "pointer",
           gap: 8,
         }}
-        onClick={() => setShowFeedback(true)}
+        onClick={() => {
+          if (typeof onOpen === 'function') onOpen();
+          setShowFeedback(true);
+        }}
       >
         <i
           className="fa-solid fa-star"

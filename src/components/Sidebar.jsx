@@ -260,7 +260,7 @@ function Sidebar() {
         {/* Only show FeedbackButton if user is logged in */}
         {user && (
           <li className="mt-2 mb-2 d-flex justify-content-center">
-            <FeedbackButton />
+            <FeedbackButton onOpen={closeSidebar} />
           </li>
         )}
         <li className="nav-label">Settings</li>
