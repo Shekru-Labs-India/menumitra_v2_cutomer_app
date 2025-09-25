@@ -25,7 +25,7 @@ const SOCIAL_LINKS = [
   },
   {
     platform: 'google',
-    url: 'https://google.com/MenuMitra',
+    url: 'https://www.google.com/search?q=MenuMitra',
     icon: 'ri-google-fill',
     color: '#4285F4'
   }
@@ -34,7 +34,7 @@ const SOCIAL_LINKS = [
 const MenuMitra = () => {
   const renderLogo = () => (
     <div className="d-flex flex-column align-items-center mb-4">
-      <a href="/" className="text-decoration-none d-flex align-items-center">
+      <a href="https://menumitra.com" target="_blank" rel="noopener noreferrer" className="text-decoration-none d-flex align-items-center">
         <img 
           src={logo2} 
           alt="MenuMitra Logo" 
