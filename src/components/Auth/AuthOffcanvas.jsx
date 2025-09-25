@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import BaseModal from "../Modal/BaseModal";
 import { useAuth } from "../../contexts/AuthContext";
@@ -49,6 +49,8 @@ const AuthOffcanvas = () => {
   const [isResendDisabled, setIsResendDisabled] = useState(false);
   const [resetTimer, setResetTimer] = useState(0);
   const toast = useToast();
+  const phoneInputRef = useRef(null);
+  const nameInputRef = useRef(null);
 
 
   // inside AuthOffcanvas component, near other handlers
@@ -139,6 +141,26 @@ const handleInputFocus = (e) => {
       };
     }
   }, [currentStep]);
+
+  // Autofocus phone input when login step is active
+  useEffect(() => {
+    if (currentStep === STEPS.LOGIN && showAuthOffcanvas) {
+      const t = setTimeout(() => {
+        phoneInputRef.current?.focus();
+      }, 0);
+      return () => clearTimeout(t);
+    }
+  }, [currentStep, showAuthOffcanvas]);
+
+  // Autofocus name input when signup step is active
+  useEffect(() => {
+    if (currentStep === STEPS.SIGNUP && showAuthOffcanvas) {
+      const t = setTimeout(() => {
+        nameInputRef.current?.focus();
+      }, 0);
+      return () => clearTimeout(t);
+    }
+  }, [currentStep, showAuthOffcanvas]);
 
 
 
@@ -465,6 +487,7 @@ const handleInputFocus = (e) => {
             <input
               type="tel"
               className="form-control"
+              ref={phoneInputRef}
               value={phoneNumber}
               onChange={(e) => {
                 const value = e.target.value.replace(/\D/g, "");
@@ -581,6 +604,7 @@ const handleInputFocus = (e) => {
           <input
             type="text"
             className="form-control"
+            ref={nameInputRef}
             value={userDetails.name}
             onChange={(e) => {
               const value = e.target.value;
