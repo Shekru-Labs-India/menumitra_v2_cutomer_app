@@ -2,13 +2,13 @@ import React from "react";
 import { useQuery } from '@tanstack/react-query';
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import AuthPrompt from "../components/Auth/AuthPrompt";
 import AuthOffcanvas from "../components/Auth/AuthOffcanvas";
 import { useAuth } from "../contexts/AuthContext";
 import apiService from '../api/apiService';
 
-function CustomerSavings() {
-  const { user, showAuthOffcanvas, setShowAuthOffcanvas } = useAuth();
-  
+// Extracted authenticated content component
+function CustomerSavingsContent() {
   // Get userId from localStorage
   const auth = JSON.parse(localStorage.getItem('auth')) || {};
   const userId = auth.userId;
@@ -24,42 +24,11 @@ function CustomerSavings() {
     enabled: !!userId,
   });
 
-  const handleLogin = () => setShowAuthOffcanvas(true);
-
-  if (!user) {
-    return (
-      <>
-        <Header />
-        <AuthOffcanvas
-          isOpen={showAuthOffcanvas}
-          onClose={() => setShowAuthOffcanvas(false)}
-        />
-        <div className="page-content bottom-content">
-          <div
-            className="container d-flex flex-column justify-content-center align-items-center"
-            style={{ minHeight: "60vh" }}
-          >
-            <div className="text-center">
-              <h5>Please login to view your savings.</h5>
-              <br />
-              <button className="btn btn-primary mt-3" onClick={handleLogin}>
-                Login Now
-              </button>
-            </div>
-          </div>
-        </div>
-        <Footer />
-      </>
-    );
-  }
-
-  if (isLoading) return <> <Header /> <div className="page-content bottom-content"><div className="container">Loading...</div></div> <Footer /> </>;
-  if (error) return <> <Header /> <div className="page-content bottom-content"><div className="container">Error: {error.message}</div></div> <Footer /> </>;
-  if (!savingsData) return <> <Header /> <div className="page-content bottom-content"><div className="container">No savings data available</div></div> <Footer /> </>;
+  if (isLoading) return <div className="page-content bottom-content"><div className="container">Loading...</div></div>;
+  if (error) return <div className="page-content bottom-content"><div className="container">Error: {error.message}</div></div>;
+  if (!savingsData) return <div className="page-content bottom-content"><div className="container">No savings data available</div></div>;
 
   return (
-    <>
-      <Header />
       <div className="page-content bottom-content">
         <div className="container px-3">
           {/* Total Savings Card */}
@@ -182,6 +151,24 @@ function CustomerSavings() {
           ))}
         </div>
       </div>
+  );
+}
+
+function CustomerSavings() {
+  const { user, showAuthOffcanvas, setShowAuthOffcanvas } = useAuth();
+
+  return (
+    <>
+      <Header />
+      {!user ? (
+        <AuthPrompt variant="savings" />
+      ) : (
+        <CustomerSavingsContent />
+      )}
+      <AuthOffcanvas
+        isOpen={showAuthOffcanvas}
+        onClose={() => setShowAuthOffcanvas(false)}
+      />
       <Footer />
     </>
   );

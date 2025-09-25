@@ -4,12 +4,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import HorizontalMenuCard from "../components/HorizontalMenuCard";
+import AuthPrompt from "../components/Auth/AuthPrompt";
 import { useAuth } from "../contexts/AuthContext";
 import { useOutlet } from "../contexts/OutletContext";
 import apiService from "../api/apiService";
 
-function Favourite() {
-  // const navigate = useNavigate();
+// Extracted authenticated content component
+function FavouriteContent() {
   const [expandedOutlet, setExpandedOutlet] = useState({});
   const { getUserId } = useAuth();
   const { outletId } = useOutlet();
@@ -130,115 +131,126 @@ function Favourite() {
   const groupedMenus = groupByOutlet(favoriteMenus);
 
   return (
-    <>
-      <Header />
-      <div className="page-content">
-        <div className="content-inner pt-0">
-          <div className="container p-b20">
-            <div className="dashboard-area">
-              {isLoading ? (
-                <div className="text-center p-5">Loading...</div>
-              ) : (
-                (() => {
-                  const entries = Object.entries(groupedMenus)
-                    .filter(([outletName]) => outletName && outletName !== "undefined")
-                    .sort(([, aMenus], [, bMenus]) => {
-                      const aOutletId = aMenus[0]?.outlet_id;
-                      const bOutletId = bMenus[0]?.outlet_id;
-                      
-                      if (Number(aOutletId) === Number(outletId)) return -1;
-                      if (Number(bOutletId) === Number(outletId)) return 1;
-                      
-                      return aMenus[0]?.outlet_name.localeCompare(bMenus[0]?.outlet_name);
-                    });
+    <div className="page-content">
+      <div className="content-inner pt-0">
+        <div className="container p-b20">
+          <div className="dashboard-area">
+            {isLoading ? (
+              <div className="text-center p-5">Loading...</div>
+            ) : (
+              (() => {
+                const entries = Object.entries(groupedMenus)
+                  .filter(([outletName]) => outletName && outletName !== "undefined")
+                  .sort(([, aMenus], [, bMenus]) => {
+                    const aOutletId = aMenus[0]?.outlet_id;
+                    const bOutletId = bMenus[0]?.outlet_id;
+                    
+                    if (Number(aOutletId) === Number(outletId)) return -1;
+                    if (Number(bOutletId) === Number(outletId)) return 1;
+                    
+                    return aMenus[0]?.outlet_name.localeCompare(bMenus[0]?.outlet_name);
+                  });
 
-                  return entries.length > 0 ? (
-                    entries.map(([outletName, menus]) => (
-                      <div key={outletName} className="mb-4">
-                        <div
-                          className="fw-bold text-uppercase mb-2 d-flex align-items-center justify-content-between"
-                          style={{ fontSize: 16, cursor: "pointer" }}
-                          onClick={() =>
-                            setExpandedOutlet((prev) => ({
-                              ...prev,
-                              [outletName]: !prev[outletName],
-                            }))
-                          }
+                return entries.length > 0 ? (
+                  entries.map(([outletName, menus]) => (
+                    <div key={outletName} className="mb-4">
+                      <div
+                        className="fw-bold text-uppercase mb-2 d-flex align-items-center justify-content-between"
+                        style={{ fontSize: 16, cursor: "pointer" }}
+                        onClick={() =>
+                          setExpandedOutlet((prev) => ({
+                            ...prev,
+                            [outletName]: !prev[outletName],
+                          }))
+                        }
+                      >
+                        <span>
+                          <i className="fa-solid fa-store me-2"></i>
+                          {outletName}
+                        </span>
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: 28,
+                            height: 28,
+                            borderRadius: "50%",
+                            background: "#f5f5f5",
+                          }}
                         >
-                          <span>
-                            <i className="fa-solid fa-store me-2"></i>
-                            {outletName}
-                          </span>
-                          <span
-                            style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              width: 28,
-                              height: 28,
-                              borderRadius: "50%",
-                              background: "#f5f5f5",
-                            }}
-                          >
-                            <i
-                              className={`fa-solid fa-chevron-${
-                                expandedOutlet[outletName] ? "up" : "down"
-                              }`}
-                              style={{ fontSize: 18, color: "#888" }}
-                            ></i>
-                          </span>
+                          <i
+                            className={`fa-solid fa-chevron-${
+                              expandedOutlet[outletName] ? "up" : "down"
+                            }`}
+                            style={{ fontSize: 18, color: "#888" }}
+                          ></i>
+                        </span>
+                      </div>
+                      {expandedOutlet[outletName] && (
+                        <div className="mt-2">
+                          {menus.map((menu) => (
+                            <div className="mb-2" key={menu.menu_id}>
+                              <HorizontalMenuCard
+                                image={menu.image && Array.isArray(menu.image) && menu.image.length > 0 ? menu.image[0].image : null}
+                                title={menu.menu_name}
+                                currentPrice={menu.portions?.[0]?.price || 0}
+                                reviewCount={menu.rating ? parseFloat(menu.rating) : null}
+                                isFavorite={true}
+                                discount={menu.offer > 0 ? `${menu.offer}%` : null}
+                                menuItem={{
+                                  menuId: menu.menu_id,
+                                  menuCatId: menu.menu_cat_id,
+                                  menuName: menu.menu_name,
+                                  menuFoodType: menu.menu_food_type,
+                                  categoryName: menu.category_name,
+                                  spicyIndex: menu.spicy_index,
+                                  portions: menu.portions,
+                                  rating: menu.rating,
+                                  offer: menu.offer,
+                                  isSpecial: menu.is_special,
+                                  isFavourite: true,
+                                  isActive: true,
+                                  image: menu.image && Array.isArray(menu.image) && menu.image.length > 0 
+                                    ? menu.image[0].image 
+                                    : null,
+                                  outletName: menu.outlet_name,
+                                  outletId: menu.outlet_id,
+                                }}
+                                onFavoriteUpdate={handleFavoriteUpdate}
+                              />
+                            </div>
+                          ))}
                         </div>
-                        {expandedOutlet[outletName] && (
-                          <div className="mt-2">
-                            {menus.map((menu) => (
-                              <div className="mb-2" key={menu.menu_id}>
-                                <HorizontalMenuCard
-                                  image={menu.image && Array.isArray(menu.image) && menu.image.length > 0 ? menu.image[0].image : null}
-                                  title={menu.menu_name}
-                                  currentPrice={menu.portions?.[0]?.price || 0}
-                                  reviewCount={menu.rating ? parseFloat(menu.rating) : null}
-                                  isFavorite={true}
-                                  discount={menu.offer > 0 ? `${menu.offer}%` : null}
-                                  menuItem={{
-                                    menuId: menu.menu_id,
-                                    menuCatId: menu.menu_cat_id,
-                                    menuName: menu.menu_name,
-                                    menuFoodType: menu.menu_food_type,
-                                    categoryName: menu.category_name,
-                                    spicyIndex: menu.spicy_index,
-                                    portions: menu.portions,
-                                    rating: menu.rating,
-                                    offer: menu.offer,
-                                    isSpecial: menu.is_special,
-                                    isFavourite: true,
-                                    isActive: true,
-                                    image: menu.image && Array.isArray(menu.image) && menu.image.length > 0 
-                                      ? menu.image[0].image 
-                                      : null,
-                                    outletName: menu.outlet_name,
-                                    outletId: menu.outlet_id,
-                                  }}
-                                  onFavoriteUpdate={handleFavoriteUpdate}
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    userId ? (
-                      <div className="text-center p-5">
-                        <p className="text-muted">No favorite items found</p>
-                      </div>
-                    ) : null
-                  );
-                })()
-              )}
-            </div>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center p-5">
+                    <p className="text-muted">No favorite items found</p>
+                  </div>
+                );
+              })()
+            )}
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function Favourite() {
+  const { getUserId } = useAuth();
+  const userId = getUserId();
+
+  return (
+    <>
+      <Header />
+      {!userId ? (
+        <AuthPrompt variant="favourites" />
+      ) : (
+        <FavouriteContent />
+      )}
       <Footer />
     </>
   );

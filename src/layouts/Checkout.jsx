@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import AuthPrompt from "../components/Auth/AuthPrompt";
 import { useCart } from "../contexts/CartContext";
 import axios from "axios";
 import { API_CONFIG } from "../constants/config";
@@ -72,7 +73,8 @@ const FooterSummary = React.memo(function FooterSummary({ checkoutDetails }) {
   );
 });
 
-function Checkout() {
+// Extracted authenticated content component
+function CheckoutContent() {
   // Move ALL hooks to the top
   const {
     cartItems,
@@ -83,7 +85,7 @@ function Checkout() {
     clearCart,
   } = useCart();
   const { outletId, sectionId, outletDetails } = useOutlet();
-  const { user, setShowAuthOffcanvas, getAccessToken } = useAuth();
+  const { getAccessToken } = useAuth();
   const navigate = useNavigate();
   const [existingOrderModal, setExistingOrderModal] = useState({
     isOpen: false,
@@ -97,19 +99,16 @@ function Checkout() {
   const queryClient = useQueryClient();
 
   // Keep all your handlers and effects here
-  const handleLogin = () => {
-    setShowAuthOffcanvas(true);
-  };
 
   // Calculate subtotal
-  const subtotal = getCartTotal();
+  // const subtotal = getCartTotal();
 
   // Calculate tax (2%)
-  const taxRate = 0.02;
-  const taxAmount = subtotal * taxRate;
+  // const taxRate = 0.02;
+  // const taxAmount = subtotal * taxRate;
 
   // Calculate final total
-  const total = subtotal - taxAmount;
+  // const total = subtotal - taxAmount;
 
   const handleQuantityChange = (menuId, portionId, newQuantity) => {
     if (newQuantity === 0) {
@@ -178,7 +177,7 @@ function Checkout() {
       const result = await apiService.checkout.addToExistingOrder(variables);
       return result;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       clearCart();
       localStorage.removeItem("cart");
       
@@ -507,44 +506,7 @@ function Checkout() {
   // Instead of early returns, use conditional rendering in the return statement
   return (
     <>
-      <Header />
-      {!user ? (
-        // Not logged in view
-        <div className="page-content">
-          <div className="content-inner pt-0">
-            <div className="container p-b20">
-              <div
-                className="d-flex align-items-center justify-content-center"
-                style={{ minHeight: "calc(100vh - 300px)" }}
-              >
-                <div className="text-center">
-                  <div className="mb-4">
-                    <i
-                      className="fa-solid fa-user"
-                      style={{
-                        fontSize: 80,
-                        opacity: 0.5,
-                        color: "#6c757d",
-                      }}
-                    ></i>
-                  </div>
-                  <h5 className="mb-3">Please Login to Cart</h5>
-                  <p className="text-muted mb-4">
-                    Login to your account to complete your order
-                  </p>
-                  <button
-                    className="btn btn-primary px-4 py-3"
-                    style={{ borderRadius: 12, fontWeight: 500 }}
-                    onClick={handleLogin}
-                  >
-                    Login Now
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : cartItems.length === 0 ? (
+      {cartItems.length === 0 ? (
         // Empty cart view
         <div className="page-content">
           <div className="content-inner pt-0">
@@ -1061,7 +1023,21 @@ function Checkout() {
           cancelAndCreateNewMutation.isPending
         }
       />
+    </>
+  );
+}
 
+function Checkout() {
+  const { user } = useAuth();
+
+  return (
+    <>
+      <Header />
+      {!user ? (
+        <AuthPrompt variant="checkout" />
+      ) : (
+        <CheckoutContent />
+      )}
       <Footer />
     </>
   );
