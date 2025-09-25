@@ -223,6 +223,7 @@ function ProductDetail() {
           menuId: Number(menuId),
           isFavorite: menuDetails?.is_favourite === 1, // Changed from is_favorite to is_favourite
           userId: auth.userId,
+          outletId: effectiveOutletId,
         },
         {
           onSuccess: () => {
@@ -346,21 +347,25 @@ function ProductDetail() {
 */}
 
           {/* Add the new TripleSlider implementation */}
-          <TripleSlider
-            slides={
-              menuDetails.images?.length
-                ? menuDetails.images.map((image) => ({
-                    backgroundImage: image,
-                    title: menuDetails.menu_name,
-                  }))
-                : [
-                    {
-                      backgroundImage: "https://via.placeholder.com/800x800", // Updated to square placeholder
-                      title: menuDetails.menu_name,
-                    },
-                  ]
-            }
-          />
+          {menuDetails.images?.length ? (
+            <TripleSlider
+              slides={menuDetails.images.map((image) => ({
+                backgroundImage: image,
+                title: menuDetails.menu_name,
+              }))}
+            />
+          ) : (
+            <div className="dz-banner-heading">
+              <div className="overlay-black-light">
+                <div
+                  className="bnr-img d-flex justify-content-center align-items-center border border-2 border-light-subtle"
+                  style={{ aspectRatio: "1/1" }}
+                >
+                  <i className="fa-solid fa-utensils font-100 opacity-50 text-muted"></i>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="account-box style-1">
             <div className="container p-b60">
