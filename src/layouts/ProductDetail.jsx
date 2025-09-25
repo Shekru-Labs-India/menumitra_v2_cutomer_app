@@ -376,15 +376,15 @@ function ProductDetail() {
                       </div>
                       <a
                         href="javascript:void(0);"
-                        className={`${isFavoriteLoading || isCrossOutlet ? "disabled" : ""}`}
-                        onClick={isCrossOutlet ? undefined : handleFavoriteToggle}
+                        className={`${isFavoriteLoading ? "disabled" : ""}`}
+                        onClick={handleFavoriteToggle}
                         style={{
-                          pointerEvents: isFavoriteLoading || isCrossOutlet ? "none" : "auto",
-                          cursor: isCrossOutlet ? "not-allowed" : "pointer",
+                          pointerEvents: isFavoriteLoading ? "none" : "auto",
+                          cursor: isFavoriteLoading ? "not-allowed" : "pointer",
                           textDecoration: "none",
-                          opacity: isCrossOutlet ? 0.5 : 1,
+                          opacity: isFavoriteLoading ? 0.5 : 1,
                         }}
-                        title={isCrossOutlet ? "Actions disabled for cross-outlet items" : ""}
+                        title={isFavoriteLoading ? "Updating favorite..." : ""}
                       >
                         <div
                           className={`like-button ${
