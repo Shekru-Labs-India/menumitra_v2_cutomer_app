@@ -227,9 +227,11 @@ function Favourite() {
                       </div>
                     ))
                   ) : (
-                    <div className="text-center p-5">
-                      <p className="text-muted">No favorite items found</p>
-                    </div>
+                    userId ? (
+                      <div className="text-center p-5">
+                        <p className="text-muted">No favorite items found</p>
+                      </div>
+                    ) : null
                   );
                 })()
               )}
