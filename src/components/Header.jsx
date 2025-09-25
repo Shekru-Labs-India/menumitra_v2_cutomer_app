@@ -112,20 +112,23 @@ function Header() {
                 )}
                 {/* Logo and title for home page, left-aligned */}
                 {isHomePath && (
-                  <div
-                    style={{ display: "flex", alignItems: "center", gap: 4 }}
+                  <a
+                    href="https://menumitra.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="d-flex align-items-center text-decoration-none"
+                    style={{ gap: 4 }}
+                    aria-label="Go to MenuMitra website"
                   >
                     <img
                       src={logo2}
                       alt="MenuMitra Logo"
                       style={{ height: 40, width: 40, marginRight: 0 }}
                     />
-                    <span
-                      className="fs-5 fw-semibold text-dark lh-1"
-                    >
+                    <span className="fs-5 fw-semibold text-dark lh-1">
                       MenuMitra
                     </span>
-                  </div>
+                  </a>
                 )}
               </div>
               {/* Centered header title for all non-home pages */}
