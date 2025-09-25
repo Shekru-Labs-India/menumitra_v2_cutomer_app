@@ -4,85 +4,46 @@ import Footer from "../components/Footer";
 import { useOutlet } from "../contexts/OutletContext";
 import OutletInfoBanner from "../components/OutletInfoBanner";
 import { useToast } from "../components/Toast/useToast";
+import { useQuery } from "@tanstack/react-query";
+import apiService from "../api/apiService";
 
 function OutletDetails() {
   const { outletInfo, outletId } = useOutlet();
   const toast = useToast();
-  const [restaurantDetails, setRestaurantDetails] = useState(() => {
-    // Always initialize from cache if available
-    const cached = localStorage.getItem(
-      `restaurant_details_${outletInfo?.outletId}`
-    );
-    return cached
-      ? JSON.parse(cached)
-      : {
-          outlet_details: {
-            name: outletInfo?.outletName,
-            address: outletInfo?.outletAddress,
-            mobile: outletInfo?.outletMobile,
-            veg_nonveg: outletInfo?.vegNonveg,
-            upi_id: "",
-            image: null,
-          },
-          count: {
-            total_menu: 0,
-            total_special_menu: 0,
-            total_offer_menu: 0,
-            total_category: 0,
-            total_tables: 0,
-          },
-        };
+  const {
+    data: restaurantDetails = {
+      outlet_details: {
+        name: outletInfo?.outletName,
+        address: outletInfo?.outletAddress,
+        mobile: outletInfo?.outletMobile,
+        veg_nonveg: outletInfo?.vegNonveg,
+        upi_id: "",
+        image: null,
+      },
+      count: {
+        total_menu: 0,
+        total_special_menu: 0,
+        total_offer_menu: 0,
+        total_category: 0,
+        total_tables: 0,
+      },
+    },
+    error: detailsError,
+  } = useQuery({
+    queryKey: ["restaurantDetails", outletId],
+    queryFn: () => apiService.customer.getRestaurantDetails({ outletId }),
+    enabled: !!outletId,
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 15 * 60 * 1000,
   });
   const [isProcessingUPI, setIsProcessingUPI] = useState(false);
   const [isProcessingPhonePe, setIsProcessingPhonePe] = useState(false);
   const [isProcessingGPay, setIsProcessingGPay] = useState(false);
-  const lastFetchRef = useRef(0);
-  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
-
-  const fetchRestaurantDetails = async () => {
-    try {
-      // Get the token from your auth context or localStorage
-      const auth = JSON.parse(localStorage.getItem("auth")) || {};
-      const accessToken = auth.accessToken;
-
-      const response = await fetch(
-        "https://men4u.xyz/v2/user/get_restaurant_details",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({
-            outlet_id: outletId,
-            app_source: "user_app",
-          }),
-        }
-      );
-      const data = await response.json();
-
-      setRestaurantDetails(data.detail);
-      lastFetchRef.current = Date.now();
-    } catch (error) {
-      console.error("Error fetching restaurant details:", error);
-    }
-  };
-
-  // Initial fetch and periodic refresh
   useEffect(() => {
-    if (!outletInfo?.outletId) return;
-
-    // Always fetch on mount
-    fetchRestaurantDetails();
-
-    // Set up periodic refresh
-    const intervalId = setInterval(fetchRestaurantDetails, CACHE_DURATION);
-
-    return () => {
-      clearInterval(intervalId);
-      lastFetchRef.current = 0;
-    };
-  }, [outletInfo?.outletId]);
+    if (detailsError) {
+      toast.error(detailsError.message || "Failed to load outlet details", "Error");
+    }
+  }, [detailsError, toast]);
 
   const handleGenericUPI = () => {
     if (isProcessingUPI) return;
@@ -238,18 +199,12 @@ function OutletDetails() {
                     {restaurantDetails?.outlet_details?.name}
                   </h5>
                   <div className="d-flex align-items-center">
-                    {restaurantDetails?.outlet_details?.veg_nonveg?.toLowerCase() ===
-                    "veg" ? (
-                      <VegIcon />
-                    ) : restaurantDetails?.outlet_details?.veg_nonveg?.toLowerCase() ===
-                      "nonveg" ? (
-                      <NonVegIcon />
-                    ) : (
-                      <div className="d-flex">
-                        <VegIcon />
-                        <NonVegIcon className="ms-1" />
-                      </div>
-                    )}
+                    {(() => {
+                      const foodType = restaurantDetails?.outlet_details?.veg_nonveg?.toLowerCase();
+                      if (foodType === "veg") return <VegIcon />;
+                      if (foodType === "nonveg") return <NonVegIcon />;
+                      return null;
+                    })()}
                   </div>
                 </div>
                 <p className="text-muted mb-1">

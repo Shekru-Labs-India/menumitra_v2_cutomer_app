@@ -211,6 +211,13 @@ export const apiService = {
 
   // Customer related APIs
   customer: {
+    getRestaurantDetails: async ({ outletId }) => {
+      const response = await axiosInstance.post(`/${API_VERSION}/user/get_restaurant_details`, {
+        outlet_id: outletId,
+        app_source: "user_app"
+      });
+      return response?.data?.detail || {};
+    },
     getSavings: async ({ userId }) => {
       const response = await axiosInstance.post(`/${API_VERSION}/user/get_user_count`, {
         user_id: parseInt(userId),
