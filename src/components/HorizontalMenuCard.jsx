@@ -158,7 +158,7 @@ const HorizontalMenuCard = ({
   const { openModal } = useModal();
   const { user, setShowAuthOffcanvas, getUserId } = useAuth();
   const { outletId } = useOutlet();
-  const { cartItems, getCartItemComment } = useCart(); // Add this
+  const { getCartItemComment } = useCart(); // Add this
   const userId = getUserId();
 
   // Add useNavigate hook from react-router-dom
@@ -167,10 +167,7 @@ const HorizontalMenuCard = ({
   // Convert isFavorite to boolean if it's a number
   const isFavoriteBoolean = typeof isFavorite === 'number' ? isFavorite === 1 : Boolean(isFavorite);
 
-  // Check if this menu exists in cart
-  const cartItemsForMenu = menuItem?.menuId
-    ? cartItems.filter((item) => item.menuId === menuItem.menuId)
-    : [];
+  // Removed unused cartItemsForMenu
 
   // Get the comment for this menu item
   const menuComment = menuItem?.menuId
@@ -225,21 +222,23 @@ const HorizontalMenuCard = ({
     try {
       setIsLoading(true);
       
+      const targetOutletId = menuItem?.outletId ?? outletId;
+
       if (isFavoriteBoolean) {
         await apiService.favorites.remove({
-          outletId,
+          outletId: targetOutletId,
           userId,
           menuId: menuItem.menuId
         });
       } else {
         await apiService.favorites.add({
-          outletId,
+          outletId: targetOutletId,
           userId,
           menuId: menuItem.menuId
         });
       }
       
-      onFavoriteUpdate(menuItem.menuId, !isFavoriteBoolean);
+      onFavoriteUpdate(menuItem.menuId, !isFavoriteBoolean, targetOutletId);
     } catch (error) {
       console.error("Error updating favorite status:", error);
       openModal("ERROR", {
@@ -264,24 +263,9 @@ const HorizontalMenuCard = ({
     openModal("addToCart", menuItem);
   };
 
-  // Handle quantity changes
-  const handleQuantityChange = (increment) => {
-    if (!menuItem) return;
+  // Removed unused handleQuantityChange
 
-    // Check if user is authenticated
-    if (!user) {
-      setShowAuthOffcanvas(true);
-      return;
-    }
-
-    openModal("addToCart", menuItem);
-  };
-
-  // Generate the product URL from menuItem data with safety checks
-  const detailPageUrl =
-    menuItem?.menuId && menuItem?.menuCatId
-      ? `/product-detail/${menuItem.menuId}/${menuItem.menuCatId}`
-      : "#";
+  // Removed unused detailPageUrl
 
   return (
     <div 

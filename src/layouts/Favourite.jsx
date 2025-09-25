@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -9,9 +9,9 @@ import { useOutlet } from "../contexts/OutletContext";
 import apiService from "../api/apiService";
 
 function Favourite() {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [expandedOutlet, setExpandedOutlet] = useState({});
-  const { user, getUserId, setShowAuthOffcanvas } = useAuth();
+  const { getUserId } = useAuth();
   const { outletId } = useOutlet();
   const queryClient = useQueryClient();
   const userId = getUserId();
@@ -48,7 +48,7 @@ function Favourite() {
   });
 
   const removeFavorite = useMutation({
-    mutationFn: async ({ menuId }) => {
+    mutationFn: async ({ menuId, outletId: targetOutletId }) => {
       try {
         // Simple flag in closure to prevent duplicate calls
         if (removeFavorite.mutationFn.isRunning) {
@@ -56,7 +56,7 @@ function Favourite() {
         }
         removeFavorite.mutationFn.isRunning = true;
 
-        const result = await apiService.favorites.remove({ outletId, userId, menuId });
+        const result = await apiService.favorites.remove({ outletId: targetOutletId ?? outletId, userId, menuId });
         return result;
       } finally {
         removeFavorite.mutationFn.isRunning = false;
@@ -75,13 +75,13 @@ function Favourite() {
     }
   });
 
-  const handleFavoriteUpdate = async (menuId, isFavorite) => {
+  const handleFavoriteUpdate = async (menuId, isFavorite, menuOutletId) => {
     if (!isFavorite && !removeFavorite.isLoading) {
       const currentFavorites = queryClient.getQueryData(['favorites', outletId, userId]);
       const menuExists = currentFavorites?.some(menu => menu.menu_id === menuId);
       
       if (menuExists) {
-        await removeFavorite.mutateAsync({ menuId });
+        await removeFavorite.mutateAsync({ menuId, outletId: menuOutletId });
       }
     }
   };
@@ -99,12 +99,7 @@ function Favourite() {
     }, {});
   };
 
-  const navigateToLogin = () => {
-    if (!user) {
-      setShowAuthOffcanvas(true);
-      return;
-    }
-  };
+  // Removed unused navigateToLogin
 
   // Move useEffect to component top level
   React.useEffect(() => {
