@@ -669,7 +669,7 @@ const AuthOffcanvas = () => {
 
   const renderOTPStep = () => (
     <div className="px-1">
-      <p className="text-muted mb-4">
+      <p className="text-dark mb-4">
         Enter the verification code sent to <br />
         <span className="fw-bold fs-6">+91 {phoneNumber}</span>
       </p>

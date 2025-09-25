@@ -83,7 +83,7 @@ const AuthPrompt = ({
           ></i>
         </div>
         <h5 className="mb-3">{finalTitle}</h5>
-        <p className="text-muted mb-4">{finalSubtitle}</p>
+        <p className="text-dark mb-4">{finalSubtitle}</p>
         <button
           className="btn btn-outline-primary px-4 py-3 rounded-5 "
           style={buttonStyle}

@@ -71,7 +71,7 @@ const BaseModal = ({
               </button>
             </div>
           )}
-          <div className="modal-body">
+          <div className="modal-body pb-0">
             {children}
           </div>
           {footer && (
