@@ -1,5 +1,5 @@
 import React from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useLocation, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -133,13 +133,20 @@ const FoodTypeIcon = ({ foodType }) => {
 
 function ProductDetail() {
   const { menuId, menuCatId } = useParams();
+  const { state } = useLocation();
+  const [searchParams] = useSearchParams();
   const { openModal } = useModal();
   const { cartItems, removeFromCart, updateQuantity } = useCart();
   const { outletId } = useOutlet();
   const { user, getUserId, setShowAuthOffcanvas } = useAuth();
-  const navigate = useNavigate();
   const userId = getUserId();
   const { toggleFavorite, isFavoriteLoading } = useMenuItems();
+
+  // Derive effective outlet ID from override (state or URL) or context
+  const outletIdOverride = state?.outletIdOverride ?? searchParams.get('overrideOutletId');
+  const effectiveOutletId = outletIdOverride ?? outletId;
+  const isCrossOutlet = state?.notCurrentOutlet ?? searchParams.get('notCurrentOutlet') === 'true';
+  const crossOutletName = state?.outletName ?? (isCrossOutlet ? `Outlet ${outletIdOverride}` : null);
 
   // Replace useEffect with useQuery
   const {
@@ -147,15 +154,15 @@ function ProductDetail() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["menuDetails", outletId, menuId, menuCatId, userId],
+    queryKey: ["menuDetails", effectiveOutletId, menuId, menuCatId, userId],
     queryFn: () =>
       apiService.menus.getDetails({
-        outletId,
+        outletId: effectiveOutletId,
         menuId: Number(menuId),
         menuCatId: Number(menuCatId),
         userId,
       }),
-    enabled: !!outletId && !!menuId && !!menuCatId,
+    enabled: !!effectiveOutletId && !!menuId && !!menuCatId,
   });
 
   // Check if item exists in cart with proper menuId comparison
@@ -273,6 +280,19 @@ function ProductDetail() {
     <>
       <Header />
       <div className="page-content">
+        {/* Cross-outlet banner */}
+        {isCrossOutlet && (
+          <div className="alert alert-warning mx-3 mt-3 mb-0" role="alert">
+            <div className="d-flex align-items-center">
+              <i className="fa-solid fa-store me-2"></i>
+              <div>
+                <strong>Viewing item from another outlet</strong>
+                <br />
+                <small>This item is from <strong>{crossOutletName}</strong>. Actions are disabled.</small>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="content-body bottom-content">
           {/* Comment out or remove the existing code:
 <div className="swiper-btn-center-lr my-0">
@@ -358,13 +378,15 @@ function ProductDetail() {
                       </div>
                       <a
                         href="javascript:void(0);"
-                        className={`${isFavoriteLoading ? "disabled" : ""}`}
-                        onClick={handleFavoriteToggle}
+                        className={`${isFavoriteLoading || isCrossOutlet ? "disabled" : ""}`}
+                        onClick={isCrossOutlet ? undefined : handleFavoriteToggle}
                         style={{
-                          pointerEvents: isFavoriteLoading ? "none" : "auto",
-                          cursor: "pointer",
+                          pointerEvents: isFavoriteLoading || isCrossOutlet ? "none" : "auto",
+                          cursor: isCrossOutlet ? "not-allowed" : "pointer",
                           textDecoration: "none",
+                          opacity: isCrossOutlet ? 0.5 : 1,
                         }}
+                        title={isCrossOutlet ? "Actions disabled for cross-outlet items" : ""}
                       >
                         <div
                           className={`like-button ${
@@ -433,7 +455,7 @@ function ProductDetail() {
                     )}
                   </div>
                 </div>
-                {cartItem && (
+                {cartItem && !isCrossOutlet && (
                   <div className="dz-stepper border-1 rounded-stepper">
                     <div className="input-group bootstrap-touchspin bootstrap-touchspin-injected">
                       <span className="input-group-btn input-group-prepend">
@@ -508,12 +530,17 @@ function ProductDetail() {
         <div className="footer fixed p-b55">
           <div className="container">
             <button
-              onClick={handleAddToCart}
+              onClick={isCrossOutlet ? undefined : handleAddToCart}
               className="btn btn-primary text-start w-100"
-              disabled={!menuDetails.portions?.length}
+              disabled={!menuDetails.portions?.length || isCrossOutlet}
+              style={{
+                opacity: isCrossOutlet ? 0.5 : 1,
+                cursor: isCrossOutlet ? "not-allowed" : "pointer",
+              }}
+              title={isCrossOutlet ? "Cannot add items from other outlets to cart" : ""}
             >
               <i className="fa-solid fa-cart-shopping me-2"></i>
-              ADD TO CART
+              {isCrossOutlet ? "VIEW ONLY" : "ADD TO CART"}
             </button>
           </div>
         </div>

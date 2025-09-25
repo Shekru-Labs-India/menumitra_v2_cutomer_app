@@ -649,23 +649,6 @@ function Home() {
                   </button>
                 </div>
               )}
-
-              {/* Show loading skeleton only when no cached data is available */}
-              {isLoading && menuItems.length === 0 && (
-                <div className="row g-3 mb-3">
-                  {[...Array(6)].map((_, index) => (
-                    <div className="col-6" key={`skeleton-${index}`}>
-                      <div className="card-item style-1 skeleton">
-                        <div className="dz-media skeleton-image"></div>
-                        <div className="dz-content">
-                          <div className="skeleton-text"></div>
-                          <div className="skeleton-text"></div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         </div>

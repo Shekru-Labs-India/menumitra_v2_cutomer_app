@@ -191,7 +191,23 @@ const HorizontalMenuCard = ({
     }
 
     if (menuItem?.menuId && menuItem?.menuCatId) {
-      navigate(`/product-detail/${menuItem.menuId}/${menuItem.menuCatId}`);
+      // Check if this is a cross-outlet favorite
+      const isCrossOutlet = menuItem.outletId && Number(menuItem.outletId) !== Number(outletId);
+      
+      // Navigate with outlet override state if cross-outlet
+      const url = isCrossOutlet 
+        ? `/product-detail/${menuItem.menuId}/${menuItem.menuCatId}?overrideOutletId=${menuItem.outletId}&notCurrentOutlet=true`
+        : `/product-detail/${menuItem.menuId}/${menuItem.menuCatId}`;
+      
+      navigate(url, {
+        state: isCrossOutlet
+          ? { 
+              outletIdOverride: menuItem.outletId, 
+              notCurrentOutlet: true,
+              outletName: menuItem.outletName 
+            }
+          : undefined
+      });
     }
   };
 
