@@ -28,6 +28,7 @@ function OutletDetails() {
         total_tables: 0,
       },
     },
+    isLoading: isDetailsLoading,
     error: detailsError,
   } = useQuery({
     queryKey: ["restaurantDetails", outletId],
@@ -44,6 +45,47 @@ function OutletDetails() {
       toast.error(detailsError.message || "Failed to load outlet details", "Error");
     }
   }, [detailsError, toast]);
+
+  if (isDetailsLoading) {
+    return (
+      <>
+        <Header />
+        <div className="container py-4">
+          <div className="card mb-4">
+            <div className="card-body">
+              <div className="d-flex align-items-center mb-4 placeholder-glow">
+                <div className="rounded-3 bg-light me-3" style={{ width: 64, height: 64 }} />
+                <div className="w-100">
+                  <div className="placeholder rounded-pill col-6 mb-2" style={{ height: 20 }} />
+                  <div className="placeholder rounded-pill col-8" style={{ height: 14 }} />
+                </div>
+              </div>
+
+              <div className="row g-3 mb-4 placeholder-glow">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div className="col-4" key={`stats-skel-${i}`}>
+                    <div className="placeholder rounded-pill col-8 mb-2" style={{ height: 24 }} />
+                    <div className="placeholder rounded-pill col-6" style={{ height: 12 }} />
+                  </div>
+                ))}
+              </div>
+
+              <div className="text-center mb-3 placeholder-glow">
+                <div className="placeholder rounded-pill col-6 mx-auto" style={{ height: 16 }} />
+              </div>
+
+              <div className="row g-2 placeholder-glow">
+                <div className="col-6"><div className="placeholder rounded-3 w-100" style={{ height: 48 }} /></div>
+                <div className="col-6"><div className="placeholder rounded-3 w-100" style={{ height: 48 }} /></div>
+                <div className="col-12"><div className="placeholder rounded-3 w-100" style={{ height: 48 }} /></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
   const handleGenericUPI = () => {
     if (isProcessingUPI) return;
