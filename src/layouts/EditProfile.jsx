@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import defaultAvatar from "../assets/images/avatar/avatar-default.png";
 import { useToast } from "../components/Toast/useToast";
 
 const API_BASE_URL = 'https://men4u.xyz/v2';
@@ -113,13 +112,6 @@ function EditProfile() {
       <div className="page-content">
         <div className="container">
           <div className="edit-profile">
-            {/* <div className="profile-image">
-              <div className="media media-100 rounded-circle">
-                <img src={defaultAvatar} alt="Profile" />
-              </div>
-              <a href="javascript:void(0);">Change profile photo</a>
-            </div> */}
-
             <form onSubmit={handleSubmit}>
               <div className="mb-3">
                 <label className="form-label">Name</label>

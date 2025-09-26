@@ -3,11 +3,8 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-// import { useModal } from "../contexts/ModalContext";
 import { useCart } from "../contexts/CartContext";
-// import { useTheme } from "../contexts/ThemeContext";
 import MenuMitra from "../components/MenuMitra";
-// import defaultAvatar from "../assets/images/avatar/avatar-default.png";
 import { useOutlet } from "../contexts/OutletContext";
 
 function Profile() {
@@ -54,9 +51,6 @@ function Profile() {
             style={!isAuthenticated ? { cursor: "pointer" } : {}}
           >
             <div className="d-flex align-items-center mb-0 ">
-              {/* <div className="media media-70 me-3">
-                <img src={defaultAvatar} alt="Profile" />
-              </div> */}
               <div className="about-profile ">
                 <h5 className="sub-title mb-2">
                   {isAuthenticated ? `Hello, ${user?.name}` : "Hello User"}
@@ -147,25 +141,6 @@ function Profile() {
                   Cart
                 </Link>
               </div>
-              {/* <div className="col-6">
-                {isAuthenticated ? (
-                  <button
-                    onClick={onLogoutClick}
-                    className="btn btn-light w-100 d-flex align-items-center justify-content-center py-3"
-                  >
-                    <i className="fa-solid fa-power-off me-2 text-dark" />
-                    LogOut
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleLoginClick}
-                    className="btn btn-light w-100 d-flex align-items-center justify-content-center py-3"
-                  >
-                    <i className="fa-solid fa-right-to-bracket me-2 text-dark" />
-                    Login
-                  </button>
-                )}
-              </div> */}
             </div>
           </div>
           {isAuthenticated && (
