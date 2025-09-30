@@ -28,6 +28,12 @@ function CustomerSavingsContent() {
   if (error) return <div className="page-content bottom-content"><div className="container">Error: {error.message}</div></div>;
   if (!savingsData) return <div className="page-content bottom-content"><div className="container">No savings data available</div></div>;
 
+  // Calculate effective totals considering special and coupon discounts
+  const totalAmountSpent = Number(savingsData.total_amount_spent || 0);
+  const totalSpecialDiscount = Number(savingsData.special_discount || 0);
+  const totalCouponDiscount = Number(savingsData.coupon_discount || 0);
+  const effectiveTotalAmountSpent = Math.max(0, totalAmountSpent - totalSpecialDiscount - totalCouponDiscount);
+
   return (
       <div className="page-content bottom-content">
         <div className="container px-3">
@@ -48,12 +54,16 @@ function CustomerSavingsContent() {
                 <span className="fw-light">Special Discount</span>
                 <span className="fs-5">₹{savingsData.special_discount}</span>
               </div>
+              <div className="d-flex justify-content-between align-items-center mt-2">
+                <span className="fw-light">Coupon Discount</span>
+                <span className="fs-5">₹{totalCouponDiscount}</span>
+              </div>
             </div>
           </div>
 
           {/* Statistics Cards */}
           <div className="row g-3 mb-4">
-            <div className="col-6">
+            <div className="col-4">
               <div
                 className="card h-100"
                 style={{
@@ -74,7 +84,7 @@ function CustomerSavingsContent() {
                 </div>
               </div>
             </div>
-            <div className="col-6">
+            <div className="col-4">
               <div
                 className="card h-100"
                 style={{
@@ -84,13 +94,34 @@ function CustomerSavingsContent() {
               >
                 <div className="card-body p-3 d-flex flex-column justify-content-center align-items-center">
                   <div className="fs-3 fw-bold text-dark mb-1">
-                    ₹{savingsData.total_amount_spent}
+                    ₹{totalAmountSpent}
                   </div>
                   <div
                     className="text-muted small"
                     style={{ color: "#6B7280" }}
                   >
-                    Amount Spent
+                    Amount spent on orders
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="col-4">
+              <div
+                className="card h-100"
+                style={{
+                  border: "1px solid #E5E7EB",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                }}
+              >
+                <div className="card-body p-3 d-flex flex-column justify-content-center align-items-center">
+                  <div className="fs-3 fw-bold text-dark mb-1">
+                    {savingsData.coupon_count || 0}
+                  </div>
+                  <div
+                    className="text-muted small"
+                    style={{ color: "#6B7280" }}
+                  >
+                    Total Coupons Applied
                   </div>
                 </div>
               </div>
@@ -111,16 +142,22 @@ function CustomerSavingsContent() {
               <div className="card-body p-3">
                 <h6 className="mb-4 fw-semibold">{outlet.outlet_name}</h6>
                 <div className="d-flex justify-content-between align-items-center mb-3">
-                  <span style={{ color: "#A1A5B7" }}>Orders</span>
+                  <span style={{ color: "#A1A5B7" }}>Total Orders</span>
                   <span className="badge bg-success rounded-pill px-3">
                     {outlet.order_count}
                   </span>
                 </div>
                 <div className="d-flex justify-content-between align-items-center mb-3">
-                  <span style={{ color: "#A1A5B7" }}>Amount Spent</span>
-                  <span className="text-dark">
-                    ₹{outlet.total_amount_spent}
-                  </span>
+                  <span style={{ color: "#A1A5B7" }}>Amount Spent on Orders</span>
+                  {(() => {
+                    const outletAmount = Number(outlet.total_amount_spent || 0);
+                    const outletSpecial = Number(outlet.special_discount || 0);
+                    const outletCoupon = Number(outlet.coupon_discount || 0);
+                    const outletEffective = Math.max(0, outletAmount - outletSpecial - outletCoupon);
+                    return (
+                      <span className="text-dark">₹{outletEffective}</span>
+                    );
+                  })()}
                 </div>
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <span style={{ color: "#A1A5B7" }}>Regular Discount</span>
@@ -132,6 +169,12 @@ function CustomerSavingsContent() {
                   <span style={{ color: "#A1A5B7" }}>Special Discount</span>
                   <span style={{ color: "#027335" }}>
                     ₹{outlet.special_discount}
+                  </span>
+                </div>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <span style={{ color: "#A1A5B7" }}>Coupon Discount</span>
+                  <span style={{ color: "#027335" }}>
+                    ₹{Number(outlet.coupon_discount || 0)}
                   </span>
                 </div>
                 <div className="d-flex justify-content-between align-items-center">

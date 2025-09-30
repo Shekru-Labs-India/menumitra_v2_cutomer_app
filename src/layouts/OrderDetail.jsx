@@ -655,6 +655,27 @@ function OrderDetail() {
                   </div>
                 )}
 
+                {/* Show Discount first */}
+                {orderDetails.order_details.discount_amount > 0 && (
+                  <div
+                    className="d-flex justify-content-between px-0"
+                    style={{ paddingTop: 4, paddingBottom: 4, marginBottom: 0 }}
+                  >
+                    <span>
+                      Discount
+                      {orderDetails.order_details.discount_percent > 0
+                        ? ` (${orderDetails.order_details.discount_percent}%)`
+                        : ""}
+                    </span>
+                    <strong style={{ color: "#e74c3c" }}>
+                      -₹
+                      {Number(
+                        orderDetails.order_details.discount_amount
+                      ).toFixed(2)}
+                    </strong>
+                  </div>
+                )}
+
                 {/* Show Coupon Details */}
                 {orderDetails.order_details.coupon_details && (
                   <>
@@ -690,7 +711,7 @@ function OrderDetail() {
                       }}
                     >
                       <span style={{ fontWeight: 500 }}>
-                        After Coupon Discount
+                        After Total Discount
                       </span>
                       <span style={{ fontWeight: 500 }}>
                         ₹
@@ -717,25 +738,6 @@ function OrderDetail() {
                 )}
 
                 {/* Rest of the existing bill details */}
-                {orderDetails.order_details.discount_amount > 0 && (
-                  <div
-                    className="d-flex justify-content-between px-0"
-                    style={{ paddingTop: 4, paddingBottom: 4, marginBottom: 0 }}
-                  >
-                    <span>
-                      Discount
-                      {orderDetails.order_details.discount_percent > 0
-                        ? ` (${orderDetails.order_details.discount_percent}%)`
-                        : ""}
-                    </span>
-                    <strong style={{ color: "#e74c3c" }}>
-                      -₹
-                      {Number(
-                        orderDetails.order_details.discount_amount
-                      ).toFixed(2)}
-                    </strong>
-                  </div>
-                )}
                 {orderDetails.order_details.special_discount > 0 && (
                   <div
                     className="d-flex justify-content-between px-0"
@@ -773,6 +775,7 @@ function OrderDetail() {
                         orderDetails.order_details.total_bill_amount || 0
                       ) -
                       Number(orderDetails.order_details.discount_amount || 0) -
+                      Number(orderDetails.order_details.coupon_discount || 0) -
                       Number(orderDetails.order_details.special_discount || 0) +
                       Number(orderDetails.order_details.charges || 0)
                     ).toFixed(2)}
